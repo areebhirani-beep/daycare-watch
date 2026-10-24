@@ -10,7 +10,8 @@ All facts come from Texas Health and Human Services Child Care Regulation open d
 ## Layout
 | Path | What |
 |---|---|
-| `apps/web` | The parent app (installable web app) |
-| `services/sync` | Daily data sync, district filter, plain-language summaries, alerts |
-| `firebase` | Firestore rules, indexes, hosting, emulator config |
-| `packages/shared` | Shared types |
+| `apps/mobile` | The parent app (React Native + Expo, iOS and Android) |
+| `services/pipeline` | Daily data pipeline: extract, validate, load, diff, classify, alert |
+| `supabase` | Postgres + PostGIS schema, security policies, API functions, tests |
+| `packages/db` | Database types generated from the schema |
+| `docs/ARCHITECTURE.md` | How the app and the system work |

@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env*
+*.log
+.DS_Store
+# local build tooling
+harness/
+CONTRACT.md
+.claude/
+# never commit credentials
+*service-account*.json
+*serviceAccount*.json
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+.firebase/

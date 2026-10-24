@@ -93,17 +93,17 @@
 
 | Table | Key | Notable columns |
 |---|---|---|
-| `core.daycares` | operation_id | name, type, address, city, county, zip, `geom geography(Point)`, capacity, ages[], hours, subsidies, status, corrective/adverse/closed flags, `in_district` |
+| `core.daycares` | operation_id | name, type, address, city, county, zip, `geom geography(Point)` (state coords, else Census geocode), `geocode_source`, capacity, ages[], hours, subsidies, status, corrective/adverse/closed flags, `in_district`, `district_basis` (point/county) |
 | `core.inspections` | activity_id | operation_id, date, type, violation_found, self_report |
 | `core.violations` | non_compliance_id | activity_id, operation_id, date, standard, risk_level, category, plain, narrative, corrected_at_inspection, corrected_date, verified_date, via_investigation |
-| `core.change_events` | id | operation_id, kind (`new_violation`/`status_change`/`adverse_action`/`closure`/`capacity_change`), ref_id, before/after jsonb, detected_at |
+| `core.change_events` | id | operation_id, kind (`new_violation`/`status_change`/`corrective_action`/`adverse_action`/`closure`/`capacity_change`/`permit_conditions`), ref_id, before/after jsonb, `is_replay`, detected_at |
 | `app.watches` | (user_id, operation_id) | created_at. RLS: owner only. |
 | `app.devices` | push_token | user_id, platform (ios/android), expo_push_token, last_seen. RLS: owner only. |
 | `app.notifications` | (user_id, event_id) | sent_at, ticket_id, receipt_status |
 | `geo.districts` | id | TX-04 polygon (Census TIGER CD119) |
 | `ops.sync_runs` | run_id | stage counts, join rate, newest source date, ok, error |
 
-The app calls RPC functions such as `daycares_near(lat, lng, km)`, `daycare_record(operation_id)`, `area_compare(operation_id)`, and `district_pulse(week)`. It never touches raw tables. `core.*` is read-only to clients, and `app.*` is guarded by row-level security.
+The app calls only the RPC functions pinned in CONTRACT.md section 4.1 (`daycares_near`, `daycare_record`, `area_compare`, `district_pulse`, `alert_detail`, …). It never touches raw tables. `core.*` is read-only to clients, and `app.*` is guarded by row-level security.
 
 ## 7. Guardrails
 - It never says safe, unsafe, a score, or a grade. It shows what the state found, when, and whether it was fixed.

@@ -65,8 +65,8 @@
 
 | Fact | Number | What it means for the app |
 |---|---|---|
-| Daycares in district counties (all types, active) | 1,527 (919 licensed centers, 135,630 spots) | Every one has a record on day one, because we backfill about 5 years |
-| State visits in those counties, last 13 weeks | 1,211 visits to 655 different daycares (≈ 90/week) | The district feed is never quiet |
+| Daycares in the 12 counties CD119 touches (all types, active) | 1,527 (919 licensed centers, 135,630 spots). **County count, not district count**: Collin + Denton are 83% of it but mostly outside TX-04 | Every one has a record on day one (≈5-year backfill). The in-district number comes from geocoding + point-in-polygon |
+| State visits in those counties (county-based, re-measure in district), last 13 weeks | 1,211 visits to 655 different daycares (≈ 90/week) | The district feed is never quiet |
 | Visits that found violations | 258 (≈ 20–39/week in settled weeks) | About 25 real, new findings a week to alert on and to show |
 | Per-daycare visit gap | every 2–8 months | Alerts are rare for any one family, like a smoke alarm. That's correct, not a weakness. |
 | Recent weeks with violations flagged | wk 41: 8, wk 42: 2, wk 43: 0 | Findings seem to be finalized 1–3 weeks after the visit (**inference, verify**). Alerts arrive days to weeks after an inspection. |

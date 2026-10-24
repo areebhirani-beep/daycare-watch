@@ -6,11 +6,26 @@ dist/
 # local build tooling
 harness/
 CONTRACT.md
+CLAUDE.md
 .claude/
 # never commit credentials
 *service-account*.json
 *serviceAccount*.json
-firebase-debug.log*
-firestore-debug.log*
-ui-debug.log*
-.firebase/
+
+# python
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+# expo
+.expo/
+ios/
+android/
+*.p8
+*.jks
+*.keystore
+# supabase
+supabase/.branches/
+supabase/.temp/

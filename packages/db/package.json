@@ -1,0 +1,12 @@
+{
+  "name": "@daycare-watch/db",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generated database types and RPC shapes for the Daycare Watch Supabase schema",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "gen": "supabase gen types typescript --local > types.ts",
+    "typecheck": "tsc --noEmit -p ."
+  }
+}

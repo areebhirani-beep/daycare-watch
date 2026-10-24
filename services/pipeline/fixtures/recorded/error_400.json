@@ -1,0 +1,9 @@
+{
+  "code" : "query.compiler.malformed",
+  "error" : true,
+  "message" : "Could not parse SoQL query \"select :updated_at, *\" at line 1 character 21: Star selections must come at the start of the select-list",
+  "data" : {
+    "query" : "select :updated_at, *",
+    "position" : { }
+  }
+}

@@ -1,0 +1,402 @@
+[
+  {
+    "non_compliance_id": "1022244971",
+    "standard_number_description": "745.651(2)(A) - Background Check Validation ? Every 3 months each operation, other than a licensed, registered, or listed home, must validate current list",
+    "standard_risk_level": "Medium",
+    "narrative": "The operation's current employee list in the portal has not been validated in over three months.",
+    "expected_category": "background_checks",
+    "expected_plain": "The daycare's current employee list in the portal has not been validated in over three months."
+  },
+  {
+    "non_compliance_id": "1022248545",
+    "standard_number_description": "746.1601 - Child/ Caregiver Ratio - 13 or More Children",
+    "standard_risk_level": "Medium High",
+    "narrative": "The 3-4yo classroom was observed being out of ratio when there were 20 children with specified age group 4yo with one caregiver during naptime.",
+    "expected_category": "staff_ratio",
+    "expected_plain": "The 3-4-year-old classroom was observed being out of ratio when there were 20 children with specified age group 4-year-old with one…"
+  },
+  {
+    "non_compliance_id": "1022249439",
+    "standard_number_description": "747.2315(b) - AP Cribs - Only Snug Fitting Sheet and Crib Mattress Cover Allowed if Infant Younger than 12 Months of Age",
+    "standard_risk_level": "High",
+    "narrative": "Two infants under the age of 12 months were observed sleeping in cribs containing multiple blankets. One infant under the age of 12 months was observed with a baby's bottle containing milk while sleeping in a crib.",
+    "expected_category": "safety_hazards",
+    "expected_plain": "Two infants under the age of 12 months were observed sleeping in cribs containing multiple blankets."
+  },
+  {
+    "non_compliance_id": "1022285389",
+    "standard_number_description": "749.1309(b)(1)(N) - Initial Service Plan-Must include signatures of service planning team members",
+    "standard_risk_level": "Low",
+    "narrative": "Three children's ISP was not signed by all members of the CMPS.",
+    "expected_category": "other",
+    "expected_plain": "Three children's ISP was not signed by all members of the CMPS."
+  },
+  {
+    "non_compliance_id": "1022295629",
+    "standard_number_description": "749.2470(3)(A) - Verification-Includes obtaining floor plan showing dimensions and purposes of all rooms in the home and identifying indoor areas for children's use",
+    "standard_risk_level": "Medium Low",
+    "narrative": "Two agency home floor plans did not include documentation that identified the areas the children in care use.",
+    "expected_category": "other",
+    "expected_plain": "Two agency home floor plans did not include documentation that identified the areas the children in care use."
+  },
+  {
+    "non_compliance_id": "1022308580",
+    "standard_number_description": "746.201(4) - Designating Director",
+    "standard_risk_level": "Medium High",
+    "narrative": "Licensing has not received any paper work for the new designated director.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "Licensing has not received any paper work for the new designated director."
+  },
+  {
+    "non_compliance_id": "1022317853",
+    "standard_number_description": "746.611(a)(1) - Required Health Statement - Written, dated within past year, indicates child is physically able to participate in operation's child-care program",
+    "standard_risk_level": "Low",
+    "narrative": "Three out of ten children did not have an up-to-date health statement.",
+    "expected_category": "health_medication",
+    "expected_plain": "Three out of ten children did not have an up-to-date health statement."
+  },
+  {
+    "non_compliance_id": "1022319239",
+    "standard_number_description": "746.3401(a) - Annual Sanitation Inspection",
+    "standard_risk_level": "Medium High",
+    "narrative": "A current sanitation inspection is needed. The last time this operation was inspected by the health department was in 6/23/2023.",
+    "expected_category": "health_medication",
+    "expected_plain": "A current sanitation inspection is needed."
+  },
+  {
+    "non_compliance_id": "1022322407",
+    "standard_number_description": "745.8641 - Requirements during probation",
+    "standard_risk_level": "High",
+    "narrative": "One out of six current probation conditions currently in effect is not in compliance.   Condition 1 is in in compliance. Quarterly meeting documentation for 10/22/2025 was made available for review with the probation condition documentation requirements.    Condition 2 is in compliance: The operation has hired a qualified director and is present at inspection.  Condition 3 is in compliance. Subchapter L and D have been review and copies provided to all staff. Classroom observations for each caregiver in the amount of 30 minutes each has been completed by the director. This condition is in compliance.   Condition 4 is in compliance. Child care regulation was sent infant training to approve for the operation. Subchapter H was to be printed and made available to caregivers in all infant classrooms. The infant training has been completed the caregivers in the infant classrooms. This condition is in compliance.    Condition 5: The condition of probation related to each classroom utilizing a daily child tracking sheet that includes the children's names, ages and caregivers accounting for their group with a name to face count and documenting this with each transition out of the classroom by each caregiver in the group has not been put into practice throughout the day.   The daily tracking sheets reviewed were all incomplete and missing documenting the name to face count at each transition for some classrooms, not all caregivers signed in and out of the classroom and there is not a name to face count conducted when caregivers are changing responsibility before a caregiver leaves the classroom with the time and initials. Some sheets don't have the time the children left care documented. Some sheets have the number of the children for the name to face but lacking the initials or one or both of the caregivers that were present in the classrooms for the name to face count.   Classrooms were observed transitioning out of the classroom and doing a head count not a name to face check of the children in their group. One caregiver would be observed documenting doing a name to face check at some transitions but the 2nd caregiver was not conducting a name to face count and did not document the name to face count initial as the 2nd caregiver in the group.   Condition 10: This condition is related to the building and grounds checklist.  The daily checks by the director have been conducted daily from 11/5/2025 to 11/13/2025. Classroom observations related to health and sanitization practices was also completed daily by the director. This condition is in compliance.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "One out of six current probation conditions currently in effect is not in compliance."
+  },
+  {
+    "non_compliance_id": "1022324070",
+    "standard_number_description": "746.2501(5) - Care Requirements for Toddlers - Free from Choking Objects That May Cause Choking in Infants or Toddlers",
+    "standard_risk_level": "High",
+    "narrative": "In the toddler classroom, two separate groups of toys, were observed accessible to children and pose as a choking hazard.",
+    "expected_category": "safety_hazards",
+    "expected_plain": "In the toddler classroom, two separate groups of toys, were observed accessible to children and pose as a choking hazard."
+  },
+  {
+    "non_compliance_id": "1022326253",
+    "standard_number_description": "747.901(4) - Personnel Records - Required Affidavit",
+    "standard_risk_level": "Medium Low",
+    "narrative": "Caregivers file did not have Affidavit at time of inspection.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "Caregivers file did not have Affidavit at time of inspection."
+  },
+  {
+    "non_compliance_id": "1022360894",
+    "standard_number_description": "742.501(5) - Requirements for Infants - Free from Choking Objects That May Cause Choking in Infants",
+    "standard_risk_level": "High",
+    "narrative": "A 15 month old was observed wearing an Amber necklace. This was corrected at inspection as staff removed the necklace from the child.",
+    "expected_category": "safety_hazards",
+    "expected_plain": "A 15 month old was observed wearing an Amber necklace."
+  },
+  {
+    "non_compliance_id": "1022361658",
+    "standard_number_description": "746.2603(1) - Space Requirements for Pre-Kindergarten Age - Does Not Limit Movement",
+    "standard_risk_level": "Medium",
+    "narrative": "A 3yo child was observed in a high chair during the morning routine.",
+    "expected_category": "safety_hazards",
+    "expected_plain": "A 3-year-old child was observed in a high chair during the morning routine."
+  },
+  {
+    "non_compliance_id": "1022362085",
+    "standard_number_description": "HRC 42.04271 - Parent's Rights",
+    "standard_risk_level": "Medium",
+    "narrative": "The center has not provided the parent's with a copy of the \"Parent's Rights.\"",
+    "expected_category": "parent_communication",
+    "expected_plain": "The center has not provided the parent's with a copy of the \"Parent's Rights.\""
+  },
+  {
+    "non_compliance_id": "1022392153",
+    "standard_number_description": "748.1341(a) - Initial Service Plan-Must give the child's parent(s) at least two weeks advance notice of the meeting",
+    "standard_risk_level": "Low",
+    "narrative": "During the inspection it was found that the child's parent was not given two weeks advance notice of a service plan meeting.",
+    "expected_category": "other",
+    "expected_plain": "The child's parent was not given two weeks advance notice of a service plan meeting."
+  },
+  {
+    "non_compliance_id": "1022393532",
+    "standard_number_description": "745.617(a)(2) - Background Check Requirements - Listed family homes must submit requests online or by sending signed form to Licensing",
+    "standard_risk_level": "Low",
+    "narrative": "A family member did not have a current fingerprint.  The listed home is still in the application phase.",
+    "expected_category": "background_checks",
+    "expected_plain": "A family member did not have a current fingerprint."
+  },
+  {
+    "non_compliance_id": "1022396304",
+    "standard_number_description": "746.603(a)(4) - Children's Records - Immunizations",
+    "standard_risk_level": "Medium",
+    "narrative": "Two of four files reviewed are missing immunization records.",
+    "expected_category": "health_medication",
+    "expected_plain": "Two of four files reviewed are missing immunization records."
+  },
+  {
+    "non_compliance_id": "1022436590",
+    "standard_number_description": "748.3701(a) - Recreation responsibility-Must provide daily indoor/outdoor recreational & other activities appropriate to needs, interests, and abilities of children",
+    "standard_risk_level": "Medium Low",
+    "narrative": "The recreational calendar provided does not contain daily indoor and outdoor activities for the children in care.",
+    "expected_category": "other",
+    "expected_plain": "The recreational calendar provided does not contain daily indoor and outdoor activities for the children in care."
+  },
+  {
+    "non_compliance_id": "1022445277",
+    "standard_number_description": "747.3501(1) - Safety - Electrical Outlets Covered",
+    "standard_risk_level": "Medium High",
+    "narrative": "The play room had two outlets uncovered. The living room had one outlet uncovered.    NOTE: This was corrected at inspection when the provider put electrical covers on the outlets.",
+    "expected_category": "safety_hazards",
+    "expected_plain": "The play room had two outlets uncovered."
+  },
+  {
+    "non_compliance_id": "1022470417",
+    "standard_number_description": "748.3117(a) - Fire Extinguisher-Company licensed by State Fire Marshal must inspect each fire extinguisher at least annually & conduct any service or testing",
+    "standard_risk_level": "Medium",
+    "narrative": "Three fire extinguishers observed at the operations were last serviced in July of 2024.",
+    "expected_category": "safety_hazards",
+    "expected_plain": "Three fire extinguishers observed at the operations were last serviced in July of 2024."
+  },
+  {
+    "non_compliance_id": "1022474403",
+    "standard_number_description": "744.1205(a)(2) - Responsibilities of Caregivers - Know how many children responsible for",
+    "standard_risk_level": "High",
+    "narrative": "During the inspection a caregiver did not know how many children were in care.",
+    "expected_category": "supervision",
+    "expected_plain": "A caregiver did not know how many children were in care."
+  },
+  {
+    "non_compliance_id": "1022479602",
+    "standard_number_description": "744.2669 - Food Allergy Plan-Emergency plan for diagnosed child, signed by health care professional and parent",
+    "standard_risk_level": "Medium High",
+    "narrative": "During the inspection it was determined that the Food Emergency plans were not signed by both the parent and health care professional.",
+    "expected_category": "health_medication",
+    "expected_plain": "The Food Emergency plans were not signed by both the parent and health care professional."
+  },
+  {
+    "non_compliance_id": "1022483218",
+    "standard_number_description": "742.801(b) - Healthy Environment - Mark Cleaning Supplies, Toxic Materials; Separate from Food and Inaccessible",
+    "standard_risk_level": "Medium High",
+    "narrative": "There are chemicals on child level right over the threshold of the room.",
+    "expected_category": "safety_hazards",
+    "expected_plain": "There are chemicals on child level right over the threshold of the room."
+  },
+  {
+    "non_compliance_id": "1022514609",
+    "standard_number_description": "746.201(1) - Policies Comply with Rules",
+    "standard_risk_level": "High",
+    "narrative": "The operational policies were reviewed and the following policies were not included:      -Suspension and expulsion policy  -Enrollment procedures, including how and when parents will be notified of policy changes.  -Transportation procedures.   -Parent approval not needed for visitation.   -Promotion of indoor and outdoor physical activity:  \t-The benefits of physical activity and outdoor play.  \t- The duration of indoor and outdoor physical activity at your operation.  \t-The type of physical activity (structured and unstructured) that children may engage in at your operation.  \t-Each setting in which your physical activity program will take place.  \t-A plan to ensure physical activity occurs on days when extreme weather conditions prohibit or limit outdoor play.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "The operational policies were reviewed and the following policies were not included: -Suspension and expulsion policy -Enrollment…"
+  },
+  {
+    "non_compliance_id": "1022520809",
+    "standard_number_description": "748.125(f)(1) - A PLSP must meet with a child within 24 hours of their return to an operation post hospitalization.",
+    "standard_risk_level": "Medium High",
+    "narrative": "During a review of the records, it was observed that a child in care did not meet with a PLSP within 24 hours of being released from the hospital after the child returned to the home.",
+    "expected_category": "other",
+    "expected_plain": "During a review of the records, it was observed that a child in care did not meet with a PLSP within 24 hours of being released from the…"
+  },
+  {
+    "non_compliance_id": "1022565389",
+    "standard_number_description": "747.501(8)(C) - Written Operational Policies - Plan for Extreme Weather",
+    "standard_risk_level": "Medium",
+    "narrative": "The operational policies lacked,  a plan to ensure physical activity occurs on days when extreme weather conditions prohibit or limit outdoor time.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "The operational policies lacked, a plan to ensure physical activity occurs on days when extreme weather conditions prohibit or limit…"
+  },
+  {
+    "non_compliance_id": "1022586076",
+    "standard_number_description": "748.705(b)(3) - Reasonable & prudent parent standard-must consider the child's behavioral history and ability to safely participate in proposed activity",
+    "standard_risk_level": "Medium",
+    "narrative": "A 14-year-old, whom the operation had no time to build rapport with, was allowed to go to 3 stores merely 3 days after their elopement from the operation. During this outing, the child ran away again and took another child in care, an 11-year-old, with them.",
+    "expected_category": "safety_hazards",
+    "expected_plain": "A 14-year-old, whom the daycare had no time to build rapport with, was allowed to go to 3 stores merely 3 days after their elopement from…"
+  },
+  {
+    "non_compliance_id": "1022595684",
+    "standard_number_description": "749.3041(7) - Physical Environment-Foster home must ensure that flammable or poisonous substances are stored out of reach of children, as needed",
+    "standard_risk_level": "Medium High",
+    "narrative": "Fertilizer and gas containers were observed in the backyard in the children's play area",
+    "expected_category": "safety_hazards",
+    "expected_plain": "Fertilizer and gas containers were observed in the backyard in the children's play area"
+  },
+  {
+    "non_compliance_id": "1022609094",
+    "standard_number_description": "745.8411(a) - Responsibilities - Not interfere with an inspection or investigation",
+    "standard_risk_level": "High",
+    "narrative": "Person related to the operation, during the investigation influenced the investigation. The deficiency is related to a DFPS Abuse/Neglect investigation.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "Person related to the daycare, during the investigation influenced the investigation."
+  },
+  {
+    "non_compliance_id": "1022612002",
+    "standard_number_description": "746.307(e) - Parental Notification of Infestation",
+    "standard_risk_level": "Medium Low",
+    "narrative": "All parents were not notified in writing when multiple children attended the daycare with lice.",
+    "expected_category": "parent_communication",
+    "expected_plain": "All parents were not notified in writing when multiple children attended the daycare with lice."
+  },
+  {
+    "non_compliance_id": "1022622396",
+    "standard_number_description": "HRC42.052(c) - AP Illegal Operation - Not Listed",
+    "standard_risk_level": "High",
+    "narrative": "Child care was provided to two unrelated children on regular basis that was subject to regulation.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "Child care was provided to two unrelated children on regular basis that was subject to regulation."
+  },
+  {
+    "non_compliance_id": "1022632988",
+    "standard_number_description": "HRC42.052(d) - Illegal Operation - Not Registered",
+    "standard_risk_level": "High",
+    "narrative": "The care being provided to 4 unrelated children is subject to regulation",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "The care being provided to 4 unrelated children is subject to regulation"
+  },
+  {
+    "non_compliance_id": "1022634198",
+    "standard_number_description": "746.1201(4) - AP Responsibilities of Employees and Caregivers -Ensure No Child Abused, Neglected, or Exploited",
+    "standard_risk_level": "High",
+    "narrative": "Based on information obtained during a DFPS investigation, there were findings of neglectful supervision due to a child sustaining third-degree burns as a result of a caregiver unintentionally spilling hot soup on a child.",
+    "expected_category": "supervision",
+    "expected_plain": "There were findings of neglectful supervision due to a child sustaining third-degree burns as a result of a caregiver unintentionally…"
+  },
+  {
+    "non_compliance_id": "1022634200",
+    "standard_number_description": "746.1201(1) - Responsibilities of Employees and Caregivers -Demonstrate Competency, Good Judgment, Self-control",
+    "standard_risk_level": "High",
+    "narrative": "Based on information obtained during a DFPS investigation, a caregiver did not use good judgment when they decided to warm up soup in a microwave in the classroom not intended for caregiver use.",
+    "expected_category": "supervision",
+    "expected_plain": "A caregiver did not use good judgment when they decided to warm up soup in a microwave in the classroom not intended for caregiver use."
+  },
+  {
+    "non_compliance_id": "1022635348",
+    "standard_number_description": "746.1205(a)(4) - Supervision ensures each child?s safety, well-being, including physical proximity and auditory or visual awareness of each child?s on going activity",
+    "standard_risk_level": "High",
+    "narrative": null,
+    "expected_category": "supervision",
+    "expected_plain": null
+  },
+  {
+    "non_compliance_id": "1022638957",
+    "standard_number_description": "748.2551(c)(2) - EBI Implementation-Caregiver must use the minimal amount of reasonable and necessary physical force",
+    "standard_risk_level": "High",
+    "narrative": "Staff conducted a restraint of a child where the child was lifted off their feet and taken to the floor.  The child sustained an injury to the hand.",
+    "expected_category": "discipline",
+    "expected_plain": "Staff conducted a restraint of a child where the child was lifted off their feet and taken to the floor."
+  },
+  {
+    "non_compliance_id": "1022663493",
+    "standard_number_description": "746.2417(2)(B) - Activities for Infants - Not in Restrictive Device for more than 15 Minutes",
+    "standard_risk_level": "High",
+    "narrative": "The inspector observed one teacher that had left 2 toddlers and 2 infants on highchairs from 3:05 PM to 4:23 PM until the owner stepped in to remove the children out of the highchairs to participate in other activities.    These four children had finished their PM snacks at 3:15 PM.",
+    "expected_category": "safety_hazards",
+    "expected_plain": "The inspector observed one teacher that had left 2 toddlers and 2 infants on highchairs from 3:05 PM to 4:23 PM until the owner stepped in…"
+  },
+  {
+    "non_compliance_id": "1022700145",
+    "standard_number_description": "745.8485(a) - May not record, listen to, or eavesdrop on any Licensing interview or internal discussion",
+    "standard_risk_level": "Medium High",
+    "narrative": "Investigators reported being recorded while interviewing children and staff at the facility.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "Investigators reported being recorded while interviewing children and staff at the facility."
+  },
+  {
+    "non_compliance_id": "1022711335",
+    "standard_number_description": "749.1521(3) - Medication Storage-Store medication covered by Schedule II of the Texas Controlled Substances Act under double lock in a separate container",
+    "standard_risk_level": "High",
+    "narrative": "Psychotropic medications Schedule II were observed not double locked during the visit.",
+    "expected_category": "health_medication",
+    "expected_plain": "Psychotropic medications Schedule II were observed not double locked during the visit."
+  },
+  {
+    "non_compliance_id": "1022714710",
+    "standard_number_description": "749.663(a)(1) - Child placement staff responsibilities-Deciding whether to admit a foster child, including completion of an admission assessment",
+    "standard_risk_level": "Medium",
+    "narrative": "Child placement staff placed six children under the age of 13 in a foster home when the single foster parent's vehicle can only safely transport five children under the age of 13.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "Child placement staff placed six children under the age of 13 in a foster home when the single foster parent's vehicle can only safely…"
+  },
+  {
+    "non_compliance_id": "1022720682",
+    "standard_number_description": "747.1311(a) - Time Period of Training - Primary Caregiver",
+    "standard_risk_level": "Low",
+    "narrative": "The caregiver did not have trainings for last completed training year.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "The caregiver did not have trainings for last completed training year."
+  },
+  {
+    "non_compliance_id": "1022721056",
+    "standard_number_description": "744.901(3) - Required Personnel Records - TB Test",
+    "standard_risk_level": "Low",
+    "narrative": "1 staff file did not include TB test results.",
+    "expected_category": "health_medication",
+    "expected_plain": "1 staff file did not include TB test results."
+  },
+  {
+    "non_compliance_id": "1022721183",
+    "standard_number_description": "744.901(6)(B) - Required Personnel Records-signed dated statement that employee received personnel policies",
+    "standard_risk_level": "Medium Low",
+    "narrative": "One employee does not have a statement stating they had received the personnel policies.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "One employee does not have a statement stating they had received the personnel policies."
+  },
+  {
+    "non_compliance_id": "1022721373",
+    "standard_number_description": "744.1321(b) - Block certification training include hours and topics",
+    "standard_risk_level": "Medium",
+    "narrative": "2 block training staff certificates reviewed did not specify the time spent for each topic of training.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "2 block training staff certificates reviewed did not specify the time spent for each topic of training."
+  },
+  {
+    "non_compliance_id": "1022722148",
+    "standard_number_description": "748.535(2) - AP Child-care administrator responsibilities- Ensure the operation complies with current heightened monitoring plans, if applicable.",
+    "standard_risk_level": "Medium High",
+    "narrative": "During a review conducted on 2/28/2023 it was determined that:  (1)  your operation?s administrator failed to ensure compliance with the current HM Plan(s); and   (2) 12 months had elapsed since the effective date of the plan.    The heightened monitoring plans for this operation included a specific ?planned end date? at the 12-month mark by which the operation was expected to meet all heightened monitoring criteria necessary to move out of active heightened monitoring to a phase of ?post plan monitoring?.  As a direct result of the administrator?s failure to ensure timely compliance with heightened monitoring plans, this operation is now unable to successfully move to post-plan monitoring.  Furthermore, the operation?s ?planned end date? must now be revised, and the period of heightened monitoring must be extended.  Further details of the administrator?s failure to ensure compliance include the following:     - Operation failed to demonstrate 6 months of successive compliance with the standard and contract requirements that led to heightened monitoring; and  - Operation was unable to meet compliance with Medium-High weighted citations.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "During a review conducted on 2/28/2023 it was determined that: (1) your operation's administrator failed to ensure compliance with the…"
+  },
+  {
+    "non_compliance_id": "1022722362",
+    "standard_number_description": "748.2151(c)(5) - Medication record - must include date (day/month/year) & time each medication was administered",
+    "standard_risk_level": "Medium High",
+    "narrative": "During a review of medication logs, several children's medications were documented as dispensed at 7:00am, however the children were still asleep and the medication had not been dispensed.  The time this was observed was sometime after 7:30am.",
+    "expected_category": "health_medication",
+    "expected_plain": "During a review of medication logs, several children's medications were documented as dispensed at 7:00am, however the children were still…"
+  },
+  {
+    "non_compliance_id": "1022723123",
+    "standard_number_description": "749.635(2) - AP CPA administrator responsibilities- Ensure that the operation complies with current heightened monitoring plans.",
+    "standard_risk_level": "Medium High",
+    "narrative": "During a review conducted on August 29, 2025, it was determined that:     (1)\tyour operation?s administrator failed to ensure compliance with the current HM Plan; and     (2)\tmore than 12 months had elapsed since the effective date of the plan.    As you know, the heightened monitoring plan for your operation included a specific ?planned end date? at the original 12-month mark by which your operation was expected to meet all heightened monitoring criteria necessary to move out of active heightened monitoring to a phase of ?post plan monitoring.?  As a direct result of the administrator?s failure to ensure timely compliance with heightened monitoring plan, your operation was unable to successfully move to post-plan monitoring by the original ?planned end date? necessitating previous extension.  Furthermore, due to your recent citation issued on August 27, 2025, your operation?s ?planned end date? must now be revised again, and the period of heightened monitoring must be extended again.     Further details of the administrator?s failure to ensure compliance include the following:     Your operation received a medium weighted citation in a pattern/trend category on August 27, 2025.  Specifically, the operation was cited for 749.2453(b) You must update a foster home screening- A foster home screening update may be made by using an addendum. The operation's compliance is currently pending.     - Operation failed to satisfy the conditions of the plan.    - Operation failed to demonstrate 6 months of successive compliance with the standard and contract requirements which led to heightened monitoring; and  - Operation was unable to meet compliance with Medium-High or High weighted licensing citations.      Finding: 749.635(2) ? The licensed administrator must ensure the operation complies with current heightened monitoring plan.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "During a review conducted on August 29, 2025, it was determined that: (1) your operation's administrator failed to ensure compliance with…"
+  },
+  {
+    "non_compliance_id": "1022723124",
+    "standard_number_description": "749.635(2) - AP CPA administrator responsibilities- Ensure that the operation complies with current heightened monitoring plans.",
+    "standard_risk_level": "Medium High",
+    "narrative": "During a review conducted on 09/09/2024 it was determined that:   (1) your operation?s administrator failed to ensure compliance with the current HM Plan; and   (2) 12 months had elapsed since the effective date of the plan.  As you know, the heightened monitoring plan for your operation included a specific ?planned end date? at the original 12-month mark by which your operation was expected to meet all heightened monitoring criteria necessary to move out of active heightened monitoring to a phase of ?post plan monitoring?.  As a direct result of the administrator?s failure to ensure timely compliance with heightened monitoring plan, your operation is now unable to successfully move to post-plan monitoring. Furthermore, your operation?s ?planned end date? must now be revised, and the period of heightened monitoring must be extended.   Further details of the administrator?s failure to ensure compliance include the following:   Your operation received a high-weighted citation in a pattern/trend category on 08/19/2024. Specifically, the operation was cited for 749.2593(a)(2). During the investigation, it was found that a caregiver failed to supervise children in care, resulting in inappropriate contact with a household member.   - Operation failed to demonstrate 6 months of successive compliance with the standard and contract requirements that led to heightened monitoring; and  - Operation was unable to meet compliance with Medium-High or High weighted licensing citations.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "During a review conducted on 09/09/2024 it was determined that: (1) your operation's administrator failed to ensure compliance with the…"
+  },
+  {
+    "non_compliance_id": "1022725363",
+    "standard_number_description": "746.303(b) - Report Number of Employees",
+    "standard_risk_level": "Medium Low",
+    "narrative": "The center did not report the number of employees who left employment in 2024 by 11:59 p.m. on January 15, 2025, as required.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "The center did not report the number of employees who left employment in 2024 by 11:59 p.m. on January 15, 2025, as required."
+  },
+  {
+    "non_compliance_id": "1022727121",
+    "standard_number_description": "742.403(2) - Liability Insurance Requirements -  Provide Proof of Coverage Annually by Anniversary Date of Listing",
+    "standard_risk_level": "Medium",
+    "narrative": "The primary caregiver failed to provide proof of liability insurance coverage by the anniversary date of the issuance of their permit.",
+    "expected_category": "paperwork_admin",
+    "expected_plain": "The primary caregiver failed to provide proof of liability insurance coverage by the anniversary date of the issuance of their permit."
+  }
+]

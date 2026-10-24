@@ -29,3 +29,5 @@ android/
 # supabase
 supabase/.branches/
 supabase/.temp/
+google-services.json
+GoogleService-Info.plist

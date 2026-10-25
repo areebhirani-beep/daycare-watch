@@ -1,10 +1,35 @@
-# Research: sources and claim map
+# Sources and credits
+
+Two lists: everything the project is built with, as the contest rules ask, and every outside source behind a claim in the README or docs.
+
+## Built with
+
+Every outside library, data source, and service the project uses, as the contest rules ask.
+
+| Part | Open-source libraries (license) |
+|---|---|
+| App | Expo SDK and Expo Router (MIT) · React Native and React Native Web (MIT) · TypeScript (Apache-2.0) · @supabase/supabase-js (MIT) · TanStack Query (MIT) · react-native-maps (MIT) · @gorhom/bottom-sheet (MIT) · Reanimated and Gesture Handler (MIT) · react-native-mmkv (MIT) · react-native-svg (MIT) · qrcode-generator (MIT, the QR beside the web iPhone frame) |
+| Database | PostgreSQL (PostgreSQL License) · PostGIS (GPL-2.0) · pgTAP for tests (PostgreSQL License) |
+| Pipeline | Python 3.12 · httpx (BSD-3) · pydantic (MIT) · psycopg 3 (LGPL-3.0) · structlog (MIT / Apache-2.0) · pytest, ruff, mypy for checks |
+| App tests | Jest and jest-expo (MIT) · React Native Testing Library (MIT) · Maestro flows for the simulator |
+
+| Data or service | Used for |
+|---|---|
+| [data.texas.gov](https://data.texas.gov), Texas HHSC Child Care Regulation | Every daycare, visit, and finding (public open data) |
+| U.S. Census Geocoder and TIGERweb CD119 | Map points for addresses, and the TX-04 boundary (U.S. Government works, not subject to copyright, 17 U.S.C. §105) |
+| Esri World Imagery | Aerial view on the place page, credited on screen |
+| Apple Maps (MapKit) | Map, 3D view, and directions on iPhone |
+| Mapillary (CC BY-SA 4.0) | Street photos, shown only after a person checks the photo shows that daycare, with the photographer credited |
+| OpenStreetMap (ODbL), © OpenStreetMap contributors | Building outlines used once, during the hand review, to find street photos that face a daycare's building. Not shipped in the app |
+| Supabase · GitHub Actions · Expo Push · Vercel | Database hosting · the daily sync · push alerts · the web link |
+
+## Sources and claim map
 
 **Result:** 56 primary or official sources opened on Oct 25 2026, each with the exact URL used. The README's legal, dataset, district, and contest claims hold up, with three exceptions that need new wording before submission. (1) H.R. 2425 does not "line up with" the Texas law on drop-in visits, because it has no drop-in right. (2) "Days to weeks" and "1 to 3 weeks" are not the state's figures. (3) The TX-04 boundary comes from TIGERweb, not TIGER/Line, and "public domain" and "address matched with corrections" are not the Census Bureau's words. Of 111 claims mapped: 81 VERIFIED, 22 WORDING CHANGE NEEDED, 5 NO SOURCE FOUND, and 3 not re-checked today (carried over from `OFFICIAL_SOURCES.md`).
 
 **Applied 13:29 CDT Oct 25 2026:** every WORDING CHANGE NEEDED and NO SOURCE FOUND row below has been applied to `README.md` and `docs/*.md` with the suggested wording. The Esri imagery credit (row for README:376) is fixed in the app too: it now reads "Imagery © Esri, Vantor, Earthstar Geographics", checked against Esri's live service credit. The "Operations update: about 300 to 450 rows a day" figure stays, under a column now headed "What we observed (Oct 2026)".
 
-Line numbers refer to `README.md` as it stood at 13:15 CDT on Oct 25 2026 and to `docs/*.md` at the same time (`QA_MATRIX.md` is skipped). Numbers from our own database cite the dataset IDs; the SQL behind them is documented separately.
+Line numbers refer to the longer `README.md` of Oct 25 2026, 13:15 CDT (commit f0b23f2); its methods, data, and credits sections now live in [`METHODS.md`](METHODS.md) and the Built with list above. They refer to it as it stood at 13:15 CDT on Oct 25 2026 and to `docs/*.md` at the same time (`QA_MATRIX.md` is skipped). Numbers from our own database cite the dataset IDs; the SQL behind them is documented separately.
 
 ## References
 

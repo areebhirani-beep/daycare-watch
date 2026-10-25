@@ -62,7 +62,7 @@
 
 ## 4. The data, measured (Oct 24 to 25 2026)
 
-Every number below is inside TX-04 by map point (PostGIS point-in-polygon against the Census CD119 boundary), not by county. The full tables are in the [README](../README.md#the-data).
+Every number below is inside TX-04 by map point (PostGIS point-in-polygon against the Census TIGERweb CD119 boundary), not by county. The full tables are in [`METHODS.md`](METHODS.md#the-data).
 
 | Fact | Number | What it means for the app |
 |---|---|---|

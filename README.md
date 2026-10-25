@@ -23,7 +23,7 @@ Built for the **2026 Congressional App Challenge, Texas's 4th District**
 
 ## Why we built this
 
-This app is personal to me, because my parents once moved me to a better daycare over things that seemed small at the time, like being made to nap when I was already too old for it. One place the warning signs can show up is in the reports state inspectors write after they visit a daycare, and Texas already makes those reports public, but they sit on a search website that you have to know about and go through one daycare at a time. The app cannot detect or prevent anything that happens at a daycare; what it does is make the reports the state already writes easier for a parent to find, understand, and act on.
+This app is personal to us: one of us was moved to a better daycare as a kid over things that seemed small at the time, like being made to nap when already too old for it. One place the warning signs can show up is in the reports state inspectors write after they visit a daycare, and Texas already makes those reports public, but they sit on a search website that you have to know about and go through one daycare at a time. We know the app cannot detect or prevent anything that happens at a daycare; what it does is make the reports the state already writes easier for a parent to find, understand, and act on.
 
 The app never calls a daycare safe or unsafe, and never scores, grades, or ranks one. It shows what the state found, when, and whether the state has checked the fix.
 
@@ -118,7 +118,7 @@ Every legal, dataset, and district claim was checked against a primary source on
 
 ## Team
 
-Areeb Hirani, Texas's 4th Congressional District.
+Areeb, Parth, Praneel, and Aydin, from Texas's 4th Congressional District.
 
 ## License
 

@@ -44,7 +44,7 @@ jest.mock('expo-router', () => {
   return {
     router: { push: jest.fn(), navigate: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true },
     Stack: { Screen: () => null },
-    useLocalSearchParams: () => ({ id: '1358089' }),
+    useLocalSearchParams: () => ({ id: '1358089', eventId: '17' }),
     useFocusEffect: (cb: () => void) => useEffect(cb, [cb]),
   };
 });
@@ -84,7 +84,14 @@ jest.mock('@/components/ui/Skeletons', () => {
   const { Text } = require('react-native');
   return { RowSkeleton: () => <Text>row skeleton</Text>, PlaceSkeleton: () => <Text>place skeleton</Text> };
 });
-jest.mock('@/components/LastWeek', () => ({ LastWeek: () => null }));
+jest.mock('@/components/LastWeek', () => {
+  const { Text } = require('react-native');
+  return {
+    LastWeek: () => null,
+    VisitRow: ({ visit }: { visit: { display_name: string } }) => <Text>{visit.display_name}</Text>,
+    VisitSkeleton: () => <Text>row skeleton</Text>,
+  };
+});
 jest.mock('@/components/ui', () => {
   const { Text } = require('react-native');
   return { LastChecked: () => null, Button: ({ label }: { label: string }) => <Text>{label}</Text> };
@@ -95,9 +102,11 @@ jest.mock('@/components/ui/Button', () => {
 });
 jest.mock('@/components/ui/Glyph', () => ({ Glyph: () => null }));
 
+import Alert from '../app/alert/[eventId]';
 import Home from '../app/(tabs)/index';
 import Watching from '../app/(tabs)/watching';
 import Place from '../app/daycare/[id]/index';
+import Week from '../app/week';
 
 const HOUR_AGO = Date.now() - 60 * 60_000;
 
@@ -162,5 +171,19 @@ describe('offline, with nothing saved', () => {
     expect(screen.getByText('sheet skeleton')).toBeTruthy();
     expect(screen.queryByText(/^0 daycares/)).toBeNull();
     expect(mockRpc).toHaveBeenCalledWith('daycares_near', { lat: 33.0198, lng: -96.6989, km: 15 });
+  });
+
+  it('the week list says it couldn’t reach the records, never an empty week', async () => {
+    const client = await show(<Week />);
+    await failed(client, ['district_recent_visits', 50]);
+    expect(await screen.findByText('We couldn’t reach the state records. Check your connection.')).toBeTruthy();
+    expect(screen.getByText('Try again')).toBeTruthy();
+  });
+
+  it('an alert that never loaded says so, with Try again', async () => {
+    const client = await show(<Alert />);
+    await failed(client, ['alert_detail', 17]);
+    expect(await screen.findByText('We couldn’t load this alert.')).toBeTruthy();
+    expect(screen.getByText('Try again')).toBeTruthy();
   });
 });

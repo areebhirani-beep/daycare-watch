@@ -267,6 +267,39 @@ Past 2 years
 | 4 | `alerts.tsx` | "Turn on alerts." + "Only for daycares you watch, and only when the state posts something new." A lock-screen panel (flyover wallpaper, live time) with the banner arriving. Then the OS prompt on "Turn on alerts"; "Not now" always works |
 | 5 | `done.tsx` | The check draws once: "You're watching <name>." and one line on what happens next |
 
+### Web (the judges' link): one app, three widths
+
+Phone web is the app. From 768 px wide it becomes a map with a panel, the Google Maps / Zillow pattern. One breakpoint hook (`useLayout()` → `{ mode: 'phone' | 'split', panel: number }`) decides; screens are not duplicated, they render inside the panel.
+
+```
+≥ 1024 px                                                     768–1023 px: same, panel 360
+┌──────────────────────┬──────────────────────────────────────────────┐
+│ ◎ Daycare Watch      │                                    [+]      │
+│ (Find|Watching|Rights)│              live map, pins,               [−]      │
+│ [ Search daycares… ] │              clusters                       [◎]      │
+│ [Centers][Homes][TX-04]                                                    │
+│ Daycares near you    │        ● ● (2)    ◉ selected pin                     │
+│ ┌───┐ Name           │                                                     │
+│ │img│ Center · 0.3 mi│                                                     │
+│ └───┘ No problems…   │                                                     │
+│ …panel scrolls…      │                      © OpenStreetMap · OpenFreeMap  │
+└──────────────────────┴──────────────────────────────────────────────┘
+   panel 420, full height                 map fills the rest
+```
+
+| Rule | Spec |
+|---|---|
+| Breakpoints | < 768: phone web, exactly the app (full width, no black column). 768–1023: split, panel 360. ≥ 1024: split, panel 420. No layout change above 1024; the map just grows |
+| Panel | Full height, left edge, `surface` (dark: `#1C1C1E`), hairline right border + `float` shadow on the map side. Scrolls on its own; the map never scrolls with it. Content keeps the phone type scale (no upscaling) with 16 pt gutters |
+| Panel head (sticky) | Brand row: `AppMark` 28 + "Daycare Watch" `headline`, 56 tall. Then a segmented control Find · Watching · Your rights (36 tall, `sunken` track, white selected thumb, `subhead`). Then the search pill (the phone's, not floating). On Find, the filter chips sit under it |
+| Find list | `PlaceRow`s (56 pt aerial thumb, name, meta, record line), not the horizontal cards. Header "Daycares near you" + "Closest first" detail. Hovering a row selects its pin on the map (selected pin, zIndex 10); hovering a pin highlights its row (`sunken` background) and scrolls it into view only if it is off screen |
+| Map | maplibre-gl. Light: OpenFreeMap positron. Dark: Esri World Dark Gray Canvas. Our `MapPin` / `AreaPin` / `ClusterBubble` exactly as on the phone, same zIndex layering. Controls bottom-right: zoom +/−, locate, 40 pt round, `float` elevation, 8 pt apart, 16 from the edges. Attribution bottom-right under the controls. Scroll-wheel zoom on; the map fits the visible results on first load |
+| Place page | Clicking a row or a pin opens the place page **in the panel** (slide 24 pt + fade, 200 ms), URL becomes `/daycare/<id>`, the map eases to the pin (zoom ≥ 16, 400 ms) and keeps it selected. Panel head becomes a back arrow + the name (`headline`, one line); back (arrow, browser back, Esc) returns to the list at its scroll position. Carousel 420 × 260 (§9) with hover arrows. The Watch bar is sticky at the panel bottom, panel width, not page width |
+| Other routes | `/rights`, `/watching`, `/search?q=` render in the panel with the map still live. `/daycare/<id>` opened cold opens the place directly, **no onboarding** |
+| Onboarding ≥ 768 | Full-bleed aerial of the example center as the page background, 20% black over it, and the onboarding step in a centred card: 480 wide, up to 860 tall (window − 64), radius 28, the page background, `float` elevation; each step renders inside it at its phone padding, progress bar on top, the same chunky buttons. Step 1's hero fills the card. The phone's full-screen hero is never stretched to a desktop |
+| Hover and focus | Rows and cards: `sunken` background on hover, pointer cursor. Every control shows a 2 pt `text`-colour focus ring, 2 pt offset, on keyboard focus only. `/` focuses search. Tab order: panel head → list → map controls |
+| Never | A phone-width column on a black page; text wider than the panel; a second scrollbar on the page itself; horizontal page scroll at any width |
+
 ## 12. Rules and anti-patterns
 
 - Never a grade, score, star, rank, or traffic-light color. No green anywhere on a record.
@@ -293,6 +326,7 @@ Past 2 years
 ### Change log after the freeze
 | Date | Change | Why |
 |---|---|---|
+| Oct 25 12:29 | Web ≥ 768 px is a map with a 420 px panel (360 on tablets); onboarding becomes a centred card | Owner: desktop must not be a phone column; judges open the link on laptops |
 | Oct 25 12:28 | Carousel = up to 2 verified street photos of the building, then ONE overhead; Street View tile cut | Owner: "2 pics of the building itself, then the satellite view", not three satellite angles |
 | Oct 25 06:20 | At ≥1.6× text, a history row stacks the date over its status | Dates truncated to "J…" at the largest size |
 | Oct 25 05:45 | The Home map is one VoiceOver element pointing to the list | The maps library reads every custom pin as "Map pin"; the list carries the same daycares with their records |

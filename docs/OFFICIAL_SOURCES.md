@@ -67,7 +67,7 @@ Every phone number, URL, and legal claim shown in the app must trace to a row he
 
 | Claim | Exact value | Source URL | Verbatim quote | Verified (Oct 24 2026) |
 |---|---|---|---|---|
-| Official public record URL format | `https://childcare.hhs.texas.gov/Public/OperationDetails?operationId=<operation_id>` | https://childcare.hhs.texas.gov/Public/OperationDetails?operationId=1199180 | The page rendered the record for operation 1199180 (Registered Child-Care Home, Plano, Collin County), matching data.texas.gov `bc5r-88dy` `operation_id` | Yes |
+| Official public record URL format | `https://childcare.hhs.texas.gov/Public/OperationDetails?operationId=<operation_id>` | https://childcare.hhs.texas.gov/Public/OperationDetails?operationId=1459611 | The page rendered the record for operation 1459611 (Viva World School, Licensed Center, Rockwall; operation number 1785179), matching data.texas.gov `bc5r-88dy` `operation_id` and `operation_number`. Checked Oct 25 2026. A Licensed Center is used as the example so this repo never points at a private home | Yes |
 | The site's own links use this format | The site's code builds `/Public/operationDetails?operationId=` + id (lowercase "o"); both spellings render | childcare.hhs.texas.gov public JS bundle | `Public_Operation_Deatils:"/Public/operationDetails"` | Yes |
 | Five-year history | Compliance history covers 5 years | same OperationDetails page | "CCR provides inspection and compliance history over a five-year period." | Yes |
 | Due-process lag | Violations appear only after due process | same OperationDetails page | "does not include minimum standard violations or corrective or adverse actions until after the child-care operation has had due process" | Yes |

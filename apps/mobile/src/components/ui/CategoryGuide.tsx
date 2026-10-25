@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { categoryLabel } from '@/lib/format';
-import { space, useColors } from '@/theme';
+import { elevation, space, useColors } from '@/theme';
 
 import { CATEGORY_MEANING, CATEGORY_ORDER, CategoryIcon } from './CategoryIcon';
 import { Text } from './Text';
@@ -22,7 +22,7 @@ export function CategoryGuide() {
           Every problem the state cites is under a rule, and we group the rules into nine kinds. The color only tells the kinds apart. It never means better or worse.
         </Text>
       </View>
-      <View style={[styles.card, { backgroundColor: c.surface }]}>
+      <View style={[styles.card, elevation.card, { backgroundColor: c.surface }]}>
         {CATEGORY_ORDER.map((k, i) => (
           <View
             key={k}

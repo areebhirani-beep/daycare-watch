@@ -96,13 +96,13 @@ export function fixedLabel(
   f: Pick<Finding, 'corrected_at_inspection' | 'corrected_date' | 'verified_date' | 'date'>,
   now: Date = new Date(),
 ): string {
-  if (f.corrected_at_inspection) return 'Corrected during the inspection';
-  if (f.verified_date) return `State verified the fix ${formatDateShort(f.verified_date, f.date)}`;
+  if (f.corrected_at_inspection) return 'Fixed during the visit';
+  if (f.verified_date) return `Fixed · the state checked ${formatDateShort(f.verified_date, f.date)}`;
   if (f.corrected_date) {
     const when = formatDateShort(f.corrected_date, f.date);
     return f.corrected_date.slice(0, 10) >= todayIso(now)
-      ? `Fix due ${when} · not yet verified by the state`
-      : `Fix date listed ${when} · not yet verified by the state`;
+      ? `Fix due ${when} · no state check on record yet`
+      : `Fix date was ${when} · no state check on record yet`;
   }
   return 'No fix date on record';
 }

@@ -38,8 +38,8 @@ export function RightCard({
         <Glyph name={icon} size={18} color={c.text} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
-        <Text variant="headline">{title}</Text>
-        <Text variant="footnote" tone="secondary">
+        <Text variant="subhead">{title}</Text>
+        <Text variant="callout" tone="secondary">
           {detail}
         </Text>
       </View>

@@ -48,7 +48,8 @@ export function Glyph({
   const c = useColors();
   return (
     <SymbolView
-      name={GLYPHS[name] as SymbolViewProps['name']}
+      // Web reads `.web`; Material Symbols ships with the web build, so it reuses the Android names.
+      name={{ ...GLYPHS[name], web: GLYPHS[name].android } as SymbolViewProps['name']}
       size={size}
       tintColor={color ?? c.text}
       weight={weight}

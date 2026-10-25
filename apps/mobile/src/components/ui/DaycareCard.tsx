@@ -3,10 +3,36 @@ import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 import { imageryAllowed } from '@/lib/imagery';
 import { haptic, radius, space, useColors } from '@/theme';
 
+import { formatDateShort, plural } from '@/lib/format';
+
 import { Glyph } from './Glyph';
 import { MapSnapshot } from './MapSnapshot';
-import { RecordStrip, type StripVisit } from './RecordStrip';
+import type { StripVisit } from './RecordStrip';
 import { Text } from './Text';
+
+/**
+ * The card's record in words (hierarchy rule 4: content is the chart): what the state found at its most
+ * recent visit. "3 problems found Oct 5 · 1 serious", "No problems cited Oct 5".
+ */
+export function recordLine(visits: StripVisit[]): { text: string; found: boolean } {
+  const last = visits.reduce<StripVisit | null>((a, b) => (!a || b.date > a.date ? b : a), null);
+  if (!last) return { text: 'No state visits posted in 2 years', found: false };
+  const when = formatDateShort(last.date, new Date().toISOString().slice(0, 10));
+  const n = last.marks.length;
+  if (n === 0) return { text: `No problems cited ${when}`, found: false };
+  const serious = last.marks.filter((m) => m.rank === 5).length;
+  return { text: `${plural(n, 'problem')} found ${when}${serious > 0 ? ` · ${serious} serious` : ''}`, found: true };
+}
+
+function RecordLine({ strip, fallback }: { strip?: StripVisit[] | null; fallback?: string }) {
+  const line = strip ? recordLine(strip) : fallback ? { text: fallback, found: false } : null;
+  if (!line) return null;
+  return (
+    <Text variant="subhead" tone={line.found ? 'primary' : 'secondary'} numberOfLines={1} tabular>
+      {line.text}
+    </Text>
+  );
+}
 
 type Common = {
   name: string;
@@ -43,7 +69,7 @@ function WatchToggle({ watched, onPress, onImage }: { watched?: boolean; onPress
   );
 }
 
-/** DoorDash store card: a real map of the place on top, bold name, one meta line, the record strip. */
+/** DoorDash store card: a real map of the place on top, bold name, one meta line, the record in words. */
 export function DaycareCard({
   name,
   meta,
@@ -85,20 +111,14 @@ export function DaycareCard({
           {meta}
         </Text>
         <View style={styles.strip}>
-          {strip ? (
-            <RecordStrip visits={strip} variant="compact" />
-          ) : fallback ? (
-            <Text variant="footnote" tone="secondary" tabular>
-              {fallback}
-            </Text>
-          ) : null}
+          <RecordLine strip={strip} fallback={fallback} />
         </View>
       </View>
     </Pressable>
   );
 }
 
-/** Dense list row (DoorDash list density): 64 map thumb, name, meta, strip, bell. */
+/** Dense list row (DoorDash list density): 64 map thumb, name, meta, the record in words, bell. */
 export function PlaceRow({
   name,
   meta,
@@ -147,15 +167,9 @@ export function PlaceRow({
         <Text variant="footnote" tone="secondary" numberOfLines={1} tabular>
           {meta}
         </Text>
-        {strip ? (
-          <View style={{ marginTop: 6 }}>
-            <RecordStrip visits={strip} variant="compact" />
-          </View>
-        ) : fallback ? (
-          <Text variant="footnote" tone="secondary" tabular>
-            {fallback}
-          </Text>
-        ) : null}
+        <View style={{ marginTop: 2 }}>
+          <RecordLine strip={strip} fallback={fallback} />
+        </View>
       </View>
       {onToggleWatch ? <WatchToggle watched={watched} onPress={onToggleWatch} /> : null}
       {selected !== undefined ? (
@@ -179,7 +193,7 @@ const styles = StyleSheet.create({
   hero: { aspectRatio: 2, borderRadius: radius.thumb, overflow: 'hidden' },
   heroToggle: { position: 'absolute', top: 10, right: 10 },
   body: { paddingTop: space.sm + 2, gap: 2 },
-  strip: { marginTop: space.sm, minHeight: 20, justifyContent: 'flex-end' },
+  strip: { marginTop: space.xs },
   toggle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   row: {
     minHeight: 88,

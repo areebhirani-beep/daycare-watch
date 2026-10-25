@@ -235,7 +235,7 @@ export function ActionTile({ icon, label, onPress }: { icon: GlyphName; label: s
       style={({ pressed }) => [styles.tile, { backgroundColor: c.sunken, transform: [{ scale: pressed ? 0.96 : 1 }] }]}
     >
       <Glyph name={icon} size={20} color={c.text} weight="semibold" />
-      <Text variant="footnote" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85} maxFontSizeMultiplier={1.4} style={{ fontWeight: '600' }}>
+      <Text variant="subhead" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} maxFontSizeMultiplier={1.4}>
         {label}
       </Text>
     </Pressable>

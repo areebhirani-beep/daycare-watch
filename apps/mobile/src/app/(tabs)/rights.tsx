@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ActionPill } from '@/components/ui/Chrome';
@@ -10,6 +10,7 @@ import { RightCard } from '@/components/ui/RightCard';
 import { Text } from '@/components/ui/Text';
 import { useDaycareRecord } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
+import { shareText } from '@/lib/share';
 import { FEDERAL_NOTE, LAW_CITE, LAW_NAME, LAW_URL, lawCovers, NOT_COVERED, requestText, type RequestKind, RIGHTS } from '@/lib/rights';
 import { radius, space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
 
@@ -38,7 +39,7 @@ export default function RightsScreen() {
   function run(action: Action) {
     if ('request' in action) {
       const { subject, body } = requestText(action.request, daycare);
-      void Share.share({ title: subject, message: body }, { subject });
+      shareText(subject, body);
     } else if ('route' in action) {
       router.push(action.route);
     } else {

@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { LoadError } from '@/components/LoadError';
 import { Button } from '@/components/ui/Button';
@@ -8,6 +8,7 @@ import { PlaceSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useDaycareRecord } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
+import { shareText } from '@/lib/share';
 import { buildTourQuestions } from '@/lib/tour';
 import { radius, space, useColors } from '@/theme';
 
@@ -70,9 +71,10 @@ export default function TourScreen() {
           icon="share"
           style={{ flex: 1 }}
           onPress={() =>
-            void Share.share({
-              message: [`Questions for ${name}`, '', ...questions.map((q, i) => `${i + 1}. ${q.question}${q.followUp ? ` ${q.followUp}` : ''}`)].join('\n'),
-            })
+            shareText(
+              `Questions for ${name}`,
+              [`Questions for ${name}`, '', ...questions.map((q, i) => `${i + 1}. ${q.question}${q.followUp ? ` ${q.followUp}` : ''}`)].join('\n'),
+            )
           }
         />
       </StickyBar>

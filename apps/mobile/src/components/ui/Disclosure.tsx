@@ -27,9 +27,9 @@ export function Disclosure({ title, detail, children }: { title: string; detail?
         style={({ pressed }) => [styles.row, { borderColor: c.hairline }, pressed && { opacity: 0.6 }]}
       >
         <View style={{ flex: 1 }}>
-          <Text variant="headline">{title}</Text>
+          <Text variant="subhead">{title}</Text>
           {detail && !open ? (
-            <Text variant="footnote" tone="secondary" numberOfLines={1}>
+            <Text variant="callout" tone="secondary" numberOfLines={1}>
               {detail}
             </Text>
           ) : null}

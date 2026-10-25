@@ -1,7 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
 import * as WebBrowser from 'expo-web-browser';
-import { Linking, Platform, Share, View } from 'react-native';
+import { Linking, Platform, View } from 'react-native';
 
 import { Button, LastChecked } from '@/components/ui';
 import { PlacePage, type RequestKind } from '@/components/ui/PlacePage';
@@ -10,6 +10,7 @@ import { Text } from '@/components/ui/Text';
 import { useAreaCompare, useDaycareRecord, useIsWatching, useSetWatch } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
 import { since } from '@/lib/perf';
+import { shareText } from '@/lib/share';
 import { appleMapsUrl, directionsAddress, googleMapsUrl } from '@/lib/maps';
 import { LAW_CITE, requestText } from '@/lib/rights';
 import { space, useColors } from '@/theme';
@@ -60,7 +61,7 @@ export default function DaycareRecordScreen() {
         onWatch={() => router.push(`/daycare/${operationId}/watch`)}
         onUnwatch={() => setWatch.mutate(false)}
         onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-        onShare={() => void Share.share({ message: `${name}: Texas state inspection record ${official_url}` })}
+        onShare={() => shareText(`${name}: Texas state inspection record`, `${name}: Texas state inspection record ${official_url}`)}
         onDirections={openMaps(Platform.OS === 'ios' ? appleMapsUrl : googleMapsUrl) ?? (() => undefined)}
         onOpenAppleMaps={openMaps(appleMapsUrl)}
         onOpenGoogleMaps={openMaps(googleMapsUrl)}
@@ -68,7 +69,7 @@ export default function DaycareRecordScreen() {
         onTour={() => router.push(`/daycare/${operationId}/tour`)}
         onRequest={(kind: RequestKind) => {
           const { subject, body } = requestText(kind, name);
-          void Share.share({ title: subject, message: body }, { subject });
+          shareText(subject, body);
         }}
         lawCite={LAW_CITE}
         footer={<LastChecked fallback={last_checked_at} />}

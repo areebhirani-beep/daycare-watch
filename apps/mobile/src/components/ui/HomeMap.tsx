@@ -38,20 +38,26 @@ export function rowMeta(r: DaycareRow, today = new Date().toISOString().slice(0,
   const parts = [SHORT_TYPE[r.operation_type] ?? r.operation_type];
   if (typeof r.distance_km === 'number') parts.push(`${(r.distance_km * 0.621371).toFixed(1)} mi`);
   else if (r.city) parts.push(tidyCase(r.city));
-  if (r.last_inspection_date) parts.push(`Visited ${formatDateShort(r.last_inspection_date, today)}`);
+  // With a per-visit summary the card's own line carries the date ("3 problems found Oct 5").
+  if (r.last_inspection_date && !r.visits_24mo?.length) parts.push(`Visited ${formatDateShort(r.last_inspection_date, today)}`);
   return parts.join(' · ');
 }
 
-export function rowFallback(r: DaycareRow): string {
+export function rowFallback(r: DaycareRow, today = new Date().toISOString().slice(0, 10)): string {
   const n = r.findings_24mo ?? 0;
-  return n === 0 ? 'No findings posted in 24 months' : `${plural(n, 'finding')} in 24 months`;
+  if (n > 0) return `${plural(n, 'problem')} posted in 2 years`;
+  // "No problems" only when the state visited; with no visit there is nothing to report either way.
+  const cutoff = `${Number(today.slice(0, 4)) - 2}${today.slice(4)}`;
+  const visited = (r.visits_24mo?.length ?? 0) > 0 || (r.last_inspection_date != null && r.last_inspection_date >= cutoff);
+  return visited ? 'No problems posted in 2 years' : 'No state visits posted in 2 years';
 }
 
 /** The compact strip for a row, when the RPC carries `visits_24mo`. */
 export function rowStrip(r: DaycareRow) {
   // Cloud returns the field only after its next migration, so treat it as optional until then.
   const v: RowVisit[] | undefined = r.visits_24mo;
-  return v && v.length > 0 ? stripFromRow(v) : null;
+  // An empty list is a real answer (no visits in 24 months), so only a missing field falls back.
+  return v ? stripFromRow(v) : null;
 }
 
 function matches(r: DaycareRow, f: Set<Filter>): boolean {

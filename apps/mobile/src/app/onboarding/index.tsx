@@ -1,34 +1,43 @@
 import { router } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 
 import { AppMark } from '@/components/ui/AppMark';
 import { Button } from '@/components/ui/Button';
+import { shortStatus } from '@/components/ui/FindingCard';
 import { EXAMPLE_OPERATION_ID, markOnboarded } from '@/components/ui/onboarding';
 import { OnboardingFrame } from '@/components/ui/OnboardingFrame';
-import { RecordStrip, StripSkeleton, type StripVisit, stripFromRecord } from '@/components/ui/RecordStrip';
+import { byWeight, visitAnswer } from '@/components/ui/PlacePage';
+import { Block } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useDaycareRecord } from '@/lib/api';
-import { tidyCase } from '@/lib/format';
+import { formatDateShort, tidyCase } from '@/lib/format';
+import { groupByVisit } from '@/lib/record';
 import { radius, space, useColors } from '@/theme';
 
 // Point-in-polygon count against the CD119 boundary (CONTRACT 3, decision log Oct 24 6:25 pm).
 // Always "at least": daycares without a map point are not counted.
 const TX04_DAYCARES_AT_LEAST = 379;
 
-function within(visits: StripVisit[], months: number, now = new Date()): StripVisit[] {
-  const cutoff = new Date(now.getFullYear(), now.getMonth() - months, now.getDate()).toISOString().slice(0, 10);
-  return visits.filter((v) => v.date >= cutoff);
-}
-
 const rise = (i: number) => FadeInDown.delay(120 + i * 90).duration(360).reduceMotion(ReduceMotion.System);
 
+/**
+ * Step 1: what the app does for a parent, shown on one real daycare's record. Three sizes: 34 (the
+ * promise), 17 (the example and the lockup), 15 (grey meta).
+ */
 export default function WhyScreen() {
   const c = useColors();
   const record = useDaycareRecord(EXAMPLE_OPERATION_ID);
-  const visits = useMemo(() => (record.data ? within(stripFromRecord(record.data), 24) : []), [record.data]);
-  const city = record.data?.daycare.city ? tidyCase(record.data.daycare.city) : 'Rockwall';
+  const [today] = useState(() => new Date().toISOString().slice(0, 10));
+  const example = useMemo(() => {
+    if (!record.data) return null;
+    const cutoff = new Date(new Date(today).getFullYear() - 2, new Date(today).getMonth(), 1).toISOString().slice(0, 10);
+    const visits = groupByVisit(record.data).filter((v) => v.date >= cutoff);
+    const last = visits[0];
+    const top = last ? [...last.findings].sort(byWeight)[0] : undefined;
+    return { answer: visitAnswer(last, today), top, name: tidyCase(record.data.daycare.name), city: tidyCase(record.data.daycare.city) };
+  }, [record.data, today]);
 
   return (
     <OnboardingFrame
@@ -39,7 +48,7 @@ export default function WhyScreen() {
       }}
       actions={<Button label="Find your daycare" kind="ink" onPress={() => router.push('/onboarding/find')} />}
     >
-      <Animated.View entering={rise(0)} style={{ gap: space.lg }}>
+      <Animated.View entering={rise(0)} style={{ gap: space.xl }}>
         <View style={styles.lockup}>
           <AppMark width={52} />
           <Text variant="headline">Daycare Watch</Text>
@@ -55,37 +64,38 @@ export default function WhyScreen() {
       </Animated.View>
 
       <Animated.View entering={rise(1)} style={[styles.card, { backgroundColor: c.sunken }]}>
-        <Text variant="footnote" tone="secondary">
-          Daycares in Texas’s 4th District
+        <Text variant="callout" tone="secondary">
+          {example ? `A real example: ${example.name}, ${example.city}` : 'A real example from the state record'}
         </Text>
-        <View style={styles.numeralRow}>
-          <Text variant="footnote" tone="secondary" style={styles.atLeast}>
-            at least
-          </Text>
-          <Text variant="numeral" accessibilityLabel={`At least ${TX04_DAYCARES_AT_LEAST}`}>
-            {String(TX04_DAYCARES_AT_LEAST)}
-          </Text>
-        </View>
-        <Text variant="footnote" tone="tertiary">
-          Each one is inspected by the state every few months.
-        </Text>
+        {example ? (
+          <>
+            <Text variant="headline">{example.answer.headline}</Text>
+            {example.top?.plain ? <Text variant="body">{`“${example.top.plain}”`}</Text> : null}
+            {example.top ? (
+              <Text variant="callout" tone="secondary" tabular>
+                {`${formatDateShort(example.top.date, today)} · ${shortStatus(example.top)}`}
+              </Text>
+            ) : null}
+          </>
+        ) : (
+          <View style={{ gap: space.sm }}>
+            <Block style={{ height: 22, width: '80%' }} />
+            <Block style={{ height: 20, width: '95%' }} />
+            <Block style={{ height: 18, width: '40%' }} />
+          </View>
+        )}
       </Animated.View>
 
-      <Animated.View entering={rise(2)} style={[styles.card, { backgroundColor: c.sunken }]}>
-        <Text variant="footnote" tone="secondary">
-          {`A licensed center in ${city} · last 24 months`}
+      <Animated.View entering={rise(2)}>
+        <Text variant="callout" tone="secondary" tabular>
+          {`Covers at least ${TX04_DAYCARES_AT_LEAST} daycares in Texas’s 4th District, straight from data.texas.gov.`}
         </Text>
-        <View style={{ marginTop: space.md }}>
-          {record.data ? <RecordStrip visits={visits} variant="hero" /> : <StripSkeleton />}
-        </View>
       </Animated.View>
     </OnboardingFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.stat, padding: space.lg, gap: space.xs },
-  numeralRow: { flexDirection: 'row', alignItems: 'flex-end', gap: space.sm },
-  atLeast: { paddingBottom: 10 },
+  card: { borderRadius: radius.card, padding: space.lg, gap: space.sm },
   lockup: { flexDirection: 'row', alignItems: 'center', gap: space.md },
 });

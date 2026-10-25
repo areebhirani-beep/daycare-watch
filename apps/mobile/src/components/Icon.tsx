@@ -36,7 +36,8 @@ export function Icon({
   const c = useColors();
   return (
     <SymbolView
-      name={ICONS[name] as SymbolViewProps['name']}
+      // expo-symbols on web reads a 'web' key; it takes the Material names.
+      name={{ ...ICONS[name], web: ICONS[name].android } as SymbolViewProps['name']}
       size={size}
       tintColor={color ?? c.textSecondary}
       weight={weight}

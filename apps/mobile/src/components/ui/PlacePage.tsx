@@ -17,41 +17,34 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  agesLabel,
-  daysLabel,
-  formatDate,
-  hoursLabel,
-  operationTypeLabel,
-  plural,
-  tidyCase,
-} from '@/lib/format';
-import { groupByVisit, summarize, visibleVisits, visitTypeLabel } from '@/lib/record';
+import { agesLabel, daysLabel, formatDate, formatDateShort, hoursLabel, isFixed, operationTypeLabel, plural, tidyCase } from '@/lib/format';
+import { groupByVisit, type Visit, visitTypeLabel } from '@/lib/record';
 import { imageryAllowed } from '@/lib/imagery';
 import { placeAddress } from '@/lib/maps';
 import { buildTourQuestions } from '@/lib/tour';
 import { lawCovers, NOT_COVERED, REQUEST_CARDS, type RequestKind } from '@/lib/rights';
-import type { AreaCompare, DaycareRecord } from '@/lib/types';
+import type { AreaCompare, DaycareRecord, Finding } from '@/lib/types';
 import { haptic, radius, riskRank, space, spring, useColors } from '@/theme';
 
 import { Button } from './Button';
 import { FactChips } from './Chip';
 import { ActionTile, IconButton, SquareButton, StickyBar } from './Chrome';
-import { FindingCard } from './FindingCard';
+import { FindingCard, SeriousTag } from './FindingCard';
 import { Glyph, type GlyphName } from './Glyph';
 import { Disclosure } from './Disclosure';
 import { MapSnapshot } from './MapSnapshot';
-import { RingCard } from './NumberCard';
 import { type GeocodeQuality, PlaceGallery } from './PlaceGallery';
-import { RecordStrip, stripFromRecord } from './RecordStrip';
 import { RightCard } from './RightCard';
+import { latestOpen, plainStatus, shortStatus, visitStatus } from './status';
 import { Tabs } from './Tabs';
 import { Text } from './Text';
 
 /**
  * The place page (googlemaps place sheet + doordash-3 store page + uber-3 sticky CTA, harness/state/refs).
- * Map hero, huge name, then the record itself (days since the last visit, the visit rail, one sentence),
- * fact chips, action tiles, tabs. Tour questions lead Overview.
+ * It answers one question first: what did the state find here? Map hero, name, the answer in one sentence,
+ * the top two problems in the state's own words, then chips, tiles and tabs. Overview holds the past two
+ * years as one row per visit (Apple Weather's 10-day list) and the tour questions.
+ * Three type sizes: 28 (the answer), 22 (name, section titles), 15 (everything else, grey for meta).
  * Data and navigation come in as props.
  */
 
@@ -59,6 +52,7 @@ export type { RequestKind };
 type Tab = 'overview' | 'findings' | 'rights';
 
 const HERO = 236;
+const MONTHS = 24;
 
 type Props = {
   record: DaycareRecord;
@@ -81,6 +75,16 @@ type Props = {
   /** "Last checked with the state …" (CONTRACT 3). */
   footer: ReactNode;
 };
+
+function isoDay(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Highest-risk first, then newest. */
+export function byWeight(a: Finding, b: Finding): number {
+  return riskRank[b.risk_level] - riskRank[a.risk_level] || (b.date ?? '').localeCompare(a.date ?? '');
+}
+
 
 export function PlacePage({
   record,
@@ -106,11 +110,11 @@ export function PlacePage({
   const hasPoint = typeof record.daycare.lat === 'number' && typeof record.daycare.lng === 'number';
   // No map location in the state record: a short band, not an empty map that pretends to be one.
   const heroH = hasPoint ? HERO : 72;
-  // Past the photo, a solid bar with the name fades in and the status bar turns dark (Apple Maps place card).
+  // Past the photo, a bar with the name fades in over a dimmed slice of the map (Apple Maps place card).
   const y = useSharedValue(0);
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const [solid, setSolid] = useState(false);
-  // The bar's slim aerial only loads once the reader scrolls toward it (tiles load on view).
+  // The bar's slim map only loads once the reader scrolls toward it (tiles load on view).
   const [barImage, setBarImage] = useState(false);
   const onScroll = useAnimatedScrollHandler((e) => {
     y.value = e.contentOffset.y;
@@ -127,10 +131,9 @@ export function PlacePage({
       if (now) runOnJS(setBarImage)(true);
     },
   );
-  // The bar is fully solid before the large title reaches it, and the large title fades as it passes under,
-  // so the two names never overlap (Apple's large-title collapse).
+  // The bar is fully in before the name reaches it, and the name fades as it passes under (large-title collapse).
   const barStyle = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [heroH - 110, heroH - 50], [0, 1], 'clamp') }));
-  const nameStyle = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [heroH - 60, heroH + 10], [1, 0], 'clamp') }));
+  const nameStyle = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [heroH - 40, heroH + 10], [1, 0], 'clamp') }));
 
   // Watch confirm: success haptic and a spring pop the moment watching turns on.
   const pop = useSharedValue(1);
@@ -143,14 +146,21 @@ export function PlacePage({
     wasWatching.current = watching;
   }, [watching, pop]);
   const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
-  const { daycare } = record;
-  const s = summarize(record);
-  const strip = stripFromRecord(record);
-  const { shown } = visibleVisits(groupByVisit(record));
-  const findingVisits = shown.filter((v) => v.status === 'findings');
-  const verified = s.findings - s.notFixed;
 
-  // First view: three facts a parent decides on (DESIGN.md §9). The rest sits in "More details".
+  const { daycare } = record;
+  // Today and the 24-month cutoff are read once per mount, so render stays pure.
+  const [today] = useState(() => isoDay(new Date()));
+  const [cutoff] = useState(() => {
+    const d = new Date();
+    return isoDay(new Date(d.getFullYear(), d.getMonth() - MONTHS, d.getDate()));
+  });
+  const visits = useMemo(() => groupByVisit(record).filter((v) => v.date >= cutoff), [record, cutoff]);
+  const problems = useMemo(() => record.findings.filter((f) => f.date !== null && f.date >= cutoff), [record.findings, cutoff]);
+  const top = useMemo(() => [...problems].sort(byWeight).slice(0, 2), [problems]);
+  const findingVisits = visits.filter((v) => v.status === 'findings');
+  const last = visits[0];
+
+  // Three facts a parent decides on (DESIGN.md §9). The rest sits in "More details".
   const facts: { icon: GlyphName; label: string; a11y: string }[] = [];
   const typeLabel = operationTypeLabel(daycare.operation_type);
   facts.push({ icon: daycare.operation_type === 'Licensed Center' ? 'center' : 'home', label: typeLabel, a11y: typeLabel });
@@ -182,14 +192,21 @@ export function PlacePage({
     .join(' · ');
   const tour = useMemo(() => buildTourQuestions(record.findings).slice(0, 2), [record.findings]);
 
-  // Tapping a visit on the rail opens Findings scrolled to that visit.
+  // "See all" and a tap on a past visit open Problems, scrolled to the tabs or to that visit.
   const bodyTop = useRef(0);
-  const [target, setTarget] = useState<string | number | null>(null);
-  const jumpTo = (id: string | number) => {
+  const [target, setTarget] = useState<number | null>(null);
+  const toTabs = () => scrollRef.current?.scrollTo({ y: Math.max(0, bodyTop.current - insets.top - 56 - 48), animated: true });
+  const seeAll = () => {
+    haptic.select();
+    setTab('findings');
+    toTabs();
+  };
+  const jumpTo = (id: number) => {
+    haptic.select();
     setTab('findings');
     setTarget(id);
   };
-  const onVisitLayout = (id: string | number) => (e: LayoutChangeEvent) => {
+  const onVisitLayout = (id: number) => (e: LayoutChangeEvent) => {
     if (id !== target) return;
     scrollRef.current?.scrollTo({ y: Math.max(0, bodyTop.current + e.nativeEvent.layout.y - insets.top - 56 - space.md), animated: true });
     setTarget(null);
@@ -197,7 +214,7 @@ export function PlacePage({
 
   return (
     <View style={{ flex: 1, backgroundColor: c.surface }}>
-      {/* Light status-bar text over the aerial photo and the dimmed header; the street maps follow the theme. */}
+      {/* Light status-bar text over the aerial photo and the dimmed bar; the street maps follow the theme. */}
       <StatusBar style={(solid ? hasPoint : aerial) ? 'light' : 'auto'} />
       <Animated.ScrollView ref={scrollRef} contentContainerStyle={{ paddingBottom: space.section }} onScroll={onScroll} scrollEventThrottle={16}>
         <PlaceGallery
@@ -211,14 +228,12 @@ export function PlacePage({
         />
 
         <View style={[styles.head, { backgroundColor: c.surface }]}>
-          <Animated.View style={nameStyle}>
-            <Text variant="display" accessibilityRole="header">
-              {tidyCase(daycare.name)}
+          <Animated.View style={[{ gap: space.xxs }, nameStyle]}>
+            <Text variant="title">{tidyCase(daycare.name)}</Text>
+            <Text variant="callout" tone="secondary" selectable>
+              {address}
             </Text>
           </Animated.View>
-          <Text variant="callout" tone="secondary" selectable>
-            {address}
-          </Text>
           {notes.length > 0 ? (
             <View style={[styles.notes, { backgroundColor: c.sunken }]}>
               {notes.map((n) => (
@@ -228,11 +243,19 @@ export function PlacePage({
               ))}
             </View>
           ) : null}
-          <View style={styles.record}>
-            <HeroFact lastVisit={s.lastVisit} visits={s.visits} months={s.months} />
-            <RecordStrip visits={strip} variant="hero" months={s.months} onPressVisit={jumpTo} />
-            <RecordLine s={s} area={area} />
-          </View>
+
+          <Answer last={last} today={today} />
+          {top.length > 0 ? (
+            <TopProblems
+              items={top}
+              total={problems.length}
+              today={today}
+              onSeeAll={seeAll}
+              // When the latest visit was clean, the problems shown come from earlier visits: say so.
+              label={last && last.findings.length === 0 ? 'Earlier in the past 2 years' : null}
+            />
+          ) : null}
+
           <FactChips facts={facts} />
           <View style={styles.tiles}>
             {privateHome ? null : onOpenAppleMaps && onOpenGoogleMaps ? (
@@ -256,7 +279,7 @@ export function PlacePage({
           <Tabs
             tabs={[
               { key: 'overview', label: 'Overview' },
-              { key: 'findings', label: s.findings > 0 ? `Findings ${s.findings}` : 'Findings' },
+              { key: 'findings', label: problems.length > 0 ? `Problems ${problems.length}` : 'Problems' },
               { key: 'rights', label: 'Your rights' },
             ]}
             value={tab}
@@ -267,17 +290,10 @@ export function PlacePage({
         <Animated.View key={tab} entering={FadeIn.duration(180).reduceMotion(ReduceMotion.System)} style={styles.body}>
           {tab === 'overview' ? (
             <>
+              <History visits={visits} today={today} area={area} onPress={jumpTo} />
               <TourCard questions={tour} onOpen={onTour} />
-              <Disclosure title="More details" detail="Fixes verified, permit, capacity">
-                {s.findings > 0 ? (
-                  <RingCard
-                    value={verified}
-                    of={s.findings}
-                    title="Verified fixed by the state"
-                    sub={s.notFixed > 0 ? `${s.notFixed} not yet verified` : undefined}
-                  />
-                ) : null}
-                {more.length > 0 ? (
+              {more.length > 0 ? (
+                <Disclosure title="More details" detail="Capacity, subsidies, permit">
                   <View style={{ gap: space.xs }}>
                     {more.map((m) => (
                       <Text key={m} variant="callout">
@@ -285,41 +301,43 @@ export function PlacePage({
                       </Text>
                     ))}
                   </View>
-                ) : null}
-              </Disclosure>
+                </Disclosure>
+              ) : null}
             </>
           ) : null}
 
           {tab === 'findings' ? (
             findingVisits.length === 0 ? (
               <View style={[styles.empty, { backgroundColor: c.sunken }]}>
-                <Text variant="headline">No findings posted</Text>
+                <Text variant="subhead">{visits.length > 0 ? 'No problems posted in 2 years' : 'No state visits posted in 2 years'}</Text>
                 <Text variant="callout" tone="secondary">
-                  {`The state posted ${plural(s.visits, 'visit')} in the last 24 months with no findings.`}
+                  {visits.length > 0
+                    ? `The state posted ${plural(visits.length, 'visit')} with no problems cited.`
+                    : 'The state posted no visits in the past 2 years.'}
                 </Text>
               </View>
             ) : (
               findingVisits.map((v) => {
-                // Highest-risk first. Two or more lower-risk findings fold into one row.
-                const sorted = [...v.findings].sort((a, b) => riskRank[b.risk_level] - riskRank[a.risk_level]);
+                // Highest-risk first. Two or more Low / Medium Low findings fold into one row.
+                const sorted = [...v.findings].sort(byWeight);
                 const lower = sorted.filter((f) => riskRank[f.risk_level] <= 2);
                 const fold = lower.length >= 2;
                 const shown = fold ? sorted.filter((f) => riskRank[f.risk_level] > 2) : sorted;
                 return (
                   <View key={v.activity_id} style={{ gap: space.md }} onLayout={onVisitLayout(v.activity_id)}>
-                    <View>
+                    <View style={{ gap: space.xxs }}>
                       <Text variant="title" tabular>
                         {formatDate(v.date)}
                       </Text>
-                      <Text variant="footnote" tone="secondary">
-                        {`${visitTypeLabel(v.type)} · ${plural(v.findings.length, 'finding')}`}
+                      <Text variant="callout" tone="secondary">
+                        {`${visitTypeLabel(v.type)} · ${plural(v.findings.length, 'problem')}`}
                       </Text>
                     </View>
                     {shown.map((f) => (
                       <FindingCard key={f.non_compliance_id} finding={f} visitDate={v.date} />
                     ))}
                     {fold ? (
-                      <Disclosure title={`${lower.length} lower-risk findings`} detail="Rules the state rates Low or Medium Low">
+                      <Disclosure title={`${lower.length} less serious problems`}>
                         {lower.map((f) => (
                           <FindingCard key={f.non_compliance_id} finding={f} visitDate={v.date} />
                         ))}
@@ -339,13 +357,13 @@ export function PlacePage({
                 ))
               ) : (
                 <View style={[styles.empty, { backgroundColor: c.sunken }]}>
-                  <Text variant="headline">{NOT_COVERED}</Text>
+                  <Text variant="subhead">{NOT_COVERED}</Text>
                   <Text variant="callout" tone="secondary">
                     You can still read every inspection the state posts here.
                   </Text>
                 </View>
               )}
-              <Text variant="footnote" tone="tertiary" style={{ marginTop: space.lg }}>
+              <Text variant="callout" tone="tertiary" style={{ marginTop: space.lg }}>
                 {lawCite}
               </Text>
             </View>
@@ -374,7 +392,7 @@ export function PlacePage({
             <View style={[StyleSheet.absoluteFill, styles.scrim]} />
           </>
         ) : null}
-        <Text variant="headline" numberOfLines={1} color={hasPoint ? '#FFFFFF' : undefined} style={{ marginHorizontal: 64 }} align="center">
+        <Text variant="subhead" numberOfLines={1} color={hasPoint ? '#FFFFFF' : undefined} style={{ marginHorizontal: 64 }} align="center">
           {tidyCase(daycare.name)}
         </Text>
       </Animated.View>
@@ -387,37 +405,35 @@ export function PlacePage({
         {Platform.OS === 'web' ? (
           // The web link is read-only: no account, no push. One quiet line instead of a button that can't work.
           <View style={{ flex: 1, justifyContent: 'center' }}>
-            <Text variant="subhead" style={{ fontWeight: '600' }}>
-              Alerts need the app
-            </Text>
-            <Text variant="footnote" tone="secondary">
+            <Text variant="subhead">Alerts need the app</Text>
+            <Text variant="callout" tone="secondary">
               Watch a daycare on iPhone or Android to get the state’s next post.
             </Text>
           </View>
         ) : (
-        <Animated.View style={[{ flex: 1 }, popStyle]}>
-        {watching ? (
-          <Button
-            label="Watching · alerts on"
-            kind="primary"
-            icon="bellFill"
-            onPress={onUnwatch}
-            disabled={watchPending}
-            accessibilityHint="Stops alerts for this daycare"
-            style={{ flex: 1 }}
-          />
-        ) : (
-          <Button
-            label="Watch this daycare"
-            kind="ink"
-            icon="bell"
-            onPress={onWatch}
-            disabled={watchPending}
-            accessibilityHint="Get an alert when the state posts something new about this daycare"
-            style={{ flex: 1 }}
-          />
-        )}
-        </Animated.View>
+          <Animated.View style={[{ flex: 1 }, popStyle]}>
+            {watching ? (
+              <Button
+                label="Watching · alerts on"
+                kind="primary"
+                icon="bellFill"
+                onPress={onUnwatch}
+                disabled={watchPending}
+                accessibilityHint="Stops alerts for this daycare"
+                style={{ flex: 1 }}
+              />
+            ) : (
+              <Button
+                label="Watch this daycare"
+                kind="ink"
+                icon="bell"
+                onPress={onWatch}
+                disabled={watchPending}
+                accessibilityHint="Get an alert when the state posts something new about this daycare"
+                style={{ flex: 1 }}
+              />
+            )}
+          </Animated.View>
         )}
         <SquareButton icon="share" label="Share" onPress={onShare} />
       </StickyBar>
@@ -426,61 +442,177 @@ export function PlacePage({
 }
 
 /**
- * The page's one giant number (DESIGN.md §9): days since the state's last visit. A date fact from the
- * record, never a grade. With no visit in the window it counts visits instead (0).
+ * The page's one answer (hierarchy rule 1): what the state found at its most recent visit, as a sentence,
+ * and one grey line on where the fixes stand.
  */
-function HeroFact({ lastVisit, visits, months }: { lastVisit: string | null; visits: number; months: number }) {
-  // Today is read once per mount; the count is whole days, so it can't drift while the page is open.
-  const [today] = useState(() => new Date().setHours(12, 0, 0, 0));
-  const days = lastVisit ? Math.max(0, Math.round((today - new Date(`${lastVisit}T12:00:00`).getTime()) / 86_400_000)) : null;
+export function visitAnswer(last: Visit | undefined, today: string): { headline: string; sub: string | null } {
+  // Non-breaking spaces keep "Oct 5" on one line when the sentence wraps.
+  const when = last ? formatDateShort(last.date, today).replace(/ /g, '\u00A0') : '';
+  const n = last?.findings.length ?? 0;
+  const headline = !last
+    ? 'No state visits in the past 2 years'
+    : last.status === 'pending'
+    ? `Results from the ${when} visit aren’t posted yet`
+    : n > 0
+    ? `${plural(n, 'problem')} found at the ${when} visit`
+    : `No problems cited at the ${when} visit`;
+  let sub: string | null = null;
+  if (last && n > 0) {
+    const open = latestOpen(last.findings);
+    const openCount = last.findings.filter((f) => !isFixed(f)).length;
+    if (!open) sub = n === 1 ? 'Fixed' : 'All fixed';
+    else {
+      const status = plainStatus(open);
+      sub = openCount > 1 ? status.replace(/^Fix due/, 'Fixes due by').replace(/^Fix date was/, 'Latest fix date was') : status;
+      if (openCount < n) sub = `${n - openCount} fixed · ${sub}`;
+    }
+  }
+  return { headline, sub };
+}
+
+function Answer({ last, today }: { last: Visit | undefined; today: string }) {
+  const { headline, sub } = visitAnswer(last, today);
   return (
-    <View
-      accessible
-      accessibilityLabel={days != null ? `${days} days since the state's last visit, on ${formatDate(lastVisit)}` : `No state visits in ${months} months`}
-      style={{ gap: space.xxs }}
-    >
-      {/* The line box keeps descender room the digits never use; pull the label up so number and label read as one. */}
-      <Text variant="hero" tabular style={{ marginBottom: -14 }}>
-        {days != null ? String(days) : String(visits)}
-      </Text>
-      <Text variant="title">{days != null ? (days === 1 ? 'day since the state’s last visit' : 'days since the state’s last visit') : `state visits in ${months} months`}</Text>
-      {days != null ? (
+    <View accessible accessibilityRole="header" style={styles.answer}>
+      <Text variant="largeTitle">{headline}</Text>
+      {sub ? (
         <Text variant="callout" tone="secondary" tabular>
-          {`Last visit ${formatDate(lastVisit)}`}
+          {sub}
         </Text>
       ) : null}
     </View>
   );
 }
 
-/** The record in one plain sentence under the rail, plus the county median when there are enough peers. Facts only. */
-function RecordLine({ s, area }: { s: ReturnType<typeof summarize>; area: AreaCompare | null | undefined }) {
-  const [since] = useState(() => {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth() - s.months, d.getDate()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-  });
-  const line =
-    s.visits === 0
-      ? `No state visits posted since ${since}`
-      : s.findings === 0
-      ? `${plural(s.visits, 'state visit')} since ${since}, no findings posted`
-      : `${plural(s.findings, 'finding')} across ${plural(s.visits, 'state visit')} since ${since}${s.high > 0 ? ` · ${s.high} on a High-risk rule` : ''}`;
-  const median = area && area.peer_count >= 3 ? (Number.isInteger(area.median.findings) ? String(area.median.findings) : area.median.findings.toFixed(1)) : null;
+/** The two problems a parent most needs, in the state's words, then the way to the rest. */
+function TopProblems({
+  items,
+  total,
+  today,
+  onSeeAll,
+  label,
+}: {
+  items: Finding[];
+  total: number;
+  today: string;
+  onSeeAll: () => void;
+  label: string | null;
+}) {
+  const c = useColors();
   return (
-    <View style={{ gap: space.xxs }}>
-      <Text variant="callout" tabular style={{ fontWeight: '600' }}>
-        {line}
-      </Text>
+    <View style={[styles.top, { borderColor: c.hairline }, label ? styles.topLabelled : null]}>
+      {label ? (
+        <Text variant="callout" tone="secondary" style={styles.topLabel}>
+          {label}
+        </Text>
+      ) : null}
+      {items.map((f) => (
+        <View
+          key={f.non_compliance_id}
+          accessible
+          accessibilityLabel={`${f.risk_level === 'High' ? 'Serious. ' : ''}${f.plain ?? ''} ${formatDate(f.date)}. ${shortStatus(f)}.`}
+          style={[styles.topRow, { borderBottomColor: c.hairline }]}
+        >
+          {f.risk_level === 'High' ? <SeriousTag /> : null}
+          <Text variant="subhead">{f.plain ?? 'The state did not publish a description.'}</Text>
+          <Text variant="callout" tone="secondary" tabular>
+            {`${formatDateShort(f.date, today)} · ${shortStatus(f)}`}
+          </Text>
+        </View>
+      ))}
+      <Pressable accessibilityRole="button" onPress={onSeeAll} style={({ pressed }) => [styles.more, pressed && { opacity: 0.6 }]}>
+        <Text variant="subhead" style={{ flex: 1 }}>
+          {total > items.length ? `See all ${total}` : 'See the details'}
+        </Text>
+        <Glyph name="chevronRight" size={13} color={c.textSecondary} weight="bold" />
+      </Pressable>
+    </View>
+  );
+}
+
+const PEERS: Record<string, string> = {
+  'Licensed Center': 'centers',
+  'Licensed Child-Care Home': 'licensed homes',
+  'Registered Child-Care Home': 'registered homes',
+  'Listed Family Home': 'listed family homes',
+};
+
+/** Past two years, one row per visit (Apple Weather's 10-day list): date, count, a bar, where it stands. */
+function History({
+  visits,
+  today,
+  area,
+  onPress,
+}: {
+  visits: Visit[];
+  today: string;
+  area: AreaCompare | null | undefined;
+  onPress: (id: number) => void;
+}) {
+  const c = useColors();
+  const max = Math.max(1, ...visits.map((v) => v.findings.length));
+  const median =
+    area && area.peer_count >= 3 ? (Number.isInteger(area.median.findings) ? area.median.findings : Number(area.median.findings.toFixed(1))) : null;
+  return (
+    <View style={{ gap: space.sm }}>
+      <Text variant="title">Past 2 years</Text>
+      {visits.length === 0 ? (
+        <Text variant="callout" tone="secondary">
+          The state posted no visits in the past 2 years.
+        </Text>
+      ) : (
+        <View>
+          {visits.map((v) => {
+            const n = v.findings.length;
+            const status = visitStatus(v);
+            const row = (
+              <>
+                <Text variant="callout" tabular style={styles.hDate} numberOfLines={1} maxFontSizeMultiplier={1.4}>
+                  {formatDateShort(v.date, today)}
+                </Text>
+                <Text variant="subhead" tabular style={styles.hCount} tone={n > 0 ? 'primary' : 'tertiary'} maxFontSizeMultiplier={1.4}>
+                  {String(n)}
+                </Text>
+                <View style={[styles.hTrack, { backgroundColor: c.sunken }]}>
+                  {n > 0 ? <View style={[styles.hFill, { width: `${(n / max) * 100}%`, backgroundColor: c.text }]} /> : null}
+                </View>
+                <Text variant="callout" tone="secondary" style={styles.hStatus} numberOfLines={1} maxFontSizeMultiplier={1.4}>
+                  {status}
+                </Text>
+              </>
+            );
+            const label = `${formatDate(v.date)}: ${n === 0 ? 'no problems cited' : plural(n, 'problem')}. ${status}.`;
+            return n > 0 ? (
+              <Pressable
+                key={v.activity_id}
+                accessibilityRole="button"
+                accessibilityLabel={label}
+                accessibilityHint="Shows this visit's problems"
+                onPress={() => onPress(v.activity_id)}
+                style={({ pressed }) => [styles.hRow, { borderBottomColor: c.hairline }, pressed && { opacity: 0.6 }]}
+              >
+                {row}
+              </Pressable>
+            ) : (
+              <View key={v.activity_id} accessible accessibilityLabel={label} style={[styles.hRow, { borderBottomColor: c.hairline }]}>
+                {row}
+              </View>
+            );
+          })}
+        </View>
+      )}
       {area && median != null ? (
-        <Text variant="footnote" tone="secondary" tabular>
-          {`Median for ${operationTypeLabel(area.operation_type).toLowerCase()}s in ${tidyCase(area.county)} County: ${plural(Number(median), 'finding')} in ${area.window_months} months`}
+        <Text variant="callout" tone="secondary" style={{ marginTop: space.xs }}>
+          {`Typical for ${tidyCase(area.county)} County ${PEERS[area.operation_type] ?? 'daycares like this'}: ${plural(median, 'problem')} in ${
+            area.window_months === 24 ? '2 years' : `${area.window_months} months`
+          }.`}
         </Text>
       ) : null}
     </View>
   );
 }
 
-/** Tour questions built from this daycare's own findings (lib/tour), promoted to the top of Overview. */
+/** Tour questions built from this daycare's own findings (lib/tour). */
 function TourCard({ questions, onOpen }: { questions: ReturnType<typeof buildTourQuestions>; onOpen: () => void }) {
   const c = useColors();
   if (questions.length === 0) return null;
@@ -490,14 +622,14 @@ function TourCard({ questions, onOpen }: { questions: ReturnType<typeof buildTou
       {questions.map((q, i) => (
         <View key={q.question} style={styles.tourRow}>
           <View style={[styles.tourNum, { backgroundColor: c.text }]}>
-            <Text variant="footnote" color={c.surface} tabular style={{ fontWeight: '800' }}>
+            <Text variant="subhead" color={c.surface} tabular maxFontSizeMultiplier={1.2}>
               {String(i + 1)}
             </Text>
           </View>
           <View style={{ flex: 1, gap: space.xxs }}>
-            <Text variant="headline">{q.question}</Text>
+            <Text variant="subhead">{q.question}</Text>
             {q.fact ? (
-              <Text variant="footnote" tone="secondary">
+              <Text variant="callout" tone="secondary">
                 {q.fact}
               </Text>
             ) : null}
@@ -510,9 +642,9 @@ function TourCard({ questions, onOpen }: { questions: ReturnType<typeof buildTou
           haptic.select();
           onOpen();
         }}
-        style={({ pressed }) => [styles.tourMore, { borderTopColor: c.hairline }, pressed && { opacity: 0.6 }]}
+        style={({ pressed }) => [styles.more, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.hairline }, pressed && { opacity: 0.6 }]}
       >
-        <Text variant="subhead" style={{ flex: 1, fontWeight: '600' }}>
+        <Text variant="subhead" style={{ flex: 1 }}>
           All tour questions
         </Text>
         <Glyph name="chevronRight" size={13} color={c.textSecondary} weight="bold" />
@@ -532,16 +664,24 @@ const styles = StyleSheet.create({
     gap: space.sm,
   },
   notes: { borderRadius: radius.card, padding: space.md, gap: space.xs, marginTop: space.xs },
-  bleed: { marginHorizontal: -space.lg, flexGrow: 0 },
-  row: { paddingHorizontal: space.lg, gap: space.sm, paddingTop: space.sm },
+  answer: { gap: space.xs, paddingTop: space.lg },
+  top: { borderTopWidth: StyleSheet.hairlineWidth, marginTop: space.md, marginBottom: space.sm },
+  topLabelled: { borderTopWidth: 0 },
+  topLabel: { paddingBottom: space.xs, paddingTop: space.sm },
+  topRow: { gap: space.xs, paddingVertical: space.md, borderBottomWidth: StyleSheet.hairlineWidth },
+  more: { flexDirection: 'row', alignItems: 'center', minHeight: 48, paddingTop: space.xs },
   tiles: { flexDirection: 'row', gap: space.sm, paddingTop: space.sm },
   body: { paddingHorizontal: space.lg, paddingTop: space.xl, gap: space.xxl },
   empty: { borderRadius: radius.card, padding: space.lg, gap: space.xs },
-  record: { gap: space.md, paddingTop: space.lg, paddingBottom: space.md },
+  hRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48, borderBottomWidth: StyleSheet.hairlineWidth },
+  hDate: { width: 100 },
+  hCount: { width: 22, textAlign: 'right' },
+  hTrack: { flex: 1, height: 8, borderRadius: 4, overflow: 'hidden' },
+  hFill: { height: 8, borderRadius: 4 },
+  hStatus: { width: 128, textAlign: 'right' },
   tour: { borderRadius: radius.card, padding: space.lg, gap: space.lg },
   tourRow: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },
-  tourNum: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-  tourMore: { flexDirection: 'row', alignItems: 'center', borderTopWidth: StyleSheet.hairlineWidth, paddingTop: space.md, minHeight: 44 },
+  tourNum: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   scrim: { backgroundColor: 'rgba(0,0,0,0.52)' },
   bar: { position: 'absolute', left: 0, right: 0, top: 0, justifyContent: 'center', borderBottomWidth: StyleSheet.hairlineWidth },
   floatTop: { position: 'absolute', left: space.lg, right: space.lg, flexDirection: 'row', justifyContent: 'space-between' },

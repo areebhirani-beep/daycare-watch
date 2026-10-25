@@ -2,13 +2,13 @@ import { describe, expect, it, jest } from '@jest/globals';
 
 import { rowFallback, rowMeta } from '@/components/ui/HomeMap';
 
+import { placeAddress } from '../maps';
+import type { DaycareRow } from '../types';
+
 // The row helpers are pure; the sheet, map and animation modules only matter on a device.
 jest.mock('@gorhom/bottom-sheet', () => ({}));
 jest.mock('react-native-maps', () => ({}));
 jest.mock('react-native-reanimated', () => ({}));
-
-import { placeAddress } from '../maps';
-import type { DaycareRow } from '../types';
 
 // daycare_search('78626') row for operation 175268, a Listed Family Home, as returned Oct 24 2026.
 const row = {
@@ -35,7 +35,7 @@ const row = {
 describe('a list row for a home daycare', () => {
   it('renders no street address anywhere in the row text', () => {
     const text = [rowMeta(row, '2026-10-24'), rowFallback(row), placeAddress(row)].join(' | ');
-    expect(text).toBe('Listed home · Georgetown | No findings posted in 24 months | Georgetown, TX 78626');
+    expect(text).toBe('Listed home · Georgetown | No state visits posted in 2 years | Georgetown, TX 78626');
     expect(text).not.toMatch(/2309|caprock/i);
   });
 });

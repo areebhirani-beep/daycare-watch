@@ -64,7 +64,7 @@ export function InspectorQuote({
 
   if (same) {
     return (
-      <Text variant="footnote" tone="tertiary">
+      <Text variant="callout" tone="tertiary">
         {source ? `The inspector’s words, word for word · ${source}` : 'The inspector’s words, word for word'}
       </Text>
     );
@@ -82,7 +82,7 @@ export function InspectorQuote({
         hitSlop={8}
         style={({ pressed }) => [styles.link, pressed && { opacity: 0.6 }]}
       >
-        <Text variant="footnote" tone="tertiary" style={{ flexShrink: 1 }}>
+        <Text variant="callout" tone="tertiary" style={{ flexShrink: 1 }}>
           {source ? `${label} in full · ${source}` : `${label} in full`}
         </Text>
         <Glyph name="chevronRight" size={10} color={c.textTertiary} weight="bold" />
@@ -101,8 +101,8 @@ export function InspectorQuote({
       }}
       style={({ pressed }) => [styles.quote, { backgroundColor: c.sunken }, pressed && { opacity: 0.8 }]}
     >
-      <Text variant="caption" tone="tertiary">
-        {label.toUpperCase()}
+      <Text variant="callout" tone="tertiary">
+        {label}
       </Text>
       <Text
         variant="callout"
@@ -117,18 +117,18 @@ export function InspectorQuote({
       {open ? (
         <Animated.View entering={FadeIn.duration(180).reduceMotion(ReduceMotion.System)} style={{ gap: space.xs }}>
           {source ? (
-            <Text variant="footnote" tone="tertiary">
+            <Text variant="callout" tone="tertiary">
               {source}
             </Text>
           ) : null}
           {note ? (
-            <Text variant="footnote" tone="tertiary">
+            <Text variant="callout" tone="tertiary">
               {note}
             </Text>
           ) : null}
         </Animated.View>
       ) : long || source ? (
-        <Text variant="subhead" tone="accent">
+        <Text variant="subhead">
           Show more
         </Text>
       ) : null}

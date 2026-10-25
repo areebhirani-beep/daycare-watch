@@ -66,17 +66,17 @@ describe('format', () => {
     const now = new Date('2026-10-24T12:00:00');
     const base = { corrected_at_inspection: false, verified_date: null, date: '2026-10-05' };
     expect(fixedLabel({ ...base, corrected_at_inspection: true, corrected_date: '2026-10-05' }, now)).toBe(
-      'Corrected during the inspection',
+      'Fixed during the visit',
     );
     expect(fixedLabel({ ...base, corrected_date: '2026-10-10', verified_date: '2026-10-20' }, now)).toBe(
-      'State verified the fix Oct 20',
+      'Fixed · the state checked Oct 20',
     );
     // Real case: nc 1022378716, cited Oct 5 2026, corrected_date Oct 30 2026 (future).
     expect(fixedLabel({ ...base, corrected_date: '2026-10-30' }, now)).toBe(
-      'Fix due Oct 30 · not yet verified by the state',
+      'Fix due Oct 30 · no state check on record yet',
     );
     expect(fixedLabel({ ...base, corrected_date: '2026-10-12' }, now)).toBe(
-      'Fix date listed Oct 12 · not yet verified by the state',
+      'Fix date was Oct 12 · no state check on record yet',
     );
     expect(fixedLabel({ ...base, corrected_date: null }, now)).toBe('No fix date on record');
   });

@@ -35,26 +35,26 @@ Rows are tested cold, by someone who did not write the UI.
 | U9 | Search: ZIP | Maestro | PASS | "75087" → Rockwall daycares ([u09-zip](qa/u09-zip.jpg)) | mobile |
 | U10 | Search: city | Maestro | PASS | "Sherman" → Sherman daycares ([u10-city](qa/u10-city.jpg)) | mobile |
 | U11 | Search: typo | Maestro | PASS | "Lionhart" → Lionheart Children’s Academy ([u11-typo](qa/u11-typo.jpg); pgTAP 010) | mobile |
-| U12 | Center: aerial imagery shown with attribution | Maestro | PENDING | | design |
+| U12 | Center: aerial imagery shown with attribution | Maestro | PASS | aerial page shows the pin and "Imagery © Esri, Maxar" (u18/u20 on 97587); 3D page "3D view · Apple Maps" has no pin (D17) | design |
 | U13 | Home daycare: no street address, no imagery, no house pin | Maestro | PASS | 1490119: no "Imagery", no "Placed from the street address", no street line; DB returns address null + 2-decimal point (pgTAP 011) ([u13-home-0](qa/u13-home-0.jpg)) | design / mobile |
-| U14 | Place with 0 findings | Maestro | PENDING | | mobile |
+| U14 | Place with 0 findings | Maestro | PASS | 228100 Stonebriar Preschool Pals: "No problems cited at the May 13 visit", past-2-years rows say "No problems cited", no verdict words ([u14](qa/u14-zero-0.jpg)) | mobile |
 | U15 | Place with many findings | Maestro | PASS | 97587 (220 findings) renders, "See all" works ([u15-many-0](qa/u15-many-0.jpg)) | mobile |
 | U16 | Place with approximate geocode | Maestro | FAIL | 98685: approximate caption truncated and overlapping the map legal mark (D4) ([u16-approx-0](qa/u16-approx-0.jpg), [D4-approx-caption](qa/D4-approx-caption.jpg)); no-point 1120831 renders ([u16-nopoint-0](qa/u16-nopoint-0.jpg)) | mobile |
-| U16a | Place with 0 / 1 / 3 street photos | Maestro (after pipeline fills photos) | PENDING | | mobile |
-| U16b | Home daycare never shows photos | pgTAP 009 + Maestro | PASS (SQL) | `daycare_record` returns `photos: []` for a home even when a row exists (pgTAP 009); on-screen check pending | platform / mobile |
-| U16c | Approximate geocode never shows photos | pgTAP 009 + Maestro | PASS (SQL) | `photos: []` for a non_exact center even when a row exists (pgTAP 009); on-screen check pending | platform / mobile |
-| U16d | Photo credit (Mapillary, CC BY-SA) and captured date visible | Maestro | PENDING | | mobile / design |
+| U16a | Place with 0 / 1 / 3 street photos | Maestro (after pipeline fills photos) | PASS | `u16-photos.yaml`: 241227 (3 photos) and 1470186 (2) open on the 3D view, photos follow with month + credit, full-screen viewer with Close ([3D](qa/u16a-3-0.jpg), [photo](qa/u16a-3-1-photo.jpg), [2 photos](qa/u16a-2-photo.jpg)); 1459611 (0) shows no photo ([0](qa/u16a-0.jpg)). Photo quality: D15 | mobile |
+| U16b | Home daycare never shows photos | pgTAP 009 + Maestro | PASS | pgTAP 009 + 1462404: "Neighborhood only · private home", no photo, no 3D view ([home](qa/u16b-home.jpg)) | platform / mobile |
+| U16c | Approximate geocode never shows photos | pgTAP 009 + Maestro | PASS | pgTAP 009 + 98685: "Approximate location", no photo ([approx](qa/u16c-approx.jpg)) | platform / mobile |
+| U16d | Photo credit (Mapillary, CC BY-SA) and captured date visible | Maestro | PASS | month ("Oct 2026") + "Mapillary contributors" on the card and in the viewer ([viewer](qa/u16d-viewer.jpg)); license name missing (D16) | mobile / design |
 | U17 | Fix-status strings key off the state’s own fields (fixed during the visit, or state-verified), never "Fixed <corrected_date>" | Maestro + text search | PASS | 1459611 shows "Fix due Oct 30", never "Fixed … Oct 30" ([u17-viva-0](qa/u17-viva-0.jpg)) | mobile / design |
 | U18 | Watch, unwatch, re-watch | Maestro | PASS | `u18-watch.yaml` on 97587: watch → sheet → "You’re watching" → place "Watching ·" → sheet → "Stop watching" → re-watch; `app.watches` row present ([u18 screens](qa/), [stop sheet](qa/u18-2b-stop-sheet.jpg)). D10 fixed 02:05 | mobile |
-| U19 | Notifications allowed | Maestro | PENDING | iOS prompt appears on first "Turn on alerts" (handled in `u18-watch.yaml`); Expo Go permission now denied on the QA sim, so re-run needs a fresh Expo Go install | mobile |
+| U19 | Notifications allowed | Maestro | PASS (sim) | `u19-allowed.yaml` on a fresh Expo Go: "Turn on alerts" → iOS prompt → Allow → done. Simulator never registers for push (`Device.isDevice`), so the page honestly reads "alerts off"; "alerts on" is proven on the owner’s phone (B6) | mobile |
 | U20 | Notifications denied | Maestro | PASS | `u20-denied.yaml`: after "Don’t Allow" the place button no longer says "alerts on" ([u20-0-place-denied](qa/u20-0-place-denied.jpg)); sheet says notifications are off + Open Settings. D9 fixed 02:05 | mobile |
-| U21 | Push tap, app cold | simctl push + Maestro | PENDING | | mobile |
-| U22 | Push tap, app warm | simctl push + Maestro | PENDING | | mobile |
-| U23 | Push tap, app in background | simctl push + Maestro | PENDING | | mobile |
-| U24 | Share | Maestro | PENDING | | mobile |
-| U25 | Rights request generation | Maestro | PENDING | | mobile |
-| U26 | Tour questions | Maestro | PENDING | | mobile |
-| U27 | "View on the state's site" from a finding and from the place page | Maestro | PASS (place) | place page "State record" visible (`u14-place.yaml`); from a finding: pending | mobile |
+| U21 | Push tap, app cold | simctl push + Maestro | OWNER PHONE | Expo Go on the simulator drops `simctl push` payloads (no banner). Cold tap goes through `getLastNotificationResponse` → `/alert/<id>`; check on a real phone | mobile |
+| U22 | Push tap, app warm | simctl push + Maestro | PASS (route) | `u22-alert-route.yaml`: the exact route a tap opens (`/alert/43?operationId=1304920`, real event, watched) shows "Replay of a real state record", the finding, inspector’s words, "View on the state’s site" ([alert](qa/u22-warm-alert.jpg)); banner tap on a real phone | mobile |
+| U23 | Push tap, app in background | simctl push + Maestro | OWNER PHONE | same as U21 (background tap) | mobile |
+| U24 | Share | Maestro | PASS | "Share" opens the iOS share sheet ([sheet](qa/u24-share-sheet.jpg)) | mobile |
+| U25 | Rights request generation | Maestro | PASS | Your rights tab: Request records / Drop in without notice / Ask to inspect video + "Texas Human Resources Code §42.04271"; "Request records" opens the share sheet with the generated letter "Dear Director, …" ([tab](qa/u25-rights-tab.jpg), [sheet](qa/u25-request-sheet.jpg)) | mobile |
+| U26 | Tour questions | Maestro | PASS | tour card → "Ask Viva World School", questions from its own findings (6 safety + 2 paperwork + 1 health = 9, matches "Problems 9"), "Share these questions" ([card](qa/u26-tour-card.jpg), [tour](qa/u26-tour.jpg)) | mobile |
+| U27 | "View on the state's site" from a finding and from the place page | Maestro | PASS | place page "State record" (u14-place, u24 flow); finding card "View on the state’s site" on the alert screen ([alert](qa/u22-warm-alert.jpg)) | mobile |
 | U28 | Dark mode | Maestro + simctl appearance | PASS | `u28-dark.yaml`: place, home daycare, search in dark ([place](qa/u28-dark-0-place.jpg), [home](qa/u28-dark-2-home.jpg), [search](qa/u28-dark-3-search.jpg)) | design |
 | U29 | Dynamic Type XXXL | Maestro + simctl content_size | PASS | `u29-xxxl.yaml` (accessibility XXXL): wraps, no clipping ([place](qa/u29-xxxl-0-place.jpg), [home](qa/u29-xxxl-2-home.jpg)); Serious tag moved to the meta line so text keeps full width | design |
 | U30 | VoiceOver label on every control | accessibility tree audit | PARTIAL | home: sheet contents, chips, cards, list reachable (D11 fixed); pins read "<name>, Center" / "N daycares here. Zooms in." (D12 fixed). Place, watch, rights screens not yet audited | mobile |
@@ -98,3 +98,7 @@ Rows are tested cold, by someone who did not write the UI.
 | D11 | U30 | mobile | 02:04 Oct 25 | `maestro hierarchy`: one "Bottom Sheet" element, no children | High · Apple-engineer lens: home list unreachable by VoiceOver (gorhom default `accessible=true`) · FIXED 02:09, re-tested PASS (hierarchy + u03/u04) |
 | D12 | U30 | mobile | 02:04 Oct 25 | `maestro hierarchy`: 95 × "Map pin" | Low · Apple-engineer lens: map pins have no daycare name for VoiceOver · FIXED 02:09, re-tested PASS (hierarchy) |
 | D13 | U15 | mobile + design | 02:10 Oct 25 | [u28-dark-0-place](qa/u28-dark-0-place.jpg) | Low · parent lens: "3 problems at the Oct 5 visit" then "See all 9" · FIXED 02:11 by design ("See all 9 from the past 2 years"), on-screen re-test pending |
+| D14 | U1 | mobile + design | 02:19 Oct 25 | [u01-3-done](qa/u01-3-done.jpg) | Med · CAC-judge + parent lens: done screen promised alerts after "Not now" · FIXED 02:19 by design (`useAlertsOn`), re-test pending |
+| D15 | U16a | pipeline | 02:26 Oct 25 | [u16a-3-1-photo](qa/u16a-3-1-photo.jpg) | Med · CAC-judge + Apple-designer lens: forward dashcam frames (hood in shot) chosen for 241227 |
+| D16 | U16d | mobile + design | 02:26 Oct 25 | [u16d-viewer](qa/u16d-viewer.jpg) | Low · Apple-engineer lens: credit lacks the CC BY-SA license name |
+| D17 | U12, U14 | mobile + design | 02:31 Oct 25 | [u14-zero-0](qa/u14-zero-0.jpg) | Med · parent + CAC-judge lens: 3D view (page one) has no pin; can’t tell which building |

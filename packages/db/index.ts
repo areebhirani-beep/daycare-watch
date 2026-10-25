@@ -77,10 +77,18 @@ export type Inspection = {
   open_count: number; // of those, neither corrected at the inspection nor verified by the state
 };
 
+// A Mapillary street-level image near the daycare (CC BY-SA; show the credit and captured date).
+export type Photo = {
+  image_id: string;
+  captured_at: string;
+  distance_m: number;
+};
+
 export type DaycareRecord = {
   daycare: DaycareHeader;
   findings: Finding[];
   inspections: Inspection[];
+  photos: Photo[]; // [] unless a licensed center with an exact geocode; at most 3, newest first
   official_url: string;
   last_checked_at: string | null;
 };

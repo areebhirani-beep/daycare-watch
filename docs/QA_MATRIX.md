@@ -10,15 +10,15 @@ Rows are tested cold, by someone who did not write the UI.
 
 | # | Case | Method | Status | Evidence | Owner if it fails |
 |---|---|---|---|---|---|
-| B1 | Schema, RLS allow + deny, RPC shapes, views | pgTAP | PASS | `supabase test db` → Files=7, Tests=139, PASS | platform |
+| B1 | Schema, RLS allow + deny, RPC shapes, views, photos rule, recent visits | pgTAP | PASS | `supabase test db` → Files=9, Tests=158, PASS | platform |
 | B2 | App API path: public reads, anonymous sign-in, watch / unwatch / re-watch idempotent, `core`/`app`/`ops` tables unreachable | `supabase/snippets/api_smoke.sh` | PASS | local 21/21; cloud `yqrrfawmsvhxgffgrmse` 21/21 | platform |
 | B3 | Daily sync on a no-change night creates no events | `python -m pipeline sync --dry-run --no-notify` | PASS | run 658fef1c: events_new_violation 0, events_daycare 0, inspections_new 0, join_rate 1.0 (`harness/state/qa/resync-dryrun.log`) | pipeline |
-| B4 | Alert for a daycare no longer watched is not shown | API: watch → alert_detail(event) → unwatch → alert_detail(event) | PENDING | | platform |
+| B4 | Alert for a daycare no longer watched is not shown | `EVENT_ID=43 EVENT_OP=1304920 supabase/snippets/api_smoke.sh` | PASS | hidden before watching → shown while watching (is_replay=true) → hidden after unwatch; 24/24 | platform |
 | B5 | RPC latency p95 < 100 ms | `supabase/snippets/bench_rpc.sql` | PASS | search 29.9 ms, near 7.5 ms, record 1.0 ms (60 runs each, role anon) | platform |
 | B6 | Push reaches a real iPhone | replay → Expo ticket → receipt → banner | PASS | event 43, ticket 01a17151-582b-75bd-89b2-ccba6e7ae980, receipt delivered_to_provider, owner saw banner 23:31 Oct 24 | pipeline |
 | B7 | Push on Android | | CUT | CONTRACT 11:00 pm Oct 24: Android Expo Go has no remote push | |
-| B8 | "In TX-04" only on point basis | pgTAP + SQL | PENDING | | platform |
-| B9 | Replays are labelled as replays | push body + alert screen | PENDING | | pipeline / mobile |
+| B8 | "In TX-04" only on point basis | pgTAP + SQL + source review | PASS | 379 point / 23 county-only in district; every app check is `in_district && district_basis === 'point'` (HomeMap.tsx:66, HomeMap.web.tsx:52, PlacePage.tsx:190); `district_pulse_weekly` and `district_recent_visits` filter `district_basis = 'point'` (pgTAP 004, 008) | platform |
+| B9 | Replays are labelled as replays | push body + alert screen | PASS (source) | push body prefix `Replay of a real state record from {date}:` (notify.py:49); alert screen shows "Replay of a real state record" when `is_replay` (alert/[eventId].tsx:69); on-screen check in U21 | pipeline / mobile |
 
 ## App (iOS simulator, Expo Go)
 
@@ -40,6 +40,10 @@ Rows are tested cold, by someone who did not write the UI.
 | U14 | Place with 0 findings | Maestro | PENDING | | mobile |
 | U15 | Place with many findings | Maestro | PENDING | | mobile |
 | U16 | Place with approximate geocode | Maestro | PENDING | | mobile |
+| U16a | Place with 0 / 1 / 3 street photos | Maestro (after pipeline fills photos) | PENDING | | mobile |
+| U16b | Home daycare never shows photos | pgTAP 009 + Maestro | PASS (SQL) | `daycare_record` returns `photos: []` for a home even when a row exists (pgTAP 009); on-screen check pending | platform / mobile |
+| U16c | Approximate geocode never shows photos | pgTAP 009 + Maestro | PASS (SQL) | `photos: []` for a non_exact center even when a row exists (pgTAP 009); on-screen check pending | platform / mobile |
+| U16d | Photo credit (Mapillary, CC BY-SA) and captured date visible | Maestro | PENDING | | mobile / design |
 | U17 | Fix-status strings follow CONTRACT 3 (never "Fixed <corrected_date>") | Maestro + text search | PENDING | | mobile / design |
 | U18 | Watch, unwatch, re-watch | Maestro | PENDING | | mobile |
 | U19 | Notifications allowed | Maestro | PENDING | | mobile |

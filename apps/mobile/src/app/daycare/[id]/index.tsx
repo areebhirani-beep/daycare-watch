@@ -1,4 +1,5 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useEffect } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import { Linking, Platform, Share, View } from 'react-native';
 
@@ -8,6 +9,7 @@ import { PlaceSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useAreaCompare, useDaycareRecord, useIsWatching, useSetWatch } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
+import { since } from '@/lib/perf';
 import { appleMapsUrl, directionsAddress, googleMapsUrl } from '@/lib/maps';
 import { LAW_CITE, requestText } from '@/lib/rights';
 import { space, useColors } from '@/theme';
@@ -20,6 +22,10 @@ export default function DaycareRecordScreen() {
   const area = useAreaCompare(operationId);
   const watching = useIsWatching(operationId);
   const setWatch = useSetWatch(operationId);
+  const ready = Boolean(record.data);
+  useEffect(() => {
+    if (ready) since('place record shown');
+  }, [ready]);
 
   if (!record.data) {
     return (

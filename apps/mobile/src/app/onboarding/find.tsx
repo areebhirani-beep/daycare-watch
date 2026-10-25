@@ -1,13 +1,14 @@
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 
 import { Button } from '@/components/ui/Button';
 import { ActionPill, SearchPill } from '@/components/ui/Chrome';
 import { PlaceRow } from '@/components/ui/DaycareCard';
 import { rowFallback, rowMeta, rowStrip } from '@/components/ui/HomeMap';
+import { markOnboarded } from '@/components/ui/onboarding';
 import { OnboardingFrame } from '@/components/ui/OnboardingFrame';
 import { LoadError } from '@/components/LoadError';
 import { RowSkeleton } from '@/components/ui/Skeletons';
@@ -45,8 +46,15 @@ export default function FindScreen() {
     }
   };
 
+  // The web link is read-only (no sign-in, no alerts): a pick opens the record straight away.
+  const web = Platform.OS === 'web';
   const onWatch = () => {
     if (!picked) return;
+    if (web) {
+      markOnboarded();
+      router.replace(`/daycare/${picked.operation_id}`);
+      return;
+    }
     watch.mutate(true, {
       onSuccess: () => router.push({ pathname: '/onboarding/alerts', params: { id: String(picked.operation_id) } }),
     });
@@ -59,9 +67,9 @@ export default function FindScreen() {
       actions={
         <>
           <Button
-            label={picked ? 'Watch this daycare' : 'Pick your daycare'}
+            label={picked ? (web ? 'See the state record' : 'Watch this daycare') : 'Pick your daycare'}
             kind="ink"
-            icon={picked ? 'bell' : undefined}
+            icon={picked && !web ? 'bell' : undefined}
             disabled={!picked || watch.isPending}
             onPress={onWatch}
           />
@@ -70,7 +78,16 @@ export default function FindScreen() {
               Couldn’t reach the server. Try again.
             </Text>
           ) : (
-            <Button label="I’m just looking" kind="plain" size="md" onPress={() => router.push('/onboarding/alerts')} />
+            <Button
+              label="I’m just looking"
+              kind="plain"
+              size="md"
+              onPress={() => {
+                if (!web) return router.push('/onboarding/alerts');
+                markOnboarded();
+                router.replace('/');
+              }}
+            />
           )}
         </>
       }

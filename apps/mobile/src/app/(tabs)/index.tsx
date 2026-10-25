@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/Button';
 import { HomeMap } from '@/components/ui/HomeMap';
 import { Text } from '@/components/ui/Text';
 import { useDaycaresNear, useMyWatches } from '@/lib/api';
+import { mark, tapped } from '@/lib/perf';
+import { isWeb } from '@/lib/runtime';
+import { storage } from '@/lib/storage';
 import { configError } from '@/lib/supabase';
 import { radius, space, useColors } from '@/theme';
 
@@ -17,9 +20,22 @@ type Point = { lat: number; lng: number };
 // Default view when location is off or slow: Frisco, in the district. Camera and query center only.
 const DISTRICT_CENTER: Point = { lat: 33.1507, lng: -96.8236 };
 const LOCATION_TIMEOUT_MS = 5_000;
+const LAST_POSITION = 'last-position';
+
+/** Where the parent was last time, kept on this phone only, so the list can load before location answers. */
+function savedPosition(): Point | null {
+  try {
+    const raw = storage.getString(LAST_POSITION);
+    return raw ? (JSON.parse(raw) as Point) : null;
+  } catch {
+    return null;
+  }
+}
 
 /** The parent's position, or null when location is denied, unavailable, or slower than 5 s. */
 async function findPosition(): Promise<Point | null> {
+  // The web link never asks: a browser location prompt is the wrong first screen for a judge.
+  if (isWeb) return null;
   try {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') return null;
@@ -39,17 +55,31 @@ async function findPosition(): Promise<Point | null> {
 export default function FindScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
-  // undefined while asking, null when we fell back to the district center.
+  const [saved] = useState(savedPosition);
+  // undefined while asking, null when location is off or slow.
   const [position, setPosition] = useState<Point | null | undefined>(undefined);
 
-  const locate = useCallback(() => findPosition().then(setPosition), []);
+  const locate = useCallback(
+    () =>
+      findPosition().then((p) => {
+        mark(p ? 'location found' : 'location fallback');
+        if (p) storage.set(LAST_POSITION, JSON.stringify(p));
+        setPosition(p);
+      }),
+    [],
+  );
 
   useEffect(() => {
-    void findPosition().then(setPosition);
-  }, []);
+    void locate();
+  }, [locate]);
 
-  const near = useDaycaresNear(position === undefined ? null : (position ?? DISTRICT_CENTER), 15);
+  // Never wait on location: start from the last position (or the district), then re-center when it answers.
+  const near = useDaycaresNear(position ?? saved ?? DISTRICT_CENTER, 15);
   const watches = useMyWatches();
+  const pins = near.data?.length ?? 0;
+  useEffect(() => {
+    if (pins > 0) mark(`first pins (${pins})`);
+  }, [pins > 0]); // eslint-disable-line react-hooks/exhaustive-deps
   const watchedIds = useMemo(() => new Set(watches.data?.map((d) => d.operation_id)), [watches.data]);
 
   const problem = configError ?? (near.isError ? 'We couldn’t reach the state records. Check your connection.' : null);
@@ -59,12 +89,15 @@ export default function FindScreen() {
       <HomeMap
         rows={near.data ?? []}
         // On an error the sheet keeps its skeleton under the error card, never "0 daycares".
-        loading={problem !== null || position === undefined || near.isPending}
-        center={position ?? null}
+        loading={problem !== null || near.isPending}
+        center={position ?? saved}
         fallbackCenter={DISTRICT_CENTER}
-        areaLabel={position === null ? 'Near Frisco · location off' : 'Finding your location…'}
+        areaLabel={position === null ? (saved ? 'Near your last location' : 'Near Frisco · location off') : 'Finding your location…'}
         watchedIds={watchedIds}
-        onOpen={(id) => router.push(`/daycare/${id}`)}
+        onOpen={(id) => {
+          tapped('place');
+          router.push(`/daycare/${id}`);
+        }}
         onSearch={() => router.push('/search')}
         onAlerts={() => router.push('/(tabs)/watching')}
         onLocate={() => void locate()}

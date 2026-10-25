@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { type LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
+import { type LayoutChangeEvent, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import Animated, {
   FadeIn,
@@ -177,7 +177,7 @@ export function PlacePage({
   ].filter((n): n is string => n !== null);
 
   // Centers: the state's full address line. Homes: city and ZIP only (lib/maps).
-  const address = [placeAddress(daycare), daycare.in_district && daycare.district_basis === 'point' ? 'TX-04' : null]
+  const address = [tidyCase(placeAddress(daycare)).replace(/\bTx\b/, 'TX'), daycare.in_district && daycare.district_basis === 'point' ? 'TX-04' : null]
     .filter(Boolean)
     .join(' · ');
   const tour = useMemo(() => buildTourQuestions(record.findings).slice(0, 2), [record.findings]);
@@ -384,6 +384,17 @@ export function PlacePage({
       </View>
 
       <StickyBar>
+        {Platform.OS === 'web' ? (
+          // The web link is read-only: no account, no push. One quiet line instead of a button that can't work.
+          <View style={{ flex: 1, justifyContent: 'center' }}>
+            <Text variant="subhead" style={{ fontWeight: '600' }}>
+              Alerts need the app
+            </Text>
+            <Text variant="footnote" tone="secondary">
+              Watch a daycare on iPhone or Android to get the state’s next post.
+            </Text>
+          </View>
+        ) : (
         <Animated.View style={[{ flex: 1 }, popStyle]}>
         {watching ? (
           <Button
@@ -407,6 +418,7 @@ export function PlacePage({
           />
         )}
         </Animated.View>
+        )}
         <SquareButton icon="share" label="Share" onPress={onShare} />
       </StickyBar>
     </View>

@@ -1,6 +1,6 @@
 # Daycare Watch — design system v2
 
-**One line:** a map app, not a document. The map gives the color, the type is the native grotesk set heavy and big, every number is huge and tabular, and the record strip is the one picture people remember.
+**One line:** a map app, not a document. The map gives the color, the type is the native grotesk set heavy and big, every number is huge and tabular, and the visit rail is the one picture people remember.
 
 The v1 direction (Newsreader serif, paper beige, text stacks) is retired. Nothing from it survives.
 
@@ -105,26 +105,28 @@ Android: same sizes on `sans-serif` (Roboto) with numeric weights. Roboto Flex a
 | `PlaceRow` | Dense list row: 64 aerial thumb (credit "© Esri"), name, meta, compact strip |
 | `MapSnapshot` | The hero image: a real **aerial photo** of the daycare's location with our pin (Esri World Imagery tiles, no key). **The Esri credit shows on every image**: full line on cards and heroes (lifted above the place page's head card), "© Esri" on thumbnails. Tiles load on view only, never prefetched. Tile mosaic in `expo-image`, fetched one zoom deeper for retina. No native module, works in Expo Go and in carousels. (CARTO was tried first: it now returns an "API key required" placeholder.) |
 | `MapPin` / `ClusterBubble` | Uniform ink pin (white core), watched = yellow disc with ink bell and ink ring; cluster = ink circle + tabular count |
-| `StatBand` / `RingCard` / `Ring` | Three counts in an open band with hairlines (no boxes); one wide card with a 92-pt ring for "verified fixed by the state". A ring shows a share of findings, never a rating. `NumberCard` stays for single stats; never a grid of identical cards |
+| `RingCard` / `Ring` | One wide card with a 92-pt ring for "verified fixed by the state", behind "More details". A ring shows a share of findings, never a rating. **No stat band**: the 3-count band was cut (owner, Oct 25) as the #1 dashboard cliché; counts live in one sentence under the rail |
+| `AppMark` | The mark: one visit on the rail (ink ring, solid centre, on a time line, an earlier visit to its left). Reads as a visit and as an eye. Same drawing as the icon (`harness/state/design/mark.py`). Never a letter in a square |
+| `FindingCard` | A High-risk finding gets an ink header bar ("High-risk rule · category"), a 1.5-pt ink border and a `title` line; every other level is a hairline card with a small tag |
 | `RightCard` | One right, one tap: icon disc, bold title, one-line detail, opens the generated request |
 | `Tabs` | Google Maps place-sheet tabs, underline indicator springs between tabs |
 | `SheetHandle`, `SheetHeader` | Grabber + title row for `@gorhom/bottom-sheet` |
-| `RecordStrip` | The signature visual (below) |
+| `RecordStrip` | The visit rail, the signature visual (below) |
 | `Skeleton` | Card-, row- and strip-shaped placeholders with a slow opacity pulse |
 | `OnboardingFrame`, `ProgressBar`, `Celebration` | Duolingo flow chrome |
 
-## 5. The record strip
+## 5. The visit rail (`RecordStrip`)
 
-Every state visit in the last 24 months is a column at its date. A visit with findings is a stack of rounded marks, one per finding, highest-risk rule at the bottom. **Solid** = corrected at the inspection or verified fixed by the state. **Outlined** = not yet verified. A dot on the baseline = a visit with no findings posted. Variants: `hero` (place page, onboarding), `full` (findings tab, with axis + key), `compact` (cards, rows, alerts). It shows counts and dates only; there is no total, no color for "good", and no label that ranks.
+One line for the last 24 months; **one circle per state visit**, centred on the line at its date. The **number inside** is how many findings the state posted from that visit, and the circle grows with it (sqrt, capped at 10). **Solid ink** = every finding corrected at the inspection or verified fixed. **Outlined ring** = some fixes not yet verified. **Small ring with a check** = a visit with no findings posted. **Ember notch** (top-right) = at least one finding on a High-risk rule. Tap a circle: Findings opens scrolled to that visit. The key is one line and only lists what this record draws ("Fixes not yet verified", "High-risk rule cited"); the number explains itself. Variants: `hero` (place page head, onboarding) 30–52 pt, `full` (alert) 24–38 pt, `compact` (cards, rows) 18–25 pt. Replaced the stacked-squares strip (owner, Oct 25: "a chart that needs a 3-line legend"). Counts and dates only; no total, no color for "good", nothing that ranks.
 
 ## 6. Screens
 
 | # | Screen | Structure |
 |---|---|---|
 | 1 | Home | Map full-bleed. Search pill top (safe area + 8). Locate `FloatButton` rides above the sheet. Sheet detents peek / half / full. Peek: "**N daycares** near you" `largeTitle` + chip row (Centers · Homes · In TX-04 · Accepts subsidies). Half (60%): carousel of `DaycareCard`. Full: `PlaceRow` list. |
-| 2 | Place page | `MapSnapshot` hero 240 high bleeding under the status bar; sheet-style body with 28 top radius overlapping the hero by 28. Name `display`; meta line; `InfoChip` row (ages · capacity · hours · subsidies); action row (Call · Directions · Official record · Share); sticky bottom bar with `Button ink` "Watch this daycare" + square share button (uber-3); `Tabs` Overview / Findings / Rights. Overview, three different shapes so it never reads as a card grid: `RecordStrip hero` → `StatBand` (visits · findings · on High risk rules) → `RingCard` (verified fixed, N of M) → "Next to the county" as two bars (this daycare in ink, county median in grey) → "Last checked with the state". |
+| 2 | Place page | `PlaceGallery` hero 236 under the status bar; head with 28 top radius overlapping it. Head, in order: name `display` → address (centers: state line; homes: city + ZIP only) · TX-04 → **the record**: hero numeral "days since the state's last visit" + "Last visit <date>" → visit rail `hero` → one sentence ("9 findings across 4 state visits since Oct 2024 · 1 on a High-risk rule") + county median line → 3 fact chips → action tiles (Apple Maps · Google Maps · State record; homes: State record only). Then `Tabs`. Overview: **"Ask about these on your tour"** card (2 questions from `lib/tour`, built from this daycare's findings) → "More details" (verified ring, permit, capacity). Findings: visits newest first, highest risk first; 2+ Low / Medium Low findings fold into one "N lower-risk findings" row. Scrolled: a slim dimmed slice of the hero map stays behind the name in the top bar, so the page never loses its picture. Sticky `Button ink` "Watch this daycare" + share. |
 | 3 | Onboarding | `ProgressBar` + close. Step 1 why (real TX-04 numbers as numerals). Step 2 find your daycare (search). Step 3 alerts (explain, then OS prompt). Celebration on watch. |
-| 4 | Alert | Compact strip with the new mark pulsing once, "What the state posted", plain words, date, what you can do (rights cards). |
+| 4 | Alert | Visit rail with the new visit haloed, "What the state posted", plain words, date, what you can do (rights cards). |
 | 5 | Findings + Rights | Findings: timeline cards grouped by visit. Rights: action cards that open the generated request. |
 
 ## 7. Rules
@@ -158,16 +160,15 @@ What "built" looks like here: a 4/8-pt rhythm, optically centred glyphs, card sh
 
 ## 9. Content density (owner, Oct 24)
 
-**First view of any screen = one headline, at most 3 key facts, the record strip, one primary action.** Everything else is one tap deeper. No repeated labels, no footnotes, no secondary stats in first view.
+**First view of any screen = one headline, at most 3 key facts, the visit rail, one primary action.** Everything else is one tap deeper. No repeated labels, no footnotes, no secondary stats in first view.
 
 | Primitive | Enforces |
 |---|---|
 | `FactChips` | Renders at most `MAX_FACTS` (3) facts, whatever it is given. Place page: type · ages · hours |
-| `Disclosure` | "More details" row. Place page Overview hides the verified-fix ring, the county bars, capacity / subsidies / permit date and tour questions behind it |
-| `StatBand` | Three counts, never more |
+| `Disclosure` | "More details" row (verified-fix ring, capacity / subsidies / permit date) and the "N lower-risk findings" fold |
 | `StickyBar` | Exactly one primary action |
 
-Place page, first view: gallery · name · address (· TX-04) · 3 fact chips · Apple Maps / Google Maps / State record · tabs · strip · 3 counts · "Watch this daycare".
+Place page, first view (6.3" iPhone): gallery · name · address · **days since the last visit · rail · one sentence** · "Watch this daycare". Chips, tiles and tabs start one scroll down.
 
 ## 10. Location imagery (integrator rules, Oct 24 11:15 pm)
 
@@ -175,7 +176,7 @@ Place page, first view: gallery · name · address (· TX-04) · 3 fact chips ·
 |---|---|---|---|
 | Licensed Center, geocode `state` / `exact` / unknown | `PlaceGallery`: Esri aerial z17 → z15 → Apple 3D flyover (pitch 60), dots, swipe | Esri aerial, pin | "Location from the state record" / "Placed from the street address" / "Area around the address" |
 | Licensed Center, geocode `non_exact` | Plain muted map with pin, no aerial | Esri aerial | "Approximate location (address matched with corrections)" |
-| Any home type (Licensed / Registered Child-Care Home, Listed Family Home), or unknown type | Grey Esri street canvas, zoom ≤ 14, ~400 m area circle, **no pin, no photo, no flyover** | Same grey canvas, circle, no pin | "Neighborhood only. This is a private home" |
+| Any home type (Licensed / Registered Child-Care Home, Listed Family Home), or unknown type | Grey Esri street canvas, zoom ≤ 14, ~400 m area circle centred on a 0.005° grid point, **no pin, no photo, no flyover**. Address shows city + ZIP only; no Apple / Google Maps tiles (integrator, Oct 24 11:49 pm) | Same grey canvas, circle, no pin | "Neighborhood only · private home" |
 
 `lib/imagery.ts` (`imageryAllowed`) is the single test; `DaycareCard` / `PlaceRow` require `operationType` so no caller can skip it. Credit shows on every image: "Imagery © Esri, Maxar", "Map © Esri, HERE, Garmin, OSM", or "© Esri" on thumbnails. An aerial never claims to show the building.
 

@@ -118,7 +118,7 @@ function Visit({ v, g, c, selected }: { v: Placed; g: Geometry; c: Colors; selec
   const d = v.d;
   const open = v.marks.some((m) => m.open);
   const high = v.marks.some((m) => m.rank === 5);
-  const notch = Math.max(7, Math.round(d * 0.3));
+  const notch = Math.max(8, Math.round(d * 0.36));
   return (
     <View style={{ width: d, height: d }}>
       {selected ? (

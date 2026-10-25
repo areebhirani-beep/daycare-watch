@@ -8,11 +8,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useAlertTaps } from '@/lib/notifications';
 import { persister, queryClient, shouldPersist } from '@/lib/query';
+import { mark } from '@/lib/perf';
 import { isWeb } from '@/lib/runtime';
 import { ensureSession } from '@/lib/supabase';
 import { dark, font, light } from '@/theme';
 
 void SplashScreen.preventAutoHideAsync();
+mark('js start');
 
 export default function RootLayout() {
   const scheme = useColorScheme();

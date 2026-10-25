@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 
+import { AppMark } from '@/components/ui/AppMark';
 import { Button } from '@/components/ui/Button';
 import { EXAMPLE_OPERATION_ID, markOnboarded } from '@/components/ui/onboarding';
 import { OnboardingFrame } from '@/components/ui/OnboardingFrame';
@@ -38,10 +39,19 @@ export default function WhyScreen() {
       }}
       actions={<Button label="Find your daycare" kind="ink" onPress={() => router.push('/onboarding/find')} />}
     >
-      <Animated.View entering={rise(0)}>
-        <Text variant="display" accessibilityRole="header">
-          See what Texas inspectors found.
-        </Text>
+      <Animated.View entering={rise(0)} style={{ gap: space.lg }}>
+        <View style={styles.lockup}>
+          <AppMark width={52} />
+          <Text variant="headline">Daycare Watch</Text>
+        </View>
+        <View style={{ gap: space.sm }}>
+          <Text variant="display" accessibilityRole="header">
+            See what Texas inspectors found at your daycare.
+          </Text>
+          <Text variant="body" tone="secondary">
+            Plain words from the state record, and an alert when the state posts something new.
+          </Text>
+        </View>
       </Animated.View>
 
       <Animated.View entering={rise(1)} style={[styles.card, { backgroundColor: c.sunken }]}>
@@ -77,4 +87,5 @@ const styles = StyleSheet.create({
   card: { borderRadius: radius.stat, padding: space.lg, gap: space.xs },
   numeralRow: { flexDirection: 'row', alignItems: 'flex-end', gap: space.sm },
   atLeast: { paddingBottom: 10 },
+  lockup: { flexDirection: 'row', alignItems: 'center', gap: space.md },
 });

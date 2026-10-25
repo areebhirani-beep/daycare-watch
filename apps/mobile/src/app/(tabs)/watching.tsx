@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { FlatList, Linking, RefreshControl, StyleSheet, View } from 'react-native';
+import { Alert, FlatList, Linking, RefreshControl, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LastChecked } from '@/components/ui';
@@ -11,10 +11,21 @@ import { Glyph } from '@/components/ui/Glyph';
 import { rowFallback, rowMeta, rowStrip } from '@/components/ui/HomeMap';
 import { RowSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
-import { useMyWatches, usePrefetchRecords } from '@/lib/api';
+import { startOver, useMyWatches, usePrefetchRecords } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
 import { getPermission, type PermissionState } from '@/lib/notifications';
 import { radius, space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
+
+function confirmStartOver() {
+  Alert.alert('Start over?', 'Stops every watch on this phone and shows setup again.', [
+    { text: 'Cancel', style: 'cancel' },
+    {
+      text: 'Start over',
+      style: 'destructive',
+      onPress: () => void startOver().then(() => router.replace('/onboarding')),
+    },
+  ]);
+}
 
 export default function WatchingScreen() {
   const c = useColors();
@@ -83,7 +94,8 @@ export default function WatchingScreen() {
       ListHeaderComponent={
         list.length > 0 ? (
           <View style={styles.header}>
-            <Text variant="largeTitle" accessibilityRole="header">
+            {/* Long-press: start over for the next parent in a test session. */}
+            <Text variant="largeTitle" accessibilityRole="header" suppressHighlighting onLongPress={confirmStartOver}>
               Watching
             </Text>
             {permission === 'denied' ? (

@@ -10,6 +10,7 @@ jest.mock('../supabase', () => ({
   ensureSession: jest.fn(async () => 'stale-user'),
   resetSession: mockReset,
 }));
+jest.mock('../storage', () => ({ storage: { remove: jest.fn() } }));
 
 const deletedUser: RpcResult = {
   data: null,

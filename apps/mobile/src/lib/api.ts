@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
 import { isWeb } from './runtime';
+import { storage } from './storage';
 import { configError, ensureSession, resetSession, supabase } from './supabase';
 import type {
   AlertDetail,
@@ -140,4 +141,17 @@ export function useSetWatch(id: number) {
 export async function registerDevice(token: string, platform: 'ios' | 'android'): Promise<void> {
   if (isWeb) return;
   await rpc<void>('register_device', { p_expo_push_token: token, p_platform: platform });
+}
+
+/**
+ * Hand the phone to the next parent in a test session: stop every watch (so the old anonymous user gets no more
+ * pushes), start a fresh anonymous user, forget the saved spot, and show onboarding again.
+ */
+export async function startOver(): Promise<void> {
+  const watched = await rpc<DaycareRow[]>('my_watches');
+  await Promise.all(watched.map((d) => rpc<void>('unwatch', { p_operation_id: d.operation_id })));
+  await resetSession();
+  // Keys owned by components/ui/onboarding.ts and the Home screen.
+  storage.remove('onboarded.v1');
+  storage.remove('last-position');
 }

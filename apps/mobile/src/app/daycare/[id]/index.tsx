@@ -8,7 +8,7 @@ import { PlaceSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useAreaCompare, useDaycareRecord, useIsWatching, useSetWatch } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
-import { addressLine, appleMapsUrl, googleMapsUrl } from '@/lib/maps';
+import { appleMapsUrl, directionsAddress, googleMapsUrl } from '@/lib/maps';
 import { LAW_CITE, requestText } from '@/lib/rights';
 import { space, useColors } from '@/theme';
 
@@ -39,7 +39,9 @@ export default function DaycareRecordScreen() {
 
   const { daycare, official_url, last_checked_at } = record.data;
   const name = tidyCase(daycare.name);
-  const address = addressLine(daycare);
+  // Null for home daycares: no directions to a private residence.
+  const destination = directionsAddress(daycare);
+  const openMaps = (url: (a: string) => string) => (destination ? () => void Linking.openURL(url(destination)) : undefined);
 
   return (
     <>
@@ -53,9 +55,9 @@ export default function DaycareRecordScreen() {
         onUnwatch={() => setWatch.mutate(false)}
         onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
         onShare={() => void Share.share({ message: `${name}: Texas state inspection record ${official_url}` })}
-        onDirections={() => void Linking.openURL(Platform.OS === 'ios' ? appleMapsUrl(address) : googleMapsUrl(address))}
-        onOpenAppleMaps={() => void Linking.openURL(appleMapsUrl(address))}
-        onOpenGoogleMaps={() => void Linking.openURL(googleMapsUrl(address))}
+        onDirections={openMaps(Platform.OS === 'ios' ? appleMapsUrl : googleMapsUrl) ?? (() => undefined)}
+        onOpenAppleMaps={openMaps(appleMapsUrl)}
+        onOpenGoogleMaps={openMaps(googleMapsUrl)}
         onOfficial={() => void WebBrowser.openBrowserAsync(official_url)}
         onTour={() => router.push(`/daycare/${operationId}/tour`)}
         onRequest={(kind: RequestKind) => {

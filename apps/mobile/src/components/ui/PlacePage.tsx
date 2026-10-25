@@ -150,6 +150,10 @@ export function PlacePage({
     daycare.issuance_date ? `Permit issued ${formatDate(daycare.issuance_date)}` : null,
   ].filter((m): m is string => m !== null);
   const quality = (daycare as typeof daycare & { geocode_quality?: GeocodeQuality | null }).geocode_quality;
+  // Home daycares are private residences (lib/imagery): the hero shows only the neighborhood, so the page
+  // doesn't print the street or hand out turn-by-turn directions to the house either.
+  const privateHome = !imageryAllowed(daycare.operation_type);
+  const aerial = hasPoint && !privateHome && quality !== 'non_exact';
 
   const notes = [
     daycare.status === 'inactive' ? 'The state lists this permit as inactive.' : null,
@@ -163,7 +167,7 @@ export function PlacePage({
     ? tidyCase(daycare.address.replace(/\s+/g, ' ').replace(/\bTX-?\s*(\d{5})(?:[\s-]?\d{4})?\b/i, 'TX $1').trim()).replace(/\bTx\b/, 'TX')
     : null;
   const address = [
-    street ?? [tidyCase(daycare.city), daycare.zip].filter(Boolean).join(' '),
+    (privateHome ? null : street) ?? [tidyCase(daycare.city), daycare.zip].filter(Boolean).join(' '),
     daycare.in_district && daycare.district_basis === 'point' ? 'TX-04' : null,
   ]
     .filter(Boolean)
@@ -171,14 +175,14 @@ export function PlacePage({
 
   return (
     <View style={{ flex: 1, backgroundColor: c.surface }}>
-      {/* Light status-bar text over the aerial photo. */}
-      <StatusBar style={solid || !hasPoint ? 'auto' : 'light'} />
+      {/* Light status-bar text over the aerial photo; the street maps follow the theme. */}
+      <StatusBar style={solid || !aerial ? 'auto' : 'light'} />
       <Animated.ScrollView contentContainerStyle={{ paddingBottom: space.section }} onScroll={onScroll} scrollEventThrottle={16}>
         <PlaceGallery
           lat={daycare.lat}
           lng={daycare.lng}
           quality={quality}
-          imagery={imageryAllowed(daycare.operation_type)}
+          imagery={!privateHome}
           watched={watching}
           height={heroH + insets.top}
           bottomInset={radius.sheet}
@@ -204,7 +208,7 @@ export function PlacePage({
           ) : null}
           <FactChips facts={facts} />
           <View style={styles.tiles}>
-            {onOpenAppleMaps && onOpenGoogleMaps ? (
+            {privateHome ? null : onOpenAppleMaps && onOpenGoogleMaps ? (
               <>
                 <ActionTile icon="map" label="Apple Maps" onPress={onOpenAppleMaps} />
                 <ActionTile icon="directions" label="Google Maps" onPress={onOpenGoogleMaps} />

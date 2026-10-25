@@ -323,7 +323,7 @@ export function HomeMap({
               </View>
             ) : (
               <Text variant="callout" tone="secondary" style={{ padding: space.lg }}>
-                No daycares match these filters here.
+                {filters.size > 0 ? 'No daycares match these filters here.' : 'No licensed daycares within 15 km of here.'}
               </Text>
             )
           }

@@ -68,6 +68,7 @@ function openFromNotification(n: Notifications.Notification) {
 /** Opens the alert detail when a parent taps a push, including a cold start from the push. */
 export function useAlertTaps() {
   useEffect(() => {
+    if (isWeb) return;
     const last = Notifications.getLastNotificationResponse();
     if (last) openFromNotification(last.notification);
     const sub = Notifications.addNotificationResponseReceivedListener((r) =>

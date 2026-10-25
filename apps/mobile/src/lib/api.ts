@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { isWeb } from './runtime';
 import { configError, ensureSession, resetSession, supabase } from './supabase';
 import type {
   AlertDetail,
@@ -13,7 +14,7 @@ import type {
 // The app reaches data only through the RPCs in CONTRACT.md section 4.
 async function rpc<T>(fn: string, args?: Record<string, unknown>, limit?: number): Promise<T> {
   if (configError) throw new Error(configError);
-  await ensureSession();
+  if (!isWeb) await ensureSession();
   const call = () => (limit ? supabase.rpc(fn, args).limit(limit) : supabase.rpc(fn, args));
   let { data, error } = await call();
   // 23503 on user_id: the session's user was deleted server-side. Retry once as a fresh anonymous user.
@@ -74,6 +75,8 @@ export function useMyWatches() {
   return useQuery({
     queryKey: keys.watches,
     queryFn: () => rpc<DaycareRow[]>('my_watches'),
+    // Watching belongs to a signed-in phone; the web link never signs in.
+    enabled: !isWeb,
   });
 }
 
@@ -108,6 +111,7 @@ export function useSetWatch(id: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (watching: boolean) => {
+      if (isWeb) throw new Error('Watching a daycare needs the app.');
       await rpc<void>(watching ? 'watch' : 'unwatch', { p_operation_id: id });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.watches }),
@@ -115,5 +119,6 @@ export function useSetWatch(id: number) {
 }
 
 export async function registerDevice(token: string, platform: 'ios' | 'android'): Promise<void> {
+  if (isWeb) return;
   await rpc<void>('register_device', { p_expo_push_token: token, p_platform: platform });
 }

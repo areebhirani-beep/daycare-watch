@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useAlertTaps } from '@/lib/notifications';
 import { persister, queryClient, shouldPersist } from '@/lib/query';
+import { isWeb } from '@/lib/runtime';
 import { ensureSession } from '@/lib/supabase';
 import { dark, font, light } from '@/theme';
 
@@ -17,7 +18,7 @@ export default function RootLayout() {
   const scheme = useColorScheme();
   const c = scheme === 'dark' ? dark : light;
   useEffect(() => {
-    void ensureSession().catch(() => undefined);
+    if (!isWeb) void ensureSession().catch(() => undefined);
   }, []);
   useEffect(() => {
     void SplashScreen.hideAsync();

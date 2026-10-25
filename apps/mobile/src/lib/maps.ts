@@ -1,3 +1,5 @@
+import { tidyCase } from './format';
+import { isResidence } from './imagery';
 import type { DaycareHeader } from './types';
 
 /**
@@ -23,4 +25,21 @@ export function appleMapsUrl(address: string): string {
 /** Google Maps directions to the address. A universal link: opens the Google Maps app when installed, else the web. */
 export function googleMapsUrl(address: string): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+}
+
+type Place = Pick<DaycareHeader, 'address' | 'city' | 'zip' | 'operation_type'>;
+
+/**
+ * The address a screen may show. Home daycares are private residences: city and ZIP only, never the street
+ * ("Georgetown, TX 78626"). Centers get the full state address line.
+ */
+export function placeAddress(d: Place): string {
+  if (!isResidence(d.operation_type)) return addressLine(d);
+  const zip5 = (d.zip ?? '').trim().slice(0, 5);
+  return [tidyCase(d.city), ['TX', zip5].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+}
+
+/** Where directions may point, or null for a home daycare: no turn-by-turn route to a private house. */
+export function directionsAddress(d: Place): string | null {
+  return isResidence(d.operation_type) ? null : addressLine(d);
 }

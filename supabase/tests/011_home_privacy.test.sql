@@ -72,7 +72,8 @@ select is(
 
 reset role;
 
--- Photo age rule, on a real exact-geocoded licensed center (rolled back).
+-- Photo age rule, on a real exact-geocoded licensed center (rolled back). A person checked each verified photo shows
+-- this daycare, so the permit date no longer hides one; the 6-year limit still does.
 create temp table c on commit drop as
 select operation_id, issuance_date from core.daycares
  where operation_type = 'Licensed Center' and geocode_source = 'census' and geocode_quality = 'exact'
@@ -88,7 +89,7 @@ union all select operation_id, 'qa-current', now() - interval '30 days', 5, true
 set local role anon;
 select is(
   (select jsonb_agg(p ->> 'image_id') from c, jsonb_array_elements(public.daycare_record(c.operation_id) -> 'photos') p),
-  '["qa-current"]'::jsonb, 'a photo taken before the permit was issued is dropped');
+  '["qa-current", "qa-before-permit"]'::jsonb, 'a verified photo taken before the permit was issued is still shown');
 reset role;
 
 update core.daycare_photos set captured_at = now() - interval '7 years'

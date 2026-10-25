@@ -2,7 +2,7 @@
 -- Van Alstyne; 1366137 Princeton Montessori; both from supabase/seed.sql).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(42);
+select plan(44);
 
 insert into auth.users (id, aud, role) values
   ('00000000-0000-4000-8000-00000000000a', 'authenticated', 'authenticated'),
@@ -104,7 +104,11 @@ select is((public.last_sync() ->> 'ok')::boolean, true, 'last_sync returns the n
 -- watch / my_watches / unwatch
 select lives_ok('select public.watch(1471156); select public.watch(1471156);', 'watch is idempotent');
 select is((select count(*) from public.my_watches()), 1::bigint, 'my_watches lists the watch once');
-select throws_ok('select public.watch(-1)', 'P0002', null, 'watch rejects an unknown daycare');
+select throws_ok('select public.watch(-1)', 'PT404', null, 'watch rejects an unknown daycare with a 404, not a 500');
+select throws_ok($$ select public.register_device('ExponentPushToken[' || repeat('a', 300) || ']', 'ios') $$, '22023', null,
+                 'register_device refuses a token longer than 200 characters');
+select throws_ok($$ select public.register_device('ExponentPushToken[a b]', 'ios') $$, '22023', null,
+                 'register_device refuses a token with a space inside');
 
 -- alert_detail: A watches 1471156; B does not
 select ok(public.alert_detail((select id from ev)) -> 'finding' ->> 'non_compliance_id' is not null, 'watcher sees the alert with its finding');

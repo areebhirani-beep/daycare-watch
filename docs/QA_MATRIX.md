@@ -76,11 +76,11 @@ Rows are tested cold, by someone who did not write the UI.
 
 | # | Case | Method | Status | Evidence | Owner if it fails |
 |---|---|---|---|---|---|
-| W1 | Search, desktop width (1440 px) | Chrome | FAIL (D20) | local export renders blank; deploy pending | mobile |
-| W2 | Place page, desktop width | Chrome | FAIL (D20) | local export renders blank; deploy pending | mobile |
-| W3 | Rights, desktop width | Chrome | FAIL (D20) | local export renders blank; deploy pending | mobile |
-| W4 | Search, place, rights at phone width (390 px) | Chrome | FAIL (D20) | local export renders blank; deploy pending | mobile |
-| W5 | No anonymous sign-in on web | Chrome network log (no `/auth/v1/signup`) | PENDING (needs D20) | | pipeline |
+| W1 | Search, desktop width (1440 px) | Chrome | PASS (local build; deploy pending) | `/search` "Lionhart" → 10+ Lionheart centers (typo tolerance on web), rows show type · city · last visit | mobile |
+| W2 | Place page, desktop width | Chrome | PASS (local build; deploy pending) | `/daycare/1279336`: Esri still + pin + credit, real findings with fix status, web footer "Alerts need the app" | mobile |
+| W3 | Rights, desktop width | Chrome | PASS (local build; deploy pending) | Your rights tab: 3 actions + §42.04271; "Request records" builds the letter with the daycare’s name (`navigator.share` stubbed to capture the payload) | mobile |
+| W4 | Search, place, rights at phone width (390 px) | Chrome, 390×844 frame | PASS (local build; deploy pending) | scrollWidth 390 on all three (no sideways scroll); only map tiles clip inside the hero. "75034" search returns Frisco rows | mobile |
+| W5 | No anonymous sign-in on web | Resource Timing + storage | PASS (local build; deploy pending) | 0 of 70 requests hit `/auth/v1`; 0 `sb-` session keys; API calls are only `daycare_search`, `daycare_record`, `area_compare`, `last_sync` | pipeline |
 | W6 | Web bundle carries no street-photo code or keys | `grep` of the web export for `MLY\|`, the Mapillary env var, `graph.mapillary.com`, the token value, `service_role` | PASS | all 0; control: the API URL found 1× | mobile |
 
 ## Failures filed
@@ -106,4 +106,5 @@ Rows are tested cold, by someone who did not write the UI.
 | D17 | U12, U14 | mobile + design | 02:31 Oct 25 | [u14-zero-0](qa/u14-zero-0.jpg) | Med · parent + CAC-judge lens: 3D view (page one) has no pin; can’t tell which building · FIXED 02:33 by design (pin on the 3D view), re-tested PASS (1396589, 1459611) |
 | D18 | U30 | mobile | 02:37 Oct 25 | `maestro hierarchy` | WITHDRAWN 02:38: search pill missing only from the XCUITest snapshot at the half sheet; present at peek and on mobile’s sim |
 | D19 | M4 | design + mobile | 03:02 Oct 25 | [D19](qa/D19-reduce-motion-caption.jpg) | Med · Apple-engineer lens: under Reduce Motion the Esri still is captioned "3D view · Apple Maps", uncredited · FIXED 03:05 (final: 3D view kept, drift stopped; mobile’s gallery gate removed), re-tested PASS with pixel check |
-| D20 | W1–W4 | design (mobile backup) | 03:13 Oct 25 | | High · CAC-judge lens: the web build is blank on every route. Console: `codegenNativeComponent is not a function` (react-native-maps). `FlyoverHero.tsx:3` imports react-native-maps and has no `.web` variant; onboarding and the place page import it · OPEN |
+| D20 | W1–W4 | design (mobile backup) | 03:13 Oct 25 | | High · CAC-judge lens: the web build is blank on every route. Console: `codegenNativeComponent is not a function` (react-native-maps). `FlyoverHero.tsx:3` imports react-native-maps and has no `.web` variant; onboarding and the place page import it · FIXED 03:15 by design (`FlyoverHero.web.tsx` + native-free `flyover.ts`), re-tested: rebuilt export has 0 `codegenNativeComponent`, W1–W5 PASS |
+| D21 | W4 | mobile | 03:18 Oct 25 | | Low · Apple-engineer lens: on web the place-page tabs have `role=tab` but no `aria-selected`, so a screen reader can’t tell which tab is open (iOS is fine via `accessibilityState`, `Tabs.tsx:35`) · OPEN |

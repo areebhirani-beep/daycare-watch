@@ -137,6 +137,17 @@ flowchart LR
 | Active daycares inside TX-04 by map point | at least 379 (330 exact, 28 non-exact, 21 state coordinates). 23 more fall back to county only and are never labeled TX-04 |
 | RPC latency, p95 on the full dataset | nearest daycares 7.5 ms · search 30 ms · daycare record 1 ms |
 
+**Inside TX-04 only** (the 379 active daycares placed in the district by map point; 13 complete weeks, Jul 20 to Oct 18 2026):
+
+| Fact | Number |
+|---|---|
+| State activities at these daycares | 284 at 158 daycares, about 22 a week (238 inspections, 42 reports, 4 assessments) |
+| Activities that found violations | 65. Another 23 are still marked "Pending" in the state data, which fits findings being posted 1 to 3 weeks after a visit |
+| Findings posted | 135: 31 under rules the state rates High risk, 55 Medium High, 47 Medium, 2 lower |
+| Most common categories | Paperwork 46 · Safety hazards 34 · Health and medication 30 · Supervision 10 |
+| Time between state inspections at one daycare | Median 66 days, 90th percentile 330 days (inspections since Oct 2023) |
+| Daycares with at least one finding under a High-risk rule in the last 24 months | 140 of 379 |
+
 ### Data model
 
 | Table | Key | What it holds |

@@ -32,7 +32,7 @@ The app never calls a daycare safe or unsafe, and never scores, grades, or ranks
 1. Open **[daycare-watch.vercel.app](https://daycare-watch.vercel.app)** on any phone or computer.
 2. Search a name, city, or ZIP in TX-04, for example `Montessori`, `Rockwall`, or `75034`.
 3. Open a daycare: its latest state visit in plain English, each finding with the inspector's own words, and a link to the official state record.
-4. On that daycare's page, tap **Your rights**: the three requests Texas law already gives parents (your child's records, a drop-in visit, incident video), written and ready to send.
+4. Scroll a little to the tabs under the daycare's name and tap **Your rights**: the three requests Texas law already gives parents (your child's records, a drop-in visit, incident video), written and ready to send.
 
 On the iPhone app, **Watch this daycare** turns on a push alert for the next time the state posts something about it.
 
@@ -118,7 +118,7 @@ Every legal, dataset, and district claim was checked against a primary source on
 
 ## Team
 
-Areeb, Parth, Praneel, and Aydin, from Texas's 4th Congressional District.
+Areeb, Aydin, Praneel, and Parth, from Texas's 4th Congressional District.
 
 ## License
 

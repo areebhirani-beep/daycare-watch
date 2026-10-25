@@ -1,0 +1,59 @@
+# QA U13-U17, U27: place pages on real records, opened by deep link.
+#   97587   Amarillo Wesley Community Center (220 findings, exact geocode)
+#   1490119 Megan Baker, a registered child-care home (exact geocode): no street, no imagery, no house pin
+#   98685   Play House, a licensed center with an approximate geocode
+#   1120831 Clarice Roe Child Development Center (no map point at all)
+#   1459611 Viva World School (Fix due Oct 30, never "Fixed <date>")
+appId: host.exp.Exponent
+---
+- runFlow: _open.yaml
+
+# U15 many findings
+- openLink: ${METRO}/--/daycare/97587
+- extendedWaitUntil:
+    visible: "Amarillo Wesley.*"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/qa/u15-many-0
+- runFlow:
+    when:
+      visible: "See all.*"
+    commands:
+      - tapOn: "See all.*"
+      - waitForAnimationToEnd
+      - takeScreenshot: ../../harness/state/qa/u15-many-1-all
+      - back
+
+# U13 home daycare
+- openLink: ${METRO}/--/daycare/1490119
+- extendedWaitUntil:
+    visible: ".*Baker.*"
+    timeout: 20000
+- assertNotVisible: "Imagery.*"
+- assertNotVisible: "Placed from the street address"
+- takeScreenshot: ../../harness/state/qa/u13-home-0
+
+# U16 approximate geocode
+- openLink: ${METRO}/--/daycare/98685
+- extendedWaitUntil:
+    visible: "Play House.*"
+    timeout: 20000
+- takeScreenshot: ../../harness/state/qa/u16-approx-0
+
+# no map point at all
+- openLink: ${METRO}/--/daycare/1120831
+- extendedWaitUntil:
+    visible: "Clarice Roe.*"
+    timeout: 20000
+- takeScreenshot: ../../harness/state/qa/u16-nopoint-0
+
+# U17 fix-status wording: the Oct 5 findings have a future corrected_date (Oct 30), a due date.
+- openLink: ${METRO}/--/daycare/1459611
+- extendedWaitUntil:
+    visible: "Viva World School.*"
+    timeout: 20000
+- assertVisible: ".*Fix due Oct 30.*"
+- assertNotVisible: "Fixed.*Oct 30.*"
+- takeScreenshot: ../../harness/state/qa/u17-viva-0
+# U27: one tap to the state's own page
+- assertVisible: "State record"

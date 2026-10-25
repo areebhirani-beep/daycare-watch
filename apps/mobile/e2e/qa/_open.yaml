@@ -1,4 +1,5 @@
 # Shared: open the app in Expo Go from Metro and dismiss Expo Go's own first-run sheets.
+# Expo Go's floating gear is its own chrome; filming and store builds don't have it.
 # Pass CLEAR=true to start from a fresh install state (first launch).
 appId: host.exp.Exponent
 ---

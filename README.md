@@ -91,7 +91,7 @@ Run on Oct 25 2026. Details and commands: [`docs/TESTING.md`](docs/TESTING.md).
 | Suite | Result |
 |---|---|
 | Pipeline (pytest and hypothesis) | 283 pass, 93% line coverage, ruff and `mypy --strict` clean |
-| Database (pgTAP): schema, row-level security, every SQL function, home privacy | 195 pass in 12 files |
+| Database (pgTAP): schema, row-level security, every SQL function, home privacy | 196 pass in 12 files |
 | Live API against the cloud database | 94 of 94 endpoint checks pass |
 | App unit (Jest) | 63 pass |
 | End to end | Tapping a push with the app closed or in the background opens that visit's findings (Release build, Maestro); a replayed real finding arrived as a push on a real iPhone |

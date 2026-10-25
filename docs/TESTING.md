@@ -6,7 +6,7 @@ Every number below came from running the command next to it on **Oct 25 2026**. 
 
 | Suite | Result | Command |
 |---|---|---|
-| Database (pgTAP): schema, row-level security allow and deny, every RPC, views, visits, geocode quality, photos rule, search, home privacy (no street, 5-digit ZIP) | **195 tests in 12 files, all pass** | `supabase test db` |
+| Database (pgTAP): schema, row-level security allow and deny, every RPC, views, visits, geocode quality, photos rule, search, home privacy (no street, 5-digit ZIP) | **196 tests in 12 files, all pass** | `supabase test db` |
 | Pipeline (pytest + hypothesis) | **283 tests, all pass (29 need the local database) · 93% line coverage** (classify 100%, load 98%, notify 93%, photos 98%) | `cd services/pipeline && DATABASE_URL=... uv run pytest --cov=pipeline` |
 | Pipeline static checks | ruff clean · `mypy --strict` clean on 13 modules | `uv run ruff check . && uv run mypy --strict src` |
 | Mobile unit (Jest) | **63 tests in 12 suites, all pass** | `cd apps/mobile && npx jest` |

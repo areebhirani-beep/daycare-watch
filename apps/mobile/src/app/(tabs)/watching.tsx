@@ -1,26 +1,20 @@
-import { router, useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
-import {
-  FlatList,
-  Linking,
-  RefreshControl,
-  StyleSheet,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { FlatList, Linking, RefreshControl, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { LastChecked } from "@/components/ui";
-import { LoadError } from "@/components/LoadError";
-import { Button } from "@/components/ui/Button";
-import { DaycareCard, PlaceRow } from "@/components/ui/DaycareCard";
-import { Glyph } from "@/components/ui/Glyph";
-import { rowFallback, rowMeta, rowStrip } from "@/components/ui/HomeMap";
-import { RowSkeleton } from "@/components/ui/Skeletons";
-import { Text } from "@/components/ui/Text";
-import { useMyWatches } from "@/lib/api";
-import { tidyCase } from "@/lib/format";
-import { getPermission, type PermissionState } from "@/lib/notifications";
-import { radius, space, TAB_BAR_CLEARANCE, useColors } from "@/theme";
+import { LastChecked } from '@/components/ui';
+import { LoadError } from '@/components/LoadError';
+import { Button } from '@/components/ui/Button';
+import { DaycareCard, PlaceRow } from '@/components/ui/DaycareCard';
+import { Glyph } from '@/components/ui/Glyph';
+import { rowFallback, rowMeta, rowStrip } from '@/components/ui/HomeMap';
+import { RowSkeleton } from '@/components/ui/Skeletons';
+import { Text } from '@/components/ui/Text';
+import { useMyWatches, usePrefetchRecords } from '@/lib/api';
+import { tidyCase } from '@/lib/format';
+import { getPermission, type PermissionState } from '@/lib/notifications';
+import { radius, space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
 
 export default function WatchingScreen() {
   const c = useColors();
@@ -37,6 +31,8 @@ export default function WatchingScreen() {
   );
 
   const list = watches.data ?? [];
+  // Watched records load in the background and persist, so they open offline.
+  usePrefetchRecords(list.map((d) => d.operation_id));
   // One to three watched daycares read as pictures; a longer list goes back to compact rows.
   const cards = list.length <= 3;
   return (
@@ -90,17 +86,10 @@ export default function WatchingScreen() {
             <Text variant="largeTitle" accessibilityRole="header">
               Watching
             </Text>
-            {permission === "denied" ? (
+            {permission === 'denied' ? (
               <View style={[styles.notice, { backgroundColor: c.sunken }]}>
-                <Text variant="callout">
-                  Notifications are off, so alerts can&rsquo;t reach you.
-                </Text>
-                <Button
-                  label="Open Settings"
-                  kind="secondary"
-                  size="md"
-                  onPress={() => void Linking.openSettings()}
-                />
+                <Text variant="callout">Notifications are off, so alerts can&rsquo;t reach you.</Text>
+                <Button label="Open Settings" kind="secondary" size="md" onPress={() => void Linking.openSettings()} />
               </View>
             ) : null}
           </View>
@@ -113,10 +102,7 @@ export default function WatchingScreen() {
             <RowSkeleton />
           </View>
         ) : watches.isError ? (
-          <LoadError
-            style={{ paddingTop: space.xl }}
-            onRetry={() => void watches.refetch()}
-          />
+          <LoadError style={{ paddingTop: space.xl }} onRetry={() => void watches.refetch()} />
         ) : (
           <View style={styles.empty}>
             <View style={[styles.disc, { backgroundColor: c.signal }]}>
@@ -131,8 +117,8 @@ export default function WatchingScreen() {
             <Button
               label="Find a daycare"
               kind="ink"
-              onPress={() => router.navigate("/")}
-              style={{ alignSelf: "stretch" }}
+              onPress={() => router.navigate('/')}
+              style={{ alignSelf: 'stretch' }}
             />
           </View>
         )
@@ -141,8 +127,7 @@ export default function WatchingScreen() {
         list.length > 0 ? (
           <View style={{ paddingHorizontal: space.lg, gap: space.sm }}>
             <Text variant="callout" tone="secondary">
-              You&rsquo;ll get an alert when the state posts something new about
-              a daycare you watch.
+              You&rsquo;ll get an alert when the state posts something new about a daycare you watch.
             </Text>
             <LastChecked />
           </View>
@@ -163,8 +148,8 @@ const styles = StyleSheet.create({
   notice: { borderRadius: radius.card, padding: space.lg, gap: space.sm },
   empty: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: space.xl,
     gap: space.md,
   },
@@ -172,8 +157,8 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: space.xs,
   },
 });

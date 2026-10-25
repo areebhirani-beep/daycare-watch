@@ -187,7 +187,7 @@ export function PlacePage({
   ].filter((n): n is string => n !== null);
 
   // Centers: the state's full address line. Homes: city and ZIP only (lib/maps).
-  const address = [tidyCase(placeAddress(daycare)).replace(/\bTx\b/, 'TX'), daycare.in_district && daycare.district_basis === 'point' ? 'TX-04' : null]
+  const address = [tidyCase(placeAddress(daycare)).replace(/\bTx\b/, 'TX'), daycare.in_district && daycare.district_basis === 'point' ? 'TX‑04' : null]
     .filter(Boolean)
     .join(' · ');
   const tour = useMemo(() => buildTourQuestions(record.findings).slice(0, 2), [record.findings]);

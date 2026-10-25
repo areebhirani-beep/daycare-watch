@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 import { isWeb } from './runtime';
 import { configError, ensureSession, resetSession, supabase } from './supabase';
@@ -42,6 +43,24 @@ export function useDaycareRecord(id: number) {
     queryKey: keys.record(id),
     queryFn: () => rpc<DaycareRecord>('daycare_record', { p_operation_id: id }),
   });
+}
+
+/**
+ * Loads place records ahead of a tap: the first cards on Home (the place opens without a wait) and every watched
+ * daycare (persisted, so a parent can open them offline). Cached records are not refetched.
+ */
+export function usePrefetchRecords(ids: number[]) {
+  const qc = useQueryClient();
+  const key = ids.join(',');
+  useEffect(() => {
+    for (const id of key ? key.split(',').map(Number) : []) {
+      void qc.prefetchQuery({
+        queryKey: keys.record(id),
+        queryFn: () => rpc<DaycareRecord>('daycare_record', { p_operation_id: id }),
+        staleTime: 5 * 60_000,
+      });
+    }
+  }, [qc, key]);
 }
 
 export function useAreaCompare(id: number) {

@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, View } from 'react-native';
+import { FlatList, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SearchPill } from '@/components/ui/Chrome';
@@ -11,7 +11,7 @@ import { RowSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useDaycareSearch, useMyWatches } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
-import { space, useColors } from '@/theme';
+import { minTap, space, useColors } from '@/theme';
 
 export default function SearchScreen() {
   const c = useColors();
@@ -25,8 +25,18 @@ export default function SearchScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top + space.sm }}>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={{ paddingHorizontal: space.lg, paddingBottom: space.sm }}>
-        <SearchPill floating={false} input={{ value: q, onChangeText: setQ, autoFocus: true }} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingBottom: space.sm }}>
+        <View style={{ flex: 1 }}>
+          <SearchPill floating={false} input={{ value: q, onChangeText: setQ, autoFocus: true }} />
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={8}
+          style={{ minHeight: minTap, justifyContent: 'center' }}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+        >
+          <Text variant="headline">Cancel</Text>
+        </Pressable>
       </View>
       <FlatList
         data={typed ? (search.data ?? []) : []}
@@ -59,6 +69,10 @@ export default function SearchScreen() {
           ) : typed && search.isSuccess ? (
             <Text variant="callout" tone="secondary" style={{ padding: space.lg }}>
               No Texas daycares match “{q.trim()}”.
+            </Text>
+          ) : !typed ? (
+            <Text variant="callout" tone="secondary" style={{ padding: space.lg }}>
+              Search every Texas daycare in the state&rsquo;s list by name, city, or ZIP.
             </Text>
           ) : undefined
         }

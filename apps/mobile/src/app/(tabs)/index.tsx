@@ -8,7 +8,7 @@ import { LastChecked } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
 import { HomeMap } from '@/components/ui/HomeMap';
 import { Text } from '@/components/ui/Text';
-import { useDaycaresNear, useMyWatches } from '@/lib/api';
+import { useDaycaresNear, useMyWatches, usePrefetchRecords } from '@/lib/api';
 import { mark, tapped } from '@/lib/perf';
 import { isWeb } from '@/lib/runtime';
 import { storage } from '@/lib/storage';
@@ -85,6 +85,7 @@ export default function FindScreen() {
   useEffect(() => {
     if (pins > 0) mark(`first pins (${pins})`);
   }, [pins > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+  usePrefetchRecords(useMemo(() => (near.data ?? []).slice(0, 5).map((d) => d.operation_id), [near.data]));
   const watchedIds = useMemo(() => new Set(watches.data?.map((d) => d.operation_id)), [watches.data]);
 
   const problem = configError ?? (near.isError ? 'We couldn’t reach the state records. Check your connection.' : null);

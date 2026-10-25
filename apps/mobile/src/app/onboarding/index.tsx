@@ -65,7 +65,7 @@ export default function HookScreen() {
           </Text>
         </Animated.View>
         <Animated.View entering={rise(2)} style={{ gap: space.lg }}>
-          <Text variant="footnote" color="rgba(255,255,255,0.78)" numberOfLines={1}>
+          <Text variant="footnote" color="rgba(255,255,255,0.78)" numberOfLines={2}>
             {d ? `A licensed center in ${tidyCase(d.city)}, TX${Platform.OS === 'ios' ? ' · 3D view, Apple Maps' : ''}` : ' '}
           </Text>
           <Button label="Get started" kind="onImage" onPress={() => router.push('/onboarding/how')} />

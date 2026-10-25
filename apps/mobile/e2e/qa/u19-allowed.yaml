@@ -21,9 +21,9 @@ appId: host.exp.Exponent
     commands:
       - tapOn: "Allow While Using App"
 - extendedWaitUntil:
-    visible: ".* mi"
+    visible: ".*Center · [0-9.]+ mi.*"
     timeout: 20000
-- tapOn: ".*Center · .* mi"
+- tapOn: ".*Center · [0-9.]+ mi.*"
 - tapOn: "Watch this daycare"
 - extendedWaitUntil:
     visible: "Turn on alerts"

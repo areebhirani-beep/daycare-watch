@@ -24,6 +24,12 @@ export function recordLine(visits: StripVisit[]): { text: string; found: boolean
   return { text: `${plural(n, 'problem')} found ${when}${serious > 0 ? ` · ${serious} serious` : ''}`, found: true };
 }
 
+/** What VoiceOver reads for a card or row: name, meta, then the record line, which is the point of the card. */
+function spoken(name: string, meta: string, strip?: StripVisit[] | null, fallback?: string, watched?: boolean): string {
+  const line = strip ? recordLine(strip).text : fallback;
+  return [name, meta, line, watched ? 'Watching' : null].filter(Boolean).join('. ');
+}
+
 /** Line caps for names and meta; past 1.6x text nothing truncates, the row grows instead. */
 function useLines(n: number): number | undefined {
   return useWindowDimensions().fontScale >= 1.6 ? undefined : n;
@@ -98,7 +104,7 @@ export function DaycareCard({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${name}. ${meta}`}
+      accessibilityLabel={spoken(name, meta, strip, fallback, watched)}
       onPress={() => {
         haptic.press();
         onPress();
@@ -149,7 +155,7 @@ export function PlaceRow({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${name}. ${meta}`}
+      accessibilityLabel={spoken(name, meta, strip, fallback, watched)}
       accessibilityState={selected === undefined ? undefined : { selected }}
       onPress={() => {
         haptic.press();

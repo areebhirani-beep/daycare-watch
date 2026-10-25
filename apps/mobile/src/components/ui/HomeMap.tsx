@@ -11,7 +11,7 @@ import { haptic, sheet, space, spring, TAB_BAR_CLEARANCE, useColors, useIsDark }
 
 import { FloatButton } from './Button';
 import { Chip, ChipRow } from './Chip';
-import { IconButton, SearchPill, SectionHeader, SheetHandle } from './Chrome';
+import { SearchPill, SectionHeader, SheetHandle } from './Chrome';
 import { DaycareCard, PlaceRow } from './DaycareCard';
 import { imageryAllowed } from '@/lib/imagery';
 import { regionFor } from '@/lib/region';
@@ -73,7 +73,7 @@ function matches(r: DaycareRow, f: Set<Filter>): boolean {
 type Cluster = { key: string; lat: number; lng: number; rows: DaycareRow[] };
 
 // Pins closer than this on screen would overlap, so they share one bubble.
-const CLUSTER_PT = 44;
+const CLUSTER_PT = 52;
 
 /** Screen-grid clustering in points: cheap, stable, fine for the rows daycares_near returns. */
 function cluster(rows: DaycareRow[], region: Region, width: number, height: number): Cluster[] {
@@ -111,7 +111,6 @@ type Props = {
   onOpen: (operationId: number) => void;
   onToggleWatch?: (row: DaycareRow) => void;
   onSearch: () => void;
-  onAlerts: () => void;
   onLocate: () => void;
   /** "Last checked with the state …" (every data screen says when it last matched the state), rendered at the end of the list. */
   footer?: React.ReactNode;
@@ -133,7 +132,6 @@ export function HomeMap({
   onOpen,
   onToggleWatch,
   onSearch,
-  onAlerts,
   onLocate,
   footer,
   feed,
@@ -157,7 +155,12 @@ export function HomeMap({
 
   const shown = useMemo(() => rows.filter((r) => matches(r, filters)), [rows, filters]);
   const mapped = useMemo(() => shown.filter((r) => r.lat != null && r.lng != null), [shown]);
-  const clusters = useMemo(() => cluster(mapped, region, width, height), [mapped, region, width, height]);
+  // Pins under the status bar and the search pill can't be read or tapped; leave them off until the map pans.
+  const pillBottom = insets.top + 64;
+  const clusters = useMemo(() => {
+    const topLat = region.latitude + region.latitudeDelta / 2 - (pillBottom / height) * region.latitudeDelta;
+    return cluster(mapped, region, width, height).filter((k) => k.lat < topLat);
+  }, [mapped, region, width, height, pillBottom]);
   const featured = useMemo(() => shown.slice(0, 12), [shown]);
 
   const snapPoints = useMemo(
@@ -173,8 +176,8 @@ export function HomeMap({
   const targetLng = start.lng;
   // The strip between the search pill and the half sheet is where the map can really be seen.
   const view = useMemo(
-    () => ({ width, height, top: insets.top + 64, bottom: height - sheetCover }),
-    [width, height, insets.top, sheetCover],
+    () => ({ width, height, top: pillBottom, bottom: height - sheetCover }),
+    [width, height, pillBottom, sheetCover],
   );
   // A camera move sent before the map has a size lands zoomed out to half of Texas, so nothing moves until the
   // map is ready. Then show the parent's point and the nearest pins in that strip (just the point while loading).
@@ -292,6 +295,8 @@ export function HomeMap({
         onRegionChangeComplete={setRegion}
         onMapReady={() => setReady(true)}
         showsUserLocation
+        // The parent's own dot is the system blue everyone knows from Maps, never the ink of a cluster bubble.
+        tintColor={isDark ? '#0A84FF' : '#007AFF'}
         showsMyLocationButton={false}
         showsCompass={false}
         showsPointsOfInterests={false}
@@ -310,9 +315,10 @@ export function HomeMap({
               coordinate={{ latitude: k.lat, longitude: k.lng }}
               onPress={() => pick(k.rows[0]!)}
               tracksViewChanges={false}
-              accessibilityLabel={tidyCase(k.rows[0]!.name)}
               zIndex={selected === k.rows[0]!.operation_id ? 10 : 1}
             >
+              {/* iOS ignores a Marker's own label when it draws a custom view, so the view carries it. */}
+              <View accessible accessibilityRole="button" accessibilityLabel={`${tidyCase(k.rows[0]!.name)}, ${SHORT_TYPE[k.rows[0]!.operation_type] ?? k.rows[0]!.operation_type}`}>
               {/* A solid pin only for a center with an exact point; homes (privacy) and approximate points get an area. */}
               {imageryAllowed(k.rows[0]!.operation_type) && k.rows[0]!.geocode_quality !== 'non_exact' ? (
                 <MapPin
@@ -328,10 +334,13 @@ export function HomeMap({
                   selected={selected === k.rows[0]!.operation_id}
                 />
               )}
+              </View>
             </Marker>
           ) : (
             <Marker key={k.key} coordinate={{ latitude: k.lat, longitude: k.lng }} onPress={() => zoomInto(k)} tracksViewChanges={false}>
-              <ClusterBubble count={k.rows.length} />
+              <View accessible accessibilityRole="button" accessibilityLabel={`${k.rows.length} daycares here. Zooms in.`}>
+                <ClusterBubble count={k.rows.length} />
+              </View>
             </Marker>
           ),
         )}
@@ -340,7 +349,6 @@ export function HomeMap({
       <View style={[styles.top, { top: insets.top + space.sm }]} pointerEvents="box-none">
         <SearchPill
           onPress={onSearch}
-          trailing={<IconButton icon="bell" label="Watching and alerts" onPress={onAlerts} size={38} />}
         />
       </View>
 
@@ -349,6 +357,8 @@ export function HomeMap({
       </Animated.View>
 
       <BottomSheet
+        // The library makes the whole sheet one 'Bottom Sheet' element, which hides every row from VoiceOver.
+        accessible={false}
         ref={sheetRef}
         index={1}
         snapPoints={snapPoints}
@@ -358,10 +368,6 @@ export function HomeMap({
         style={sheetShadow}
         animationConfigs={sheetSpring}
         enableDynamicSizing={false}
-        onChange={(i) => {
-          if (i === 2) haptic.heavy();
-          else haptic.select();
-        }}
       >
         <BottomSheetFlatList
           ref={list}

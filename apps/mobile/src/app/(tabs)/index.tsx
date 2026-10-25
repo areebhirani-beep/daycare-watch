@@ -84,7 +84,6 @@ export default function FindScreen() {
           router.push(`/daycare/${id}`);
         }}
         onSearch={() => router.push('/search')}
-        onAlerts={() => router.push('/(tabs)/watching')}
         onLocate={() => void locate()}
         footer={<LastChecked />}
       />

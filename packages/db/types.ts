@@ -60,6 +60,7 @@ export type Database = {
           name: string
           operation_id: number
           operation_type: string
+          visits_24mo: Json
           zip: string
         }[]
       }
@@ -80,6 +81,7 @@ export type Database = {
           name: string
           operation_id: number
           operation_type: string
+          visits_24mo: Json
           zip: string
         }[]
       }
@@ -102,6 +104,7 @@ export type Database = {
           name: string
           operation_id: number
           operation_type: string
+          visits_24mo: Json
           zip: string
         }[]
       }

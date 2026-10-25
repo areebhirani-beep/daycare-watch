@@ -20,14 +20,21 @@ type NullableKeys =
   | 'address' | 'city' | 'zip' | 'county' | 'lat' | 'lng' | 'distance_km'
   | 'capacity' | 'last_inspection_date' | 'district_basis';
 
+// One state visit in the last 24 months (core.daycare_visits). r = risk rank per finding
+// (High 5 .. Low 1), o = 1 when that finding was neither corrected at the inspection nor
+// verified by the state; r and o are parallel, sorted by r desc then o desc.
+export type RowVisit = { d: string; n: number; r: number[]; o: (0 | 1)[] };
+
 // Generated table-returning types mark every column non-null; these columns can be null.
-export type DaycareRow = Omit<Rpc['daycares_near']['Returns'][number], NullableKeys | 'district_basis'> & {
+export type DaycareRow = Omit<Rpc['daycares_near']['Returns'][number], NullableKeys | 'district_basis' | 'visits_24mo'> & {
   [K in Exclude<NullableKeys, 'district_basis'>]: Rpc['daycares_near']['Returns'][number][K] | null;
 } & {
   district_basis: 'point' | 'county' | null;
+  visits_24mo: RowVisit[]; // oldest first; [] when no visits in the window
 };
 
-export type DaycareHeader = DaycareRow & {
+// daycare_record's header has no visits_24mo; the record carries the full inspections list.
+export type DaycareHeader = Omit<DaycareRow, 'visits_24mo'> & {
   ages: string[];
   hours: string | null;
   days: string[];

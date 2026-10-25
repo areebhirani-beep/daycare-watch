@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { categoryLabel, formatDateShort, isFixed, riskLabel, splitStandard } from '@/lib/format';
 import type { Finding } from '@/lib/types';
@@ -24,7 +24,16 @@ export function SeriousTag() {
 }
 
 /** One state finding: what was wrong in plain words, whether it's fixed, the inspector's words. */
-export function FindingCard({ finding: f, visitDate }: { finding: Finding; visitDate?: string | null }) {
+export function FindingCard({
+  finding: f,
+  visitDate,
+  onOfficial,
+}: {
+  finding: Finding;
+  visitDate?: string | null;
+  /** Opens the state's own page for this daycare (CONTRACT 1b: one tap from every finding). */
+  onOfficial?: () => void;
+}) {
   const c = useColors();
   const standard = splitStandard(f.standard);
   const summary = f.plain ?? standard?.title ?? 'The state did not publish a description.';
@@ -74,6 +83,20 @@ export function FindingCard({ finding: f, visitDate }: { finding: Finding; visit
         <Text variant="callout" tone="tertiary">{`${riskLabel(f.risk_level)} rule, per the state`}</Text>
       </View>
       {f.narrative?.trim() ? <InspectorQuote text={f.narrative.trim()} plain={f.plain} source={rule} note={note} /> : null}
+      {onOfficial ? (
+        <Pressable
+          onPress={onOfficial}
+          accessibilityRole="link"
+          accessibilityHint="Opens the state website"
+          hitSlop={8}
+          style={({ pressed }) => [styles.official, { borderTopColor: c.hairline }, pressed && { opacity: 0.5 }]}
+        >
+          <Text variant="callout" tone="secondary" style={{ flex: 1 }}>
+            View on the state’s site
+          </Text>
+          <Glyph name="external" size={13} color={c.textSecondary} weight="semibold" />
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -91,4 +114,11 @@ const styles = StyleSheet.create({
   },
   pill: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 1 },
   status: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  official: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 44,
+    marginBottom: -space.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
 });

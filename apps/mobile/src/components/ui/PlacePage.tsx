@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { type LayoutChangeEvent, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { type LayoutChangeEvent, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import Animated, {
   FadeIn,
@@ -334,12 +334,12 @@ export function PlacePage({
                       </Text>
                     </View>
                     {shown.map((f) => (
-                      <FindingCard key={f.non_compliance_id} finding={f} visitDate={v.date} />
+                      <FindingCard key={f.non_compliance_id} finding={f} visitDate={v.date} onOfficial={onOfficial} />
                     ))}
                     {fold ? (
                       <Disclosure title={`${lower.length} less serious problems`}>
                         {lower.map((f) => (
-                          <FindingCard key={f.non_compliance_id} finding={f} visitDate={v.date} />
+                          <FindingCard key={f.non_compliance_id} finding={f} visitDate={v.date} onOfficial={onOfficial} />
                         ))}
                       </Disclosure>
                     ) : null}
@@ -550,6 +550,8 @@ function History({
   onPress: (id: number) => void;
 }) {
   const c = useColors();
+  // Past 1.3x text the four columns can't share a line: each row stacks into date + status, then count + bar.
+  const stacked = useWindowDimensions().fontScale > 1.3;
   const max = Math.max(1, ...visits.map((v) => v.findings.length));
   const median =
     area && area.peer_count >= 3 ? (Number.isInteger(area.median.findings) ? area.median.findings : Number(area.median.findings.toFixed(1))) : null;
@@ -565,20 +567,43 @@ function History({
           {visits.map((v) => {
             const n = v.findings.length;
             const status = visitStatus(v);
-            const row = (
-              <>
-                <Text variant="callout" tabular style={styles.hDate} numberOfLines={1} maxFontSizeMultiplier={1.4}>
-                  {formatDateShort(v.date, today)}
-                </Text>
-                <Text variant="subhead" tabular style={styles.hCount} tone={n > 0 ? 'primary' : 'tertiary'} maxFontSizeMultiplier={1.4}>
-                  {String(n)}
-                </Text>
-                <View style={[styles.hTrack, { backgroundColor: c.sunken }]}>
-                  {n > 0 ? <View style={[styles.hFill, { width: `${(n / max) * 100}%`, backgroundColor: c.text }]} /> : null}
+            const date = (
+              <Text variant="callout" tabular style={stacked ? { flex: 1 } : styles.hDate} numberOfLines={1}>
+                {formatDateShort(v.date, today)}
+              </Text>
+            );
+            const count = (
+              <Text variant="subhead" tabular style={styles.hCount} tone={n > 0 ? 'primary' : 'tertiary'}>
+                {String(n)}
+              </Text>
+            );
+            const bar = (
+              <View style={[styles.hTrack, { backgroundColor: c.sunken }]}>
+                {n > 0 ? <View style={[styles.hFill, { width: `${(n / max) * 100}%`, backgroundColor: c.text }]} /> : null}
+              </View>
+            );
+            const word = (
+              <Text variant="callout" tone="secondary" style={stacked ? { textAlign: 'right' } : styles.hStatus} numberOfLines={stacked ? 2 : 1}>
+                {status}
+              </Text>
+            );
+            const row = stacked ? (
+              <View style={{ flex: 1, gap: space.xs, paddingVertical: space.sm }}>
+                <View style={styles.hLine}>
+                  {date}
+                  {word}
                 </View>
-                <Text variant="callout" tone="secondary" style={styles.hStatus} numberOfLines={1} maxFontSizeMultiplier={1.4}>
-                  {status}
-                </Text>
+                <View style={styles.hLine}>
+                  {count}
+                  {bar}
+                </View>
+              </View>
+            ) : (
+              <>
+                {date}
+                {count}
+                {bar}
+                {word}
               </>
             );
             const label = `${formatDate(v.date)}: ${n === 0 ? 'no problems cited' : plural(n, 'problem')}. ${status}.`;
@@ -675,7 +700,8 @@ const styles = StyleSheet.create({
   empty: { borderRadius: radius.card, padding: space.lg, gap: space.xs },
   hRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48, borderBottomWidth: StyleSheet.hairlineWidth },
   hDate: { width: 100 },
-  hCount: { width: 22, textAlign: 'right' },
+  hCount: { minWidth: 22, textAlign: 'right' },
+  hLine: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   hTrack: { flex: 1, height: 8, borderRadius: 4, overflow: 'hidden' },
   hFill: { height: 8, borderRadius: 4 },
   hStatus: { width: 128, textAlign: 'right' },

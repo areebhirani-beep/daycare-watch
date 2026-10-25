@@ -119,7 +119,7 @@ export function LastChecked({ fallback }: { fallback?: string | null }) {
   const { data } = useLastSync();
   const ts = data?.finished_at ?? fallback ?? null;
   return (
-    <T variant="footnote" tone="tertiary" style={styles.lastChecked}>
+    <T variant="callout" tone="tertiary" style={styles.lastChecked}>
       Last checked with the state {formatCheckedAt(ts)}
     </T>
   );

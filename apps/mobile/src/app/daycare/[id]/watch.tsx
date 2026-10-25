@@ -4,10 +4,13 @@ import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 
 import { T } from '@/components/T';
 import { Button } from '@/components/ui/Button';
+import { visitAnswer } from '@/components/ui/PlacePage';
 import { useDaycareRecord, useIsWatching, useSetWatch } from '@/lib/api';
-import { tidyCase } from '@/lib/format';
+import { tidyCase, todayIso } from '@/lib/format';
 import { type EnableResult, enableAlerts } from '@/lib/notifications';
-import { haptic, space, useColors } from '@/theme';
+import { groupByVisit } from '@/lib/record';
+import type { DaycareRecord } from '@/lib/types';
+import { haptic, radius, space, useColors } from '@/theme';
 
 type Step = 'explain' | 'working' | 'done';
 
@@ -43,8 +46,9 @@ export default function WatchScreen() {
         <T variant="title" accessibilityRole="header">
           You&rsquo;re watching {name}
         </T>
+        <LastVisit record={record.data} />
         <T variant="body" tone="secondary">
-          We&rsquo;ll alert you when the state posts a new finding, a permit change, or corrective action.
+          We&rsquo;ll alert you when the state posts a new problem, a permit change, or corrective action.
         </T>
         <View style={styles.buttons}>
           <Button label="Done" onPress={() => router.back()} />
@@ -68,6 +72,7 @@ export default function WatchScreen() {
         <T variant="title" accessibilityRole="header" accessibilityLiveRegion="polite">
           You&rsquo;re watching {name}
         </T>
+        <LastVisit record={record.data} />
         <T variant="body" tone="secondary">
           {on
             ? 'Alerts are on. The next time the state posts something about this daycare, you’ll get one notification.'
@@ -120,6 +125,28 @@ export default function WatchScreen() {
   );
 }
 
+/** The same answer the place page leads with, from the state's most recent visit in the past 2 years. */
+function LastVisit({ record }: { record: DaycareRecord | undefined }) {
+  const c = useColors();
+  if (!record) return null;
+  const today = todayIso();
+  const cutoff = `${Number(today.slice(0, 4)) - 2}${today.slice(4)}`;
+  const { headline, sub } = visitAnswer(
+    groupByVisit(record).find((v) => v.date >= cutoff),
+    today,
+  );
+  return (
+    <View style={[styles.answer, { backgroundColor: c.sunken }]} accessible>
+      <T variant="headline">{headline}</T>
+      {sub ? (
+        <T variant="callout" tone="secondary">
+          {sub}
+        </T>
+      ) : null}
+    </View>
+  );
+}
+
 function Point({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View style={{ gap: space.xxs }}>
@@ -135,4 +162,5 @@ const styles = StyleSheet.create({
   content: { padding: space.xl, gap: space.lg, paddingBottom: space.section },
   points: { gap: space.lg, paddingVertical: space.sm },
   buttons: { gap: space.sm, marginTop: space.sm },
+  answer: { borderRadius: radius.card, padding: space.lg, gap: space.xs },
 });

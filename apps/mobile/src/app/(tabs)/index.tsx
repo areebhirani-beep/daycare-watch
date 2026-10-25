@@ -74,7 +74,12 @@ export default function FindScreen() {
   }, [locate]);
 
   // Never wait on location: start from the last position (or the district), then re-center when it answers.
-  const near = useDaycaresNear(position ?? saved ?? DISTRICT_CENTER, 15);
+  const origin = position ?? saved;
+  const local = useDaycaresNear(origin ?? DISTRICT_CENTER, 15);
+  // Outside Texas (a judge's phone, a simulator) nothing is within 15 km: show the district instead of an empty list.
+  const outside = origin !== null && local.isSuccess && !local.isPlaceholderData && local.data.length === 0;
+  const district = useDaycaresNear(outside ? DISTRICT_CENTER : null, 15);
+  const near = outside ? district : local;
   const watches = useMyWatches();
   const pins = near.data?.length ?? 0;
   useEffect(() => {
@@ -90,9 +95,17 @@ export default function FindScreen() {
         rows={near.data ?? []}
         // On an error the sheet keeps its skeleton under the error card, never "0 daycares".
         loading={problem !== null || near.isPending}
-        center={position ?? saved}
+        center={outside ? null : origin}
         fallbackCenter={DISTRICT_CENTER}
-        areaLabel={position === null ? (saved ? 'Near your last location' : 'Near Frisco · location off') : 'Finding your location…'}
+        areaLabel={
+          outside
+            ? 'Near Frisco · no Texas daycares near you'
+            : position === null
+              ? saved
+                ? 'Near your last location'
+                : 'Near Frisco · location off'
+              : 'Finding your location…'
+        }
         watchedIds={watchedIds}
         onOpen={(id) => {
           tapped('place');

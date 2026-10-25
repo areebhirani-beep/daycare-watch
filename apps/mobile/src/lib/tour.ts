@@ -1,6 +1,6 @@
 // Tour questions built from one daycare's own findings. Facts come from the record; questions are ours.
 
-import { categoryLabel, formatDate, isFixed, plural } from './format';
+import { formatDate, formatDateShort, isFixed, plural } from './format';
 import type { Category, Finding } from './types';
 
 const QUESTIONS: Record<Category, string> = {
@@ -15,10 +15,24 @@ const QUESTIONS: Record<Category, string> = {
   other: 'What changed after your most recent state inspection?',
 };
 
+// The kind of problem in plain words: "The state found 6 safety problems".
+const KIND: Record<Category, string> = {
+  supervision: 'supervision',
+  background_checks: 'background check',
+  staff_ratio: 'staff ratio',
+  safety_hazards: 'safety',
+  health_medication: 'health or medication',
+  discipline: 'discipline',
+  parent_communication: 'parent communication',
+  paperwork_admin: 'paperwork',
+  other: 'other',
+};
+
 export type TourQuestion = { category: Category | null; fact: string | null; question: string; followUp?: string };
 
 export function buildTourQuestions(findings: Finding[], now = new Date()): TourQuestion[] {
   const cutoff = new Date(now.getFullYear() - 2, now.getMonth(), now.getDate()).toISOString().slice(0, 10);
+  const today = now.toISOString().slice(0, 10);
   const recent = findings.filter((f) => f.date !== null && f.date >= cutoff);
   const byCat = new Map<Category, Finding[]>();
   for (const f of recent) {
@@ -31,15 +45,16 @@ export function buildTourQuestions(findings: Finding[], now = new Date()): TourQ
     const latest = list.reduce((a, b) => ((b.date ?? '') > (a.date ?? '') ? b : a));
     const open = list.filter((f) => !isFixed(f)).length;
     const fact = [
-      `Inspectors cited ${plural(list.length, `${categoryLabel(cat).toLowerCase()} finding`)} in the last 2 years, most recently ${formatDate(latest.date)}.`,
-      open > 0 ? `Of those, ${open} ${open === 1 ? 'is' : 'are'} not yet verified by the state.` : null,
+      `The state found ${plural(list.length, `${KIND[cat]} problem`)} in the past 2 years, most recently ${formatDate(latest.date)}.`,
+      open > 0 ? `${open} ${open === 1 ? 'has' : 'have'} no state check on record yet.` : null,
     ]
       .filter(Boolean)
       .join(' ');
+    const which = cat === 'other' ? 'problem' : `${KIND[cat]} problem`;
     return {
       category: cat,
       fact,
-      question: `What changed after the state\u2019s ${categoryLabel(cat).toLowerCase()} finding on ${formatDate(latest.date)}?`,
+      question: `What changed after the ${which} the state found on ${formatDateShort(latest.date, today)}?`,
       followUp: QUESTIONS[cat],
     };
   });

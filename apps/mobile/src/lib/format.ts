@@ -84,7 +84,7 @@ export function riskLabel(level: RiskLevel): string {
 export const RISK_EXPLAINER =
   'Texas rates every rule it inspects from Low to High by how much risk breaking that rule poses to children. The level belongs to the rule, not to the daycare.';
 
-function todayIso(now: Date): string {
+export function todayIso(now: Date = new Date()): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 

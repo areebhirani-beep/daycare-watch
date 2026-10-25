@@ -1,6 +1,6 @@
 # Daycare Watch — design system v2
 
-**One line:** a map app, not a document. The map gives the color, the type is the native grotesk set heavy and big, every number is huge and tabular, and the visit rail is the one picture people remember.
+**One line:** a map app, not a document. The map gives the color, the type is the native grotesk set heavy and big, every number is huge and tabular, and the record answers in one plain sentence before anything else.
 
 The v1 direction (Newsreader serif, paper beige, text stacks) is retired. Nothing from it survives.
 
@@ -101,38 +101,63 @@ Android: same sizes on `sans-serif` (Roboto) with numeric weights. Roboto Flex a
 | `Button` | Duolingo 3D: face + 4-pt edge. Kinds `ink` (Uber black, **the main CTA everywhere**: Watch, Continue), `primary` (school-bus yellow: "Turn on alerts" and the "Watching · alerts on" state only), `secondary` (white + grey edge), `plain`. 56 high, radius 16 |
 | `Chip` | Filter chip (toggle, selected = ink fill) and `InfoChip` (icon + label on sunken) |
 | `SearchPill` / `FloatButton` | Floating chrome over the map, `float` elevation |
-| `DaycareCard` | DoorDash card: map hero 2:1, bold name, meta row, compact record strip |
-| `PlaceRow` | Dense list row: 64 aerial thumb (credit "© Esri"), name, meta, compact strip |
+| `DaycareCard` | DoorDash card: map hero 2:1, bold name, meta row, then one `RecordLine` in plain words ("3 problems found Oct 5 · 1 serious") |
+| `PlaceRow` | Dense list row: 64 aerial thumb (credit "© Esri"), name, meta, `RecordLine` |
 | `MapSnapshot` | The hero image: a real **aerial photo** of the daycare's location with our pin (Esri World Imagery tiles, no key). **The Esri credit shows on every image**: full line on cards and heroes (lifted above the place page's head card), "© Esri" on thumbnails. Tiles load on view only, never prefetched. Tile mosaic in `expo-image`, fetched one zoom deeper for retina. No native module, works in Expo Go and in carousels. (CARTO was tried first: it now returns an "API key required" placeholder.) |
 | `MapPin` / `ClusterBubble` | Uniform ink pin (white core), watched = yellow disc with ink bell and ink ring; cluster = ink circle + tabular count |
-| `RingCard` / `Ring` | One wide card with a 92-pt ring for "verified fixed by the state", behind "More details". A ring shows a share of findings, never a rating. **No stat band**: the 3-count band was cut (owner, Oct 25) as the #1 dashboard cliché; counts live in one sentence under the rail |
+| `RingCard` / `Ring` | Kept in the kit, off the place page. **No stat band**, no ring on Place: the owner cut both (Oct 25) as dashboard clichés |
 | `AppMark` | The mark: one visit on the rail (ink ring, solid centre, on a time line, an earlier visit to its left). Reads as a visit and as an eye. Same drawing as the icon (`harness/state/design/mark.py`). Never a letter in a square |
-| `FindingCard` | A High-risk finding gets an ink header bar ("High-risk rule · category"), a 1.5-pt ink border and a `title` line; every other level is a hairline card with a small tag |
+| `FindingCard` | A High-risk finding gets an ink header bar ("Serious · category") and a 1.5-pt ink border; every other level is a hairline card with the category in grey. Then the plain summary, the fix status (`status.ts`), and the state's own label ("High risk rule, per the state") |
+| `SeriousTag` | The only tag on the place page: a small ink pill, on High-risk findings only |
+| `status.ts` | The fix-status copy, pure and tested: `plainStatus`, `shortStatus`, `visitStatus`, `latestOpen` (CONTRACT §3 wording) |
 | `RightCard` | One right, one tap: icon disc, bold title, one-line detail, opens the generated request |
 | `Tabs` | Google Maps place-sheet tabs, underline indicator springs between tabs |
 | `SheetHandle`, `SheetHeader` | Grabber + title row for `@gorhom/bottom-sheet` |
-| `RecordStrip` | The visit rail, the signature visual (below) |
+| `RecordStrip` | Retired from Place and cards (owner, Oct 25 00:05: "too much to decode"). `stripFromRecord` / `stripFromRow` stay as the data helpers |
 | `Skeleton` | Card-, row- and strip-shaped placeholders with a slow opacity pulse |
 | `OnboardingFrame`, `ProgressBar`, `Celebration` | Duolingo flow chrome |
 
-## 5. The visit rail (`RecordStrip`)
+## 5. The record, in words (owner, Oct 25 00:05)
 
-One line for the last 24 months; **one circle per state visit**, centred on the line at its date. The **number inside** is how many findings the state posted from that visit, and the circle grows with it (sqrt, capped at 10). **Solid ink** = every finding corrected at the inspection or verified fixed. **Outlined ring** = some fixes not yet verified. **Small ring with a check** = a visit with no findings posted. **Ember notch** (top-right) = at least one finding on a High-risk rule. Tap a circle: Findings opens scrolled to that visit. The key is one line and only lists what this record draws ("Fixes not yet verified", "High-risk rule cited"); the number explains itself. Variants: `hero` (place page head, onboarding) 30–52 pt, `full` (alert) 24–38 pt, `compact` (cards, rows) 18–25 pt. Replaced the stacked-squares strip (owner, Oct 25: "a chart that needs a 3-line legend"). Counts and dates only; no total, no color for "good", nothing that ranks.
+The rail was rejected: anything that needs a legend is out. (Diagram: Viva World School 1459611's top rows; the `<…>` parts are schematic.) The record is now **one answer and a list of rows**, like Apple Weather's 10-day forecast.
+
+```
+3 problems found at the Oct 5 visit        largeTitle 28, the answer
+Fixes due by Oct 30 · no state check yet   callout 15, grey
+┌ Serious ┐ <the problem, plain words>     top 2 problems, Serious tag on High only
+ See all 9                              >
+Past 2 years
+ Oct 5          3  ███████████   Fix due Oct 30
+ Dec 5, 2025    4  ██████████████        Fixed
+ <date>         0                No problems cited
+Typical for <county> centers: N problems in 2 years.
+```
+
+| Rule | Why |
+|---|---|
+| One question per screen. Place answers "what did the state find last time?" | A parent decides in 5 seconds |
+| Max 3 type sizes per screen (28 / 17 / 15) | Hierarchy by size, not by decoration |
+| Zero legends on Place | If it needs a key, it's the wrong picture |
+| 6th-grade words: "problems", "Fixed", "Fix due Oct 30" | No "findings", "verified", "deficiency" in headlines |
+| Row "Fixed" only when every problem at that visit is fixed | Jest case on nc 1022378716 (`status.test.ts`) |
+| Empty rows: "No problems cited" (a visit) · "No problems posted in 2 years" / "No state visits posted in 2 years" (a record) | Never "nothing found", which reads as "safe" |
+| Bar length = count at that visit, ink on sunken | Counts only. No color for good or bad |
+| Past 1.3× text, a row stacks: date + status, then count + bar | AX-XXXL without truncation |
 
 ## 6. Screens
 
 | # | Screen | Structure |
 |---|---|---|
 | 1 | Home | Map full-bleed. Search pill top (safe area + 8). Locate `FloatButton` rides above the sheet. Sheet detents peek / half / full. Peek: "**N daycares** near you" `largeTitle` + chip row (Centers · Homes · In TX-04 · Accepts subsidies). Half (60%): carousel of `DaycareCard`. Full: `PlaceRow` list. |
-| 2 | Place page | `PlaceGallery` hero 236 under the status bar; head with 28 top radius overlapping it. Head, in order: name `display` → address (centers: state line; homes: city + ZIP only) · TX-04 → **the record**: hero numeral "days since the state's last visit" + "Last visit <date>" → visit rail `hero` → one sentence ("9 findings across 4 state visits since Oct 2024 · 1 on a High-risk rule") + county median line → 3 fact chips → action tiles (Apple Maps · Google Maps · State record; homes: State record only). Then `Tabs`. Overview: **"Ask about these on your tour"** card (2 questions from `lib/tour`, built from this daycare's findings) → "More details" (verified ring, permit, capacity). Findings: visits newest first, highest risk first; 2+ Low / Medium Low findings fold into one "N lower-risk findings" row. Scrolled: a slim dimmed slice of the hero map stays behind the name in the top bar, so the page never loses its picture. Sticky `Button ink` "Watch this daycare" + share. |
+| 2 | Place page | `PlaceGallery` hero 236 under the status bar; head with 28 top radius overlapping it. Head, in order: name `title` → address (centers: state line; homes: city + ZIP only) · TX-04 → **the answer** (`visitAnswer`: "3 problems found at the Oct 5 visit" + grey fix line) → top 2 problems → "See all 9" → 3 fact chips → action tiles (Apple Maps · Google Maps · State record; homes: State record only). Then `Tabs` Overview / Problems N / Your rights. Overview: **Past 2 years** rows (tap → that visit in Problems) + county typical line → **"Ask about these on your tour"** → "More details" (capacity, subsidies, permit). Problems: visits newest first, highest risk first; 2+ Low / Medium Low fold into "N less serious problems". Scrolled: a slim dimmed slice of the hero map stays behind the name in the top bar, so the page never loses its picture. Sticky `Button ink` "Watch this daycare" + share. |
 | 3 | Onboarding | `ProgressBar` + close. Step 1 why (real TX-04 numbers as numerals). Step 2 find your daycare (search). Step 3 alerts (explain, then OS prompt). Celebration on watch. |
-| 4 | Alert | Visit rail with the new visit haloed, "What the state posted", plain words, date, what you can do (rights cards). |
+| 4 | Alert | Same answer as Place (`visitAnswer`) for the new visit, the FindingCard in plain words, what changed since the last visit, what you can do (rights cards). |
 | 5 | Findings + Rights | Findings: timeline cards grouped by visit. Rights: action cards that open the generated request. |
 
 ## 7. Rules
 
 - Never a grade, score, star, rank, or traffic-light color. No green anywhere in the record.
-- Copy is calm. Use "finding", "not yet verified", "corrected during the inspection". Never "violation alert", "warning", "danger".
+- Copy is calm and plain. Use "problems", "Fixed during the visit", "Fixed · the state checked <date>", "Fix due <date> · no state check on record yet". Never "violation alert", "warning", "danger", "nothing found". Never "Fixed <corrected_date>".
 - Every data screen carries "Last checked with the state <time>".
 - AA contrast in light and dark; tap targets ≥ 44; Dynamic Type to AX-XXXL without clipping (numerals cap at 1.3×, axis labels at 1.35×).
 - Blur only over the map. No gradients. No illustrations. No stock imagery. The only imagery is real maps of real locations.
@@ -148,27 +173,29 @@ Sources: Fountain Institute, "7 Signs a UI Has Been Vibe Coded"; Tessl `de-llm-u
 | Inter everywhere | The default web font of every template | The platform grotesk (SF Pro / Roboto), heavy and tightly tracked like the system apps |
 | Soft grey shadow on every floating card | Default `shadow-md` | Flat surfaces. Only map chrome (search pill, locate, pins) floats. 3D pieces use a solid bottom edge, not a blur |
 | Every section in a rounded rectangle; stacks of white cards | Layout by container, not by hierarchy | Open sections separated by space and hairlines; cards only where a card is a thing you tap |
-| Grid of identical stat cards | The "dashboard" stock pattern | Stat band + one ring card + bars: each number gets the shape that fits it |
+| Grid of identical stat cards | The "dashboard" stock pattern | One sentence that answers the question, then Weather-style rows. No stat cards on Place |
 | Colored left-border cards | Default "callout" component | Pills and plain labels (slopcheck blocks `borderLeftWidth`) |
 | Emoji or stock icon sets (Lucide, Feather, Ionicons, MaterialIcons) | Zero-effort iconography | SF Symbols on iOS, Material Symbols on Android via `expo-symbols`; pins and record marks drawn by us |
 | Pastel overload, clip-art illustration | Filler color and filler art | Color comes from the map photo and the ember record. No illustration |
 | Generic copy ("Welcome back!", "Unlock insights"), explainer paragraphs | Text pasted from the prompt | DoorDash-length labels; numbers carry the message |
-| Generic empty / error states | Only the happy path was designed | Skeletons shaped like the real card; empty states say what's true ("No findings posted in 24 months") and give one action |
+| Generic empty / error states | Only the happy path was designed | Skeletons shaped like the real card; empty states say what's true ("No problems posted in 2 years") and give one action |
 | Five-tab bar with a floating + button | The template app shell | Three tabs (Find · Watching · Your rights), map first |
 
 What "built" looks like here: a 4/8-pt rhythm, optically centred glyphs, card shapes that vary with content, hierarchy through size and weight before color, haptics on every commit, springs on the sheet and presses, skeletons on every load, and corner radii that grow with elevation (chip 999 · thumb 12 · card 16 · stat 22 · sheet 28).
 
 ## 9. Content density (owner, Oct 24)
 
-**First view of any screen = one headline, at most 3 key facts, the visit rail, one primary action.** Everything else is one tap deeper. No repeated labels, no footnotes, no secondary stats in first view.
+**First view of any screen = one answer, at most 3 key facts, one primary action.** Everything else is one tap deeper. No repeated labels, no footnotes, no secondary stats in first view.
 
 | Primitive | Enforces |
 |---|---|
 | `FactChips` | Renders at most `MAX_FACTS` (3) facts, whatever it is given. Place page: type · ages · hours |
-| `Disclosure` | "More details" row (verified-fix ring, capacity / subsidies / permit date) and the "N lower-risk findings" fold |
+| `Disclosure` | "More details" row (capacity / subsidies / permit date) and the "N less serious problems" fold |
 | `StickyBar` | Exactly one primary action |
 
-Place page, first view (6.3" iPhone): gallery · name · address · **days since the last visit · rail · one sentence** · "Watch this daycare". Chips, tiles and tabs start one scroll down.
+Place page, first view (6.3" iPhone): gallery · name · address · **the answer · top 2 problems** · "Watch this daycare". Chips, tiles and tabs start one scroll down.
+
+**5-second test (gate note on every screen):** Viva World School → "3 problems at the Oct 5 visit, fixes due Oct 30, one serious (pool gate)." Pass.
 
 ## 10. Location imagery (integrator rules, Oct 24 11:15 pm)
 

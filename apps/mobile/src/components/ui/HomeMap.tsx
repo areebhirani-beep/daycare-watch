@@ -149,11 +149,13 @@ export function HomeMap({
     [height, insets.top],
   );
 
-  // The location can arrive after the first render; follow it once it does.
+  // The location can arrive after the first render; follow it once it does. If it drops out (outside Texas),
+  // fly back to the fallback area so the map matches the list.
+  const targetLat = start.lat;
+  const targetLng = start.lng;
   useEffect(() => {
-    if (!center) return;
-    map.current?.animateToRegion({ latitude: center.lat, longitude: center.lng, latitudeDelta: 0.12, longitudeDelta: 0.12 }, 450);
-  }, [center]);
+    map.current?.animateToRegion({ latitude: targetLat, longitude: targetLng, latitudeDelta: 0.12, longitudeDelta: 0.12 }, 450);
+  }, [targetLat, targetLng]);
   const sheetY = useSharedValue(height);
   const locateStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetY.value - 64 }],
@@ -197,12 +199,12 @@ export function HomeMap({
               ? 'Finding daycares…'
               : rows.length >= NEAR_LIMIT
                 ? filters.size > 0
-                  ? `${shown.length} of the closest ${rows.length}`
-                  : `Closest ${rows.length}`
+                  ? `${shown.length} of the ${rows.length} closest`
+                  : `${rows.length} closest daycares`
                 : `${shown.length} daycares`}
           </Text>
           <Text variant="callout" tone="secondary">
-            {center ? 'Near you' : (areaLabel ?? 'Near you')}
+            {areaLabel ?? 'Near you'}
           </Text>
         </View>
         <IconButton icon="search" label="Search daycares" onPress={onSearch} size={40} />
@@ -212,7 +214,7 @@ export function HomeMap({
         <Chip label="Homes" icon="home" selected={filters.has('homes')} onPress={() => toggle('homes')} />
         <Chip label="In TX-04" icon="district" selected={filters.has('district')} onPress={() => toggle('district')} />
       </ChipRow>
-      <SectionHeader title="Closest to you" onMore={() => sheetRef.current?.snapToIndex(2)} />
+      <SectionHeader title={areaLabel ? 'Closest first' : 'Closest to you'} onMore={() => sheetRef.current?.snapToIndex(2)} />
       {loading && rows.length === 0 ? (
         <View style={styles.carouselLoading}>
           <CardSkeleton width={cardW} />

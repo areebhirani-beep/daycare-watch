@@ -5,11 +5,11 @@ import { LastChecked } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
 import { ActionPill, SectionHeader, StickyBar } from '@/components/ui/Chrome';
 import { FindingCard } from '@/components/ui/FindingCard';
-import { RecordStrip, stripFromRecord } from '@/components/ui/RecordStrip';
+import { visitAnswer } from '@/components/ui/PlacePage';
 import { PlaceSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useAlertDetail, useDaycareRecord } from '@/lib/api';
-import { formatDate, formatLocalDay, plural, tidyCase } from '@/lib/format';
+import { formatDate, formatLocalDay, plural, tidyCase, todayIso } from '@/lib/format';
 import { type Change, whatChanged } from '@/lib/record';
 import { lawCovers } from '@/lib/rights';
 import type { AlertDetail } from '@/lib/types';
@@ -54,12 +54,13 @@ export default function AlertScreen() {
   }
 
   const a = alert.data;
-  const strip = record.data ? stripFromRecord(record.data) : null;
   const change = record.data && a.finding ? whatChanged(record.data, a.finding.activity_id) : null;
   const visit = a.finding?.date ?? a.source_date;
   const when = [visit ? `Visit ${formatDate(visit)}` : null, `posted by ${formatLocalDay(a.detected_at)}`]
     .filter(Boolean)
     .join(' · ');
+  // A new finding answers like the place page: what the state found at that visit, and where the fixes stand.
+  const answer = a.kind === 'new_violation' && change?.visit ? visitAnswer(change.visit, todayIso()) : null;
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
@@ -76,12 +77,16 @@ export default function AlertScreen() {
           <Text variant="callout" tone="secondary">
             {tidyCase(a.daycare_name)}
           </Text>
-          <Text variant="display" accessibilityRole="header">
-            {headline(a)}
+          <Text variant={answer ? 'largeTitle' : 'display'} accessibilityRole="header">
+            {answer?.headline ?? headline(a)}
           </Text>
+          {answer?.sub ? (
+            <Text variant="callout" tone="secondary">
+              {answer.sub}
+            </Text>
+          ) : null}
         </View>
 
-        {strip ? <RecordStrip visits={strip} variant="full" selectedId={a.finding?.activity_id ?? null} showKey={false} /> : null}
         <Text variant="footnote" tone="secondary" tabular>
           {when}
         </Text>
@@ -123,14 +128,14 @@ function WhatChanged({ change }: { change: Change }) {
   if (!visit) return null;
   const high = visit.findings.filter((f) => f.risk_level === 'High').length;
   const lines = [
-    `This visit: ${plural(visit.findings.length, 'finding')} posted${high > 0 ? `, ${high} on High risk rules` : ''}`,
+    `This visit: ${plural(visit.findings.length, 'problem')} found${high > 0 ? `, ${high} serious` : ''}`,
     previous
       ? `Visit before, ${formatDate(previous.date)}: ${
           previous.status === 'findings'
-            ? `${plural(previous.findings.length, 'finding')} posted`
+            ? `${plural(previous.findings.length, 'problem')} found`
             : previous.status === 'pending'
-              ? 'findings not posted yet'
-              : 'no findings posted'
+              ? 'results not posted yet'
+              : 'no problems cited'
         }`
       : 'No earlier visit in the state record',
     ...repeats.slice(0, 2).map((r) => `Rule ${r.rule} was also cited ${formatDate(r.lastCited)}`),

@@ -1,0 +1,347 @@
+# Photos QA: 20 TX-04 licensed centers with an exact census geocode (random by md5 of the id, 4 Montessoris).
+# For each, open the place page and capture every carousel page, so a person can check each label is true:
+# "this daycare" only on a verified photo or a same-name Look Around, "The street at this address" otherwise.
+# Run through e2e/qa/photos.sh on the Release build. Screens: ${SHOTS}/<id>-<page>.
+appId: com.areebhirani.daycare-watch
+---
+- launchApp
+# YMCA @ Norris Elementary, FRISCO
+- openLink: daycarewatch://daycare/1194568
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1194568-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1194568-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1194568-3
+# Childrens Lighthouse, ROCKWALL
+- openLink: daycarewatch://daycare/507034
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/507034-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/507034-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/507034-3
+# Rise Academy Learning Center, ROCKWALL
+- openLink: daycarewatch://daycare/1433122
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1433122-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1433122-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1433122-3
+# Amazing Explorers Academy, PROSPER
+- openLink: daycarewatch://daycare/1421090
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1421090-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1421090-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1421090-3
+# Montessori Academy of North Texas, SHERMAN
+- openLink: daycarewatch://daycare/1376147
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1376147-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1376147-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1376147-3
+# Essential Steps, ROCKWALL
+- openLink: daycarewatch://daycare/144589
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/144589-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/144589-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/144589-3
+# Discovery Montessori Academy North Plano, PLANO
+- openLink: daycarewatch://daycare/1462418
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1462418-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1462418-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1462418-3
+# AlphaBEST @ Sonntag - Frisco, MCKINNEY
+- openLink: daycarewatch://daycare/742488
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/742488-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/742488-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/742488-3
+# Preston Kiddie Kollege, FRISCO
+- openLink: daycarewatch://daycare/283117
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/283117-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/283117-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/283117-3
+# Meridian Montessori of Plano, PLANO
+- openLink: daycarewatch://daycare/1502000
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1502000-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1502000-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1502000-3
+# Ivybrook Academy, FRISCO
+- openLink: daycarewatch://daycare/1526738
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1526738-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1526738-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1526738-3
+# Mrs. Mirandas Child Development Center, WHITEWRIGHT
+- openLink: daycarewatch://daycare/1447644
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1447644-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1447644-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1447644-3
+# Sherman Early Head Start, SHERMAN
+- openLink: daycarewatch://daycare/1386904
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1386904-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1386904-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1386904-3
+# Rising Stars Learning Center, SHERMAN
+- openLink: daycarewatch://daycare/1244761
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1244761-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1244761-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1244761-3
+# Morning Star Academy, BONHAM
+- openLink: daycarewatch://daycare/1120093
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1120093-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1120093-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1120093-3
+# Windhaven Academy, PLANO
+- openLink: daycarewatch://daycare/1337509
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1337509-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1337509-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1337509-3
+# Friendship Corner Christian Preschool, CELINA
+- openLink: daycarewatch://daycare/1238089
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1238089-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1238089-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1238089-3
+# Kids USA Montessori, PLANO
+- openLink: daycarewatch://daycare/1268374
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1268374-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1268374-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1268374-3
+# Tuck Street Early Education Center, SHERMAN
+- openLink: daycarewatch://daycare/1206518
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1206518-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1206518-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/1206518-3
+# Elevate Life Preschool, FRISCO
+- openLink: daycarewatch://daycare/270703
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/270703-1
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/270703-2
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/270703-3

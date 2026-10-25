@@ -1,0 +1,23 @@
+# QA U23: the app is in the background when the replayed alert arrives; tapping the banner opens that alert.
+# push-tap.sh sends the push after this flow starts.
+appId: com.areebhirani.daycare-watch
+---
+- extendedWaitUntil:
+    visible: "Replay of a real state record.*"
+    timeout: 30000
+
+- tapOn:
+    text: "Replay of a real state record.*"
+    index: 0
+- runFlow:
+    when:
+      visible: "Show less"
+    commands:
+      - tapOn:
+          text: "Replay of a real state record.*"
+          index: 0
+- extendedWaitUntil:
+    visible: "Open full record"
+    timeout: 20000
+- assertVisible: "Viva World School"
+- takeScreenshot: ../../harness/state/qa/r23-1-alert

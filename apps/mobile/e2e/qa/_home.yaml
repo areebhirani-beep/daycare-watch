@@ -1,0 +1,4 @@
+# Send the app to the background.
+appId: com.areebhirani.daycare-watch
+---
+- pressKey: Home

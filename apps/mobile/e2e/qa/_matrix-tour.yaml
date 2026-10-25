@@ -1,0 +1,101 @@
+# Device matrix: one pass over the screens a parent sees, on the Release build, screenshots named
+# ${SHOTS}/<n>-<screen>. Run through e2e/qa/matrix.sh, which sets the device, appearance and text size.
+appId: com.areebhirani.daycare-watch
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Get started"
+    timeout: 60000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/01-welcome
+- tapOn: "Get started"
+- extendedWaitUntil:
+    visible: "Inspectors write down what they find.*"
+    timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/02-how
+# How it works has had 2 or 3 beats; page on until the find step.
+- repeat:
+    while:
+      visible: "^Next$"
+    commands:
+      - tapOn: "^Next$"
+- tapOn:
+    text: "Find your daycare"
+    optional: true
+- extendedWaitUntil:
+    visible: "Use my location"
+    timeout: 10000
+- tapOn: "Use my location"
+- tapOn:
+    text: "Allow While Using App"
+    optional: true
+- extendedWaitUntil:
+    visible: ".*Center, [0-9.]+ mi.*"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/03-find
+- waitForAnimationToEnd
+- tapOn: ".*Center, [0-9.]+ mi.*"
+# A tap while the cards are still settling can miss; try once more if nothing was picked.
+- runFlow:
+    when:
+      visible: "Pick your daycare"
+    commands:
+      - waitForAnimationToEnd
+      - tapOn: ".*Center, [0-9.]+ mi.*"
+- tapOn: "Watch this daycare"
+- extendedWaitUntil:
+    visible: "Turn on alerts"
+    timeout: 10000
+- takeScreenshot: ${SHOTS}/04-alerts
+- tapOn: "Not now"
+- extendedWaitUntil:
+    visible: "You’re watching.*"
+    timeout: 10000
+- takeScreenshot: ${SHOTS}/05-done
+- tapOn: "Explore the map"
+- extendedWaitUntil:
+    visible: "Daycares near you"
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/06-home
+- openLink: daycarewatch://daycare/1447992
+# iOS asks before an app opens its own link from outside.
+- tapOn:
+    text: "Open"
+    optional: true
+- extendedWaitUntil:
+    visible: "Castle Montessori of Frisco.*"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/07-place-montessori
+- scroll
+- takeScreenshot: ${SHOTS}/08-place-montessori-2
+- openLink: daycarewatch://daycare/1459611
+# iOS asks before an app opens its own link from outside.
+- tapOn:
+    text: "Open"
+    optional: true
+- extendedWaitUntil:
+    visible: "Viva World School.*"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/09-place-viva
+- scroll
+- takeScreenshot: ${SHOTS}/10-place-viva-2
+- openLink: daycarewatch://rights
+# iOS asks before an app opens its own link from outside.
+- tapOn:
+    text: "Open"
+    optional: true
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/11-rights
+- openLink: daycarewatch://watching
+# iOS asks before an app opens its own link from outside.
+- tapOn:
+    text: "Open"
+    optional: true
+- waitForAnimationToEnd
+- takeScreenshot: ${SHOTS}/12-watching

@@ -1,0 +1,78 @@
+# Release build, fresh install: onboarding with alerts allowed, then watch Viva World School (1459611), whose
+# latest visit pipeline replays. Run through e2e/qa/push-tap.sh.
+appId: com.areebhirani.daycare-watch
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Get started"
+    timeout: 60000
+- tapOn: "Get started"
+- extendedWaitUntil:
+    visible: "Inspectors write down what they find.*"
+    timeout: 15000
+# How it works has had 2 or 3 beats; page on until the find step.
+- repeat:
+    while:
+      visible: "^Next$"
+    commands:
+      - tapOn: "^Next$"
+- tapOn:
+    text: "Find your daycare"
+    optional: true
+- extendedWaitUntil:
+    visible: "Use my location"
+    timeout: 10000
+- tapOn: "Use my location"
+- runFlow:
+    when:
+      visible: "Allow While Using App"
+    commands:
+      - tapOn: "Allow While Using App"
+- extendedWaitUntil:
+    visible: ".*Center, [0-9.]+ mi.*"
+    timeout: 20000
+- tapOn: ".*Center, [0-9.]+ mi.*"
+- tapOn: "Watch this daycare"
+- extendedWaitUntil:
+    visible: "Turn on alerts"
+    timeout: 10000
+- tapOn: "Turn on alerts"
+# The iOS prompt can take a moment to appear and its button is matched exactly.
+- tapOn:
+    text: "^Allow$"
+    optional: true
+- extendedWaitUntil:
+    visible: "You’re watching.*"
+    timeout: 15000
+- tapOn: "Explore the map"
+- extendedWaitUntil:
+    visible: "Search daycares, cities, ZIP"
+    timeout: 30000
+- tapOn: "Search daycares, cities, ZIP"
+- inputText: "Viva World School"
+- extendedWaitUntil:
+    visible: "Viva World School\\. .*"
+    timeout: 15000
+- hideKeyboard
+- tapOn: "Viva World School\\. .*"
+- extendedWaitUntil:
+    visible: "State record"
+    timeout: 20000
+- waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "Watch this daycare"
+    commands:
+      - tapOn: "Watch this daycare"
+      - runFlow:
+          when:
+            visible: "Turn on alerts"
+          commands:
+            - tapOn: "Turn on alerts"
+      - extendedWaitUntil:
+          visible: "You’re watching Viva World School"
+          timeout: 15000
+      - takeScreenshot: ../../harness/state/qa/r-push-0-sheet
+      - tapOn: "Done"
+- takeScreenshot: ../../harness/state/qa/r-push-0-watching

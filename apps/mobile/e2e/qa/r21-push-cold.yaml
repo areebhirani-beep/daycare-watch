@@ -1,0 +1,23 @@
+# QA U21: the app is not running (terminated) when the replayed alert arrives; tapping the banner opens that alert.
+# push-tap.sh sends the push after this flow starts. Tap at once: a banner stays only about 5 s, and on the home
+# screen the screenshot alone can outlast it.
+appId: com.areebhirani.daycare-watch
+---
+- extendedWaitUntil:
+    visible: "Replay of a real state record.*"
+    timeout: 60000
+- tapOn:
+    text: "Replay of a real state record.*"
+    index: 0
+- runFlow:
+    when:
+      visible: "Show less"
+    commands:
+      - tapOn:
+          text: "Replay of a real state record.*"
+          index: 0
+- extendedWaitUntil:
+    visible: "Open full record"
+    timeout: 20000
+- assertVisible: "Viva World School"
+- takeScreenshot: ../../harness/state/qa/r21-1-alert

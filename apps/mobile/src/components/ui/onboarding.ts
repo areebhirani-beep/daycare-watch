@@ -18,6 +18,13 @@ export function markOnboarded(): void {
  */
 export const EXAMPLE_OPERATION_ID = 1459611;
 
+/**
+ * The building on the first screen: Castle Montessori of Frisco, a licensed center inside TX-04. A clean, recognisable
+ * school building with no open findings on its record, so the splash never puts a business with open problems up front.
+ * Shown by city and type only, like the example above.
+ */
+export const WELCOME_OPERATION_ID = 1447992;
+
 
 /** Where the "near you" cards start before the parent shares a location: Frisco, inside TX-04. */
 export const ONBOARDING_AREA = { lat: 33.1507, lng: -96.8236, label: 'Near Frisco' } as const;

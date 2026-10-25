@@ -71,7 +71,7 @@ function longMonth(p: Pick<Photo, 'captured_at'>): string {
   return new Date(p.captured_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'America/Chicago' });
 }
 
-function caption(p: Page, name: string): Caption {
+function caption(p: Page, name: string, flyoverOn = true): Caption {
   switch (p.kind) {
     case 'lookaround':
       // No same-name place: this is only the street at the state's address point, and may show a neighbour.
@@ -95,6 +95,8 @@ function caption(p: Page, name: string): Caption {
         viewer: [`© ${p.photo.creator ?? 'Mapillary contributors'} · CC BY-SA 4.0 · Mapillary`, `Taken ${longMonth(p.photo)}`],
       };
     case 'flyover':
+      // Until MapKit has drawn, the picture is the Esri still under it (FlyoverHero), so the chip says so.
+      if (!flyoverOn) return { chip: ESRI_CREDIT, label: `Aerial view of ${name}` };
       return { chip: '3D view · Apple Maps', label: `3D view of ${name} from above, Apple Maps` };
     case 'aerial':
       return { chip: ESRI_CREDIT, label: `Aerial view of ${name}` };
@@ -162,6 +164,7 @@ export function PlaceGallery({
   const visible = useRef<string | null>(null);
   // A photo that won't load drops out.
   const [broken, setBroken] = useState<ReadonlySet<string>>(new Set());
+  const [flyoverOn, setFlyoverOn] = useState(false);
   const onPhoto = (imageId: string, ok: boolean) => {
     if (!ok) setBroken((prev) => new Set(prev).add(imageId));
   };
@@ -255,7 +258,7 @@ export function PlaceGallery({
   };
 
   const at = pages[current]!;
-  const cap = caption(at, name);
+  const cap = caption(at, name, flyoverOn);
   const onPicture = at.kind !== 'area' && at.kind !== 'approx';
   const street = at.kind === 'lookaround' || at.kind === 'photo';
   const opens = onPicture;
@@ -314,6 +317,7 @@ export function PlaceGallery({
               watched={watched}
               fadeMs={reduced ? 0 : motion.base}
               onPhoto={onPhoto}
+              onFlyover={() => setFlyoverOn(true)}
             />
           </Pressable>
         ))}
@@ -375,6 +379,7 @@ function PageBody({
   watched,
   fadeMs = 0,
   onPhoto,
+  onFlyover,
 }: {
   page: Page;
   lat: number;
@@ -388,6 +393,8 @@ function PageBody({
   /** Cross-fade as a picture arrives: 200 ms, none with Reduce Motion. */
   fadeMs?: number;
   onPhoto?: (imageId: string, ok: boolean) => void;
+  /** The 3D view has drawn; the gallery's chip credits Esri's still until then, so the still carries no credit of its own. */
+  onFlyover?: () => void;
 }) {
   const isDark = useIsDark();
   switch (page.kind) {
@@ -415,7 +422,16 @@ function PageBody({
         />
       );
     case 'flyover':
-      return live ? <FlyoverHero lat={lat} lng={lng} watched={watched} legalTop={full ? undefined : height - bottomInset - 64} /> : null;
+      return live ? (
+        <FlyoverHero
+          lat={lat}
+          lng={lng}
+          watched={watched}
+          legalTop={full ? undefined : height - bottomInset - 64}
+          stillCredit={!onFlyover}
+          onReady={onFlyover}
+        />
+      ) : null;
     case 'aerial':
       return <MapSnapshot lat={lat} lng={lng} zoom={17} watched={watched} attribution={false} style={{ height }} />;
     case 'area':
@@ -458,7 +474,6 @@ function Scrim({ height, steps, edge = 'bottom' }: { height: number; steps: read
         edge === 'top' ? { top: 0, bottom: undefined } : null,
         {
           height,
-          // slopcheck: black scrim
           backgroundImage: `linear-gradient(${direction}, ${stops})`,
         },
       ]}

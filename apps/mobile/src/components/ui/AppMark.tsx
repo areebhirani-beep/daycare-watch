@@ -1,45 +1,31 @@
+import { useId } from 'react';
 import { View } from 'react-native';
+import Svg, { Circle, Defs, Mask, Path, Rect } from 'react-native-svg';
 
 import { useColors } from '@/theme';
 
 /**
- * The app mark (same drawing as the app icon): one visit on the rail. An ink ring
- * with a solid centre sits on a time line, an earlier visit to its left. It reads as a visit and as an eye.
- * `width` is the whole mark; the height follows (0.59 of it).
+ * The app mark (same drawing as the app icon): a building with its door, and one dot at the corner for
+ * something new the state posted about it. The door and the dot's gap are cut out, so it sits on photos too.
+ * `width` is the whole mark; it is square.
  */
-export function AppMark({ width = 72, color, background }: { width?: number; color?: string; background?: string }) {
+export function AppMark({ width = 44, color }: { width?: number; color?: string; background?: string }) {
   const c = useColors();
   const ink = color ?? c.text;
-  const bg = background ?? c.surface;
-  const u = width / 724;
-  const H = 428 * u;
-  const mid = H / 2;
-  const R = 214 * u;
-  const st = 58 * u;
-  const dot = 58 * u;
-  const pupil = 84 * u;
-  const line = 34 * u;
+  const cut = `cut${useId().replace(/:/g, '')}`;
   return (
-    <View accessible accessibilityRole="image" accessibilityLabel="Daycare Watch" style={{ width, height: H }}>
-      <View style={{ position: 'absolute', left: 0, right: 0, top: mid - line / 2, height: line, borderRadius: line / 2, backgroundColor: ink }} />
-      <View style={{ position: 'absolute', left: 100 * u - dot, top: mid - dot, width: dot * 2, height: dot * 2, borderRadius: dot, backgroundColor: ink }} />
-      <View
-        style={{
-          position: 'absolute',
-          left: 440 * u - R,
-          top: mid - R,
-          width: R * 2,
-          height: R * 2,
-          borderRadius: R,
-          borderWidth: st,
-          borderColor: ink,
-          backgroundColor: bg,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <View style={{ width: pupil * 2, height: pupil * 2, borderRadius: pupil, backgroundColor: ink }} />
-      </View>
+    <View accessible accessibilityRole="image" accessibilityLabel="Daycare Watch" style={{ width, height: width }}>
+      <Svg width={width} height={width} viewBox="210 202 624 624">
+        <Defs>
+          <Mask id={cut} maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+            <Rect width="1024" height="1024" fill="#FFFFFF" />
+            <Rect x="412" y="628" width="120" height="200" rx="18" fill="#000000" />
+            <Circle cx="724" cy="300" r="140" fill="#000000" />
+          </Mask>
+        </Defs>
+        <Path d="M262 786 V494 L472 320 L682 494 V786 Z" fill={ink} stroke={ink} strokeWidth={78} strokeLinejoin="round" mask={`url(#${cut})`} />
+        <Circle cx="724" cy="300" r="98" fill={ink} />
+      </Svg>
     </View>
   );
 }

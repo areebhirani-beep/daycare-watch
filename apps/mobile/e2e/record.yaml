@@ -8,12 +8,12 @@ appId: com.areebhirani.daycare-watch
 - extendedWaitUntil:
     visible: "State record"
     timeout: 20000
-- takeScreenshot: ../../harness/state/screens/record-1
+- takeScreenshot: e2e/out/record-1
 - scroll
-- takeScreenshot: ../../harness/state/screens/record-2
+- takeScreenshot: e2e/out/record-2
 - scroll
-- takeScreenshot: ../../harness/state/screens/record-3
+- takeScreenshot: e2e/out/record-3
 - scrollUntilVisible:
     element: "Last checked with the state.*"
     direction: DOWN
-- takeScreenshot: ../../harness/state/screens/record-4
+- takeScreenshot: e2e/out/record-4

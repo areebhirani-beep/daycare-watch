@@ -21,7 +21,7 @@ const ACTIONS: Record<string, { icon: GlyphName; action: Action }> = {
   visit: { icon: 'clock', action: { request: 'visit' } },
   records: { icon: 'doc', action: { request: 'records' } },
   reports: { icon: 'record', action: { request: 'records' } },
-  video: { icon: 'shield', action: { request: 'video' } },
+  video: { icon: 'video', action: { request: 'video' } },
   policies: { icon: 'list', action: { request: 'records' } },
   training: { icon: 'check', action: { request: 'records' } },
   complain: { icon: 'phone', action: { route: '/report' } },

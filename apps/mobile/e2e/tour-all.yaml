@@ -14,7 +14,7 @@ appId: com.areebhirani.daycare-watch
     visible: "NEAREST FIRST"
     timeout: 20000
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/screens/${MODE}-find
+- takeScreenshot: e2e/out/${MODE}-find
 - tapOn: "Name, city, or ZIP"
 - inputText: "Rockwall"
 - extendedWaitUntil:
@@ -22,37 +22,37 @@ appId: com.areebhirani.daycare-watch
     timeout: 10000
 - hideKeyboard
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/screens/${MODE}-search
+- takeScreenshot: e2e/out/${MODE}-search
 - tapOn: "Watching"
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/screens/${MODE}-watching
+- takeScreenshot: e2e/out/${MODE}-watching
 - tapOn: "Your rights"
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/screens/${MODE}-rights
+- takeScreenshot: e2e/out/${MODE}-rights
 - openLink: daycarewatch://daycare/1459611
 - extendedWaitUntil:
     visible: "State record"
     timeout: 20000
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/screens/${MODE}-record-1
+- takeScreenshot: e2e/out/${MODE}-record-1
 - scroll
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/screens/${MODE}-record-2
+- takeScreenshot: e2e/out/${MODE}-record-2
 - openLink: daycarewatch://daycare/1459611/tour
 - extendedWaitUntil:
     visible: "Share these questions"
     timeout: 20000
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/screens/${MODE}-tour
+- takeScreenshot: e2e/out/${MODE}-tour
 - openLink: daycarewatch://report
 - extendedWaitUntil:
     visible: "Texas Abuse Hotline.*"
     timeout: 10000
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/screens/${MODE}-report
+- takeScreenshot: e2e/out/${MODE}-report
 - openLink: daycarewatch://alert/45
 - extendedWaitUntil:
     visible: "Open full record"
     timeout: 20000
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/screens/${MODE}-alert
+- takeScreenshot: e2e/out/${MODE}-alert

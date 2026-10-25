@@ -22,6 +22,6 @@ env:
 - extendedWaitUntil:
     visible: "Open full record"
     timeout: 20000
-- takeScreenshot: ../../harness/state/screens/alert-1-detail
+- takeScreenshot: e2e/out/alert-1-detail
 - scroll
-- takeScreenshot: ../../harness/state/screens/alert-2-actions
+- takeScreenshot: e2e/out/alert-2-actions

@@ -45,7 +45,7 @@ export default function TourScreen() {
             key={i}
             style={[styles.card, elevation.card, { backgroundColor: c.surface }]}
             accessible
-            accessibilityLabel={`Question ${i + 1}: ${q.question} ${q.fact ?? ''} ${q.followUp ?? ''}`}
+            accessibilityLabel={`Question ${i + 1}: ${q.fact ? `${q.fact}. ` : ''}${q.question}`}
           >
             {/* The same numbered disc as the place page's tour card, so the two read as one list. */}
             <View style={[styles.num, { backgroundColor: c.text }]}>
@@ -54,17 +54,17 @@ export default function TourScreen() {
               </Text>
             </View>
             <View style={{ flex: 1, gap: space.xs }}>
-              <Text variant="headline">{q.question}</Text>
+              {/* What the state found here, then the question it raises. The general questions have no fact. */}
               {q.fact ? (
-                <Text variant="footnote" tone="secondary">
-                  {q.fact}
-                </Text>
-              ) : null}
-              {q.followUp ? (
-                <Text variant="callout" tone="secondary">
-                  {q.followUp}
-                </Text>
-              ) : null}
+                <>
+                  <Text variant="subhead">{q.fact}</Text>
+                  <Text variant="callout" tone="secondary">
+                    {q.question}
+                  </Text>
+                </>
+              ) : (
+                <Text variant="headline">{q.question}</Text>
+              )}
             </View>
           </View>
         ))}
@@ -78,7 +78,7 @@ export default function TourScreen() {
           onPress={() =>
             shareText(
               `Questions for ${name}`,
-              [`Questions for ${name}`, '', ...questions.map((q, i) => `${i + 1}. ${q.question}${q.followUp ? ` ${q.followUp}` : ''}`)].join('\n'),
+              [`Questions for ${name}`, '', ...questions.map((q, i) => `${i + 1}. ${q.fact ? `${q.fact}. ` : ''}${q.question}`)].join('\n'),
             )
           }
         />

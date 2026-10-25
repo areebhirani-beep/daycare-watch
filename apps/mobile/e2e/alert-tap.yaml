@@ -4,7 +4,7 @@ appId: com.areebhirani.daycare-watch
 - extendedWaitUntil:
     visible: "Viva World School"
     timeout: 30000
-- takeScreenshot: ../../harness/state/screens/alert-0-push
+- takeScreenshot: e2e/out/alert-0-push
 - tapOn:
     text: "Replay of a real state record.*"
     index: 0
@@ -19,6 +19,6 @@ appId: com.areebhirani.daycare-watch
 - extendedWaitUntil:
     visible: "Open full record"
     timeout: 20000
-- takeScreenshot: ../../harness/state/screens/alert-1-detail
+- takeScreenshot: e2e/out/alert-1-detail
 - scroll
-- takeScreenshot: ../../harness/state/screens/alert-2-actions
+- takeScreenshot: e2e/out/alert-2-actions

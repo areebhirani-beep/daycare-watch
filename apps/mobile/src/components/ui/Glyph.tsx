@@ -21,7 +21,7 @@ const GLYPHS = {
   record: { ios: 'building.columns.fill', android: 'account_balance' },
   share: { ios: 'square.and.arrow.up', android: 'share' },
   doc: { ios: 'doc.text.fill', android: 'description' },
-  shield: { ios: 'checkmark.shield.fill', android: 'verified_user' },
+  video: { ios: 'video.fill', android: 'videocam' },
   calendar: { ios: 'calendar', android: 'calendar_today' },
   map: { ios: 'map.fill', android: 'map' },
   list: { ios: 'list.bullet', android: 'list' },

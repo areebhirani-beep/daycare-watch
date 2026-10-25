@@ -94,7 +94,7 @@ export const LAW_URL = 'https://statutes.capitol.texas.gov/Docs/HR/htm/HR.42.htm
 export const REQUEST_CARDS: { kind: RequestKind; icon: GlyphName; title: string; detail: string }[] = [
   { kind: 'records', icon: 'doc', title: 'Request records', detail: 'Your child’s records and the inspection reports' },
   { kind: 'visit', icon: 'clock', title: 'Drop in without notice', detail: 'Any time it’s open. A note citing the law, for the front desk' },
-  { kind: 'video', icon: 'shield', title: 'Ask to inspect video', detail: 'Only after an alleged abuse or neglect incident involving your child' },
+  { kind: 'video', icon: 'video', title: 'Ask to inspect video', detail: 'Only after an alleged abuse or neglect incident involving your child' },
 ];
 
 export function requestText(kind: RequestKind, daycare: string | null): { subject: string; body: string } {

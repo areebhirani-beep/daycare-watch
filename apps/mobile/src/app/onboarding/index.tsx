@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -7,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppMark } from '@/components/ui/AppMark';
 import { Button } from '@/components/ui/Button';
 import { FlyoverHero } from '@/components/ui/FlyoverHero';
-import { EXAMPLE_OPERATION_ID } from '@/components/ui/onboarding';
+import { WELCOME_OPERATION_ID } from '@/components/ui/onboarding';
 import { OnboardingTop } from '@/components/ui/OnboardingFrame';
 import { Text } from '@/components/ui/Text';
 import { useDaycareRecord } from '@/lib/api';
@@ -15,9 +16,7 @@ import { tidyCase } from '@/lib/format';
 import { enter, fade, space } from '@/theme';
 
 // Darker toward the bottom so white type clears AA on any roof; one native gradient each (stacked slices banded).
-// slopcheck: black scrim
 const SCRIM = 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.22) 33%, rgba(0,0,0,0.6) 67%, rgba(0,0,0,0.8) 100%)';
-// slopcheck: black scrim
 const TOP = 'linear-gradient(to bottom, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.18) 50%, rgba(0,0,0,0) 100%)';
 
 const rise = enter;
@@ -28,18 +27,20 @@ const rise = enter;
  */
 export default function HookScreen() {
   const insets = useSafeAreaInsets();
-  const record = useDaycareRecord(EXAMPLE_OPERATION_ID);
+  const record = useDaycareRecord(WELCOME_OPERATION_ID);
   const d = record.data?.daycare;
   // At large text, or on a short screen (iPhone SE), the lockup climbs to mid-screen, so the map is padded from
   // the bottom: the building, its pin and Apple's logo all sit in the clear top part, above the wordmark.
   const { height, fontScale } = useWindowDimensions();
   const lift = fontScale >= 1.35 ? 0.66 : height < 760 ? 0.55 : 0;
+  // The caption names Apple's 3D view only once it has drawn; before that the Esri still carries its own credit.
+  const [drawn, setDrawn] = useState(false);
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
       <Animated.View entering={fade(300)} style={StyleSheet.absoluteFill}>
-        <FlyoverHero lat={d?.lat} lng={d?.lng} legalTop={insets.top + 56} bottomInset={lift ? Math.round(height * lift) : undefined} />
+        <FlyoverHero lat={d?.lat} lng={d?.lng} legalTop={insets.top + 56} bottomInset={lift ? Math.round(height * lift) : undefined} onReady={() => setDrawn(true)} />
       </Animated.View>
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.12)' }]} />
       <View
@@ -57,7 +58,7 @@ export default function HookScreen() {
 
       <View style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, space.lg) }]}>
         <Animated.View entering={rise(0)} accessible accessibilityLabel="Daycare Watch" style={styles.lockup}>
-          <AppMark width={44} color="#FFFFFF" background="transparent" />
+          <AppMark width={28} color="#FFFFFF" />
           <Text variant="headline" color="#FFFFFF">
             Daycare Watch
           </Text>
@@ -69,7 +70,7 @@ export default function HookScreen() {
         </Animated.View>
         <Animated.View entering={rise(2)} style={{ gap: space.lg }}>
           <Text variant="footnote" color="rgba(255,255,255,0.78)" numberOfLines={2}>
-            {d ? `A licensed center in ${tidyCase(d.city)}, TX${Platform.OS === 'ios' ? ' · 3D view, Apple Maps' : ''}` : ' '}
+            {d ? `A licensed center in ${tidyCase(d.city)}, TX${Platform.OS === 'ios' && drawn ? ' · 3D view, Apple Maps' : ''}` : ' '}
           </Text>
           <Button label="Get started" kind="onImage" onPress={() => router.push('/onboarding/how')} />
         </Animated.View>

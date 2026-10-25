@@ -162,12 +162,13 @@ describe('whatChanged', () => {
 });
 
 describe('tour questions', () => {
-  it('states each fact in plain words from the captured findings', () => {
+  it('leads with what the state found and when, then one question', () => {
     const now = new Date('2026-10-24T12:00:00');
     const [first] = buildTourQuestions(findings, now);
-    expect(first.fact).toMatch(/^The state found \d+ [a-z ]+ problems? in the past 2 years, most recently [A-Z][a-z]{2} \d{1,2}, \d{4}\./);
-    expect(first.fact).not.toMatch(/finding|cited|verified/i);
-    expect(first.question).toMatch(/^What changed after the [a-z ]*problem the state found on [A-Z][a-z]{2} \d{1,2}(, \d{4})?\?$/);
+    // No plain summary in the captured rows, so the fact is the rule's own title with the date.
+    expect(first.fact).toMatch(/^[A-Z][^()]+ \([A-Z][a-z]{2} \d{1,2}(, \d{4})?\)$/);
+    expect(first.fact).not.toMatch(/\.\s*\(/);
+    expect(first.question).toBe('What changed after your most recent state inspection?');
   });
 });
 

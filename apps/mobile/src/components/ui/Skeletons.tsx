@@ -22,7 +22,7 @@ export function Block({ style }: { style?: ViewStyle }) {
 }
 
 /** Shaped like DaycareCard. */
-export function CardSkeleton({ width = 280, heroRatio = 2 }: { width?: number; heroRatio?: number }) {
+export function CardSkeleton({ width = 280, heroRatio = 2 }: { width?: number | `${number}%`; heroRatio?: number }) {
   return (
     <View style={{ width }} accessibilityLabel="Loading" accessible>
       <Block style={{ aspectRatio: heroRatio, borderRadius: radius.thumb }} />

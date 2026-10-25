@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { type ReactNode, useEffect } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { type ComponentRef, type ReactNode, useEffect, useRef } from 'react';
+import { type LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { ReduceMotion, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -73,18 +73,33 @@ export function OnboardingFrame({ step, children, actions, scroll = true }: Prop
   const c = useColors();
   const isDark = useIsDark();
   const insets = useSafeAreaInsets();
-  const Body = scroll ? ScrollView : View;
+  // At the largest text sizes the step runs past the fold: flash the scroll bar once so it reads as more, not cut.
+  const body = useRef<ComponentRef<typeof ScrollView>>(null);
+  const fit = useRef({ view: 0, content: 0, flashed: false });
+  const flashIfLonger = (next: Partial<{ view: number; content: number }>) => {
+    const f = Object.assign(fit.current, next);
+    if (f.flashed || !f.view || f.content <= f.view + 1) return;
+    f.flashed = true;
+    body.current?.flashScrollIndicators();
+  };
   return (
     <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top + space.xs }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <OnboardingTop step={step} />
-      <Body
-        {...(scroll
-          ? { contentContainerStyle: styles.content, keyboardShouldPersistTaps: 'handled' as const, keyboardDismissMode: 'on-drag' as const }
-          : { style: [styles.content, { flex: 1 }] })}
-      >
-        {children}
-      </Body>
+      {scroll ? (
+        <ScrollView
+          ref={body}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          onLayout={(e: LayoutChangeEvent) => flashIfLonger({ view: e.nativeEvent.layout.height })}
+          onContentSizeChange={(_w, h) => flashIfLonger({ content: h })}
+        >
+          {children}
+        </ScrollView>
+      ) : (
+        <View style={[styles.content, { flex: 1 }]}>{children}</View>
+      )}
       <View style={[styles.actions, { paddingBottom: Math.max(insets.bottom, space.lg) }]}>{actions}</View>
     </View>
   );

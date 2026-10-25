@@ -53,7 +53,8 @@ export default function FindScreen() {
   const screen = useWindowDimensions();
   const width = useAppWidth();
   // Large text, or a short screen (iPhone SE): a wider, shorter picture so the name and the record stay above the buttons.
-  const heroRatio = screen.fontScale > 1.3 ? 2.2 : screen.height < 760 ? 2 : 1.2;
+  // Past 1.6x text the card's lines never truncate, so the picture gives up the height instead.
+  const heroRatio = screen.fontScale >= 1.6 ? 3 : screen.fontScale > 1.3 ? 2.2 : screen.height < 760 ? 2 : 1.2;
   const [query, setQuery] = useState('');
   const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);

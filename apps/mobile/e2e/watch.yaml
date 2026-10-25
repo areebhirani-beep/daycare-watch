@@ -9,12 +9,12 @@ appId: com.areebhirani.daycare-watch
 - extendedWaitUntil:
     visible: "State record"
     timeout: 20000
-- takeScreenshot: ../../harness/state/screens/watch-0-record
+- takeScreenshot: e2e/out/watch-0-record
 - tapOn: "Watch this daycare"
 - extendedWaitUntil:
     visible: "Turn on alerts"
     timeout: 10000
-- takeScreenshot: ../../harness/state/screens/watch-1-explain
+- takeScreenshot: e2e/out/watch-1-explain
 - tapOn: "Turn on alerts"
 - runFlow:
     when:
@@ -24,4 +24,4 @@ appId: com.areebhirani.daycare-watch
 - extendedWaitUntil:
     visible: "You’re watching.*"
     timeout: 15000
-- takeScreenshot: ../../harness/state/screens/watch-2-confirmed
+- takeScreenshot: e2e/out/watch-2-confirmed

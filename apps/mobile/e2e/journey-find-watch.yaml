@@ -28,12 +28,12 @@ appId: com.areebhirani.daycare-watch
     visible: "Viva World School\\. .*"
     timeout: 15000
 - hideKeyboard
-- takeScreenshot: ../../harness/state/screens/journey-0-search
+- takeScreenshot: e2e/out/journey-0-search
 - tapOn: "Viva World School\\. .*"
 - extendedWaitUntil:
     visible: "State record"
     timeout: 20000
-- takeScreenshot: ../../harness/state/screens/journey-1-record
+- takeScreenshot: e2e/out/journey-1-record
 # A device that already watches this daycare shows "Watching"; otherwise walk the watch flow.
 - runFlow:
     when:
@@ -52,5 +52,5 @@ appId: com.areebhirani.daycare-watch
       - extendedWaitUntil:
           visible: "You’re watching.*"
           timeout: 15000
-- takeScreenshot: ../../harness/state/screens/journey-2-watching
+- takeScreenshot: e2e/out/journey-2-watching
 - pressKey: Home

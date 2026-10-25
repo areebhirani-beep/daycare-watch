@@ -101,9 +101,8 @@ export function PhoneStage() {
           <p style={{ margin: 0, font: `800 40px/44px ${FONT}`, letterSpacing: -0.8 }}>
             Know what Texas inspectors found before you pick a daycare.
           </p>
-          <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 10, font: `400 17px/22px ${FONT}`, color: c.textSecondary }}>
-            <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 4, background: c.text, flexShrink: 0 }} />
-            Real Texas state data, synced daily
+          <p style={{ margin: 0, font: `400 17px/24px ${FONT}`, color: c.textSecondary }}>
+            Updated every night from data.texas.gov. Built for the 2026 Congressional App Challenge, TX-04.
           </p>
           <figure style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 16, lineHeight: 0 }}>

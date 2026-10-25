@@ -5,8 +5,8 @@ appId: com.areebhirani.daycare-watch
     visible: "Viva World School"
     timeout: 20000
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/screens/a11y-xxxl-record
+- takeScreenshot: e2e/out/a11y-xxxl-record
 - scroll
 - scroll
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/screens/a11y-xxxl-record-2
+- takeScreenshot: e2e/out/a11y-xxxl-record-2

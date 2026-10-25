@@ -78,7 +78,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 96,
-    // slopcheck: black scrim
     backgroundImage: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.2) 33%, rgba(0,0,0,0.08) 67%, rgba(0,0,0,0) 100%)',
   },
   caption: {

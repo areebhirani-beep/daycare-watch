@@ -8,7 +8,7 @@ appId: com.areebhirani.daycare-watch
     timeout: 20000
 - waitForAnimationToEnd:
     timeout: 1500
-- takeScreenshot: ../../harness/state/screens/gate/${MODE}-ob1
+- takeScreenshot: e2e/out/gate/${MODE}-ob1
 
 - openLink: daycarewatch://onboarding/find
 - tapOn: "Name, city, or ZIP"
@@ -19,7 +19,7 @@ appId: com.areebhirani.daycare-watch
 - hideKeyboard
 - waitForAnimationToEnd:
     timeout: 1500
-- takeScreenshot: ../../harness/state/screens/gate/${MODE}-ob2
+- takeScreenshot: e2e/out/gate/${MODE}-ob2
 
 - openLink: daycarewatch://onboarding/alerts?id=1459611
 - extendedWaitUntil:
@@ -27,7 +27,7 @@ appId: com.areebhirani.daycare-watch
     timeout: 15000
 - waitForAnimationToEnd:
     timeout: 1500
-- takeScreenshot: ../../harness/state/screens/gate/${MODE}-ob3
+- takeScreenshot: e2e/out/gate/${MODE}-ob3
 
 - openLink: daycarewatch://
 - extendedWaitUntil:
@@ -35,7 +35,7 @@ appId: com.areebhirani.daycare-watch
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 1500
-- takeScreenshot: ../../harness/state/screens/gate/${MODE}-find
+- takeScreenshot: e2e/out/gate/${MODE}-find
 - runFlow:
     when:
       true: ${MODE != 'xxxl'}
@@ -47,7 +47,7 @@ appId: com.areebhirani.daycare-watch
           timeout: 10000
       - waitForAnimationToEnd:
           timeout: 1500
-      - takeScreenshot: ../../harness/state/screens/gate/${MODE}-callout
+      - takeScreenshot: e2e/out/gate/${MODE}-callout
       - tapOn: "Close"
 
 - openLink: daycarewatch://daycare/1459611
@@ -56,14 +56,14 @@ appId: com.areebhirani.daycare-watch
     timeout: 20000
 - waitForAnimationToEnd:
     timeout: 1500
-- takeScreenshot: ../../harness/state/screens/gate/${MODE}-record-top
+- takeScreenshot: e2e/out/gate/${MODE}-record-top
 - scrollUntilVisible:
     element: "What inspectors found"
     direction: DOWN
 - scroll
 - waitForAnimationToEnd:
     timeout: 1500
-- takeScreenshot: ../../harness/state/screens/gate/${MODE}-record-findings
+- takeScreenshot: e2e/out/gate/${MODE}-record-findings
 
 - openLink: daycarewatch://watching
 - extendedWaitUntil:
@@ -71,7 +71,7 @@ appId: com.areebhirani.daycare-watch
     timeout: 20000
 - waitForAnimationToEnd:
     timeout: 1500
-- takeScreenshot: ../../harness/state/screens/gate/${MODE}-watching
+- takeScreenshot: e2e/out/gate/${MODE}-watching
 
 - openLink: daycarewatch://rights
 - extendedWaitUntil:
@@ -79,7 +79,7 @@ appId: com.areebhirani.daycare-watch
     timeout: 10000
 - waitForAnimationToEnd:
     timeout: 1500
-- takeScreenshot: ../../harness/state/screens/gate/${MODE}-rights
+- takeScreenshot: e2e/out/gate/${MODE}-rights
 
 - openLink: daycarewatch://alert/${EVENT_ID}
 - extendedWaitUntil:
@@ -87,7 +87,7 @@ appId: com.areebhirani.daycare-watch
     timeout: 20000
 - waitForAnimationToEnd:
     timeout: 1500
-- takeScreenshot: ../../harness/state/screens/gate/${MODE}-alert
+- takeScreenshot: e2e/out/gate/${MODE}-alert
 
 - openLink: daycarewatch://daycare/1459611/tour
 - extendedWaitUntil:
@@ -95,7 +95,7 @@ appId: com.areebhirani.daycare-watch
     timeout: 20000
 - waitForAnimationToEnd:
     timeout: 1500
-- takeScreenshot: ../../harness/state/screens/gate/${MODE}-tour
+- takeScreenshot: e2e/out/gate/${MODE}-tour
 
 - openLink: daycarewatch://report
 - extendedWaitUntil:
@@ -103,4 +103,4 @@ appId: com.areebhirani.daycare-watch
     timeout: 10000
 - waitForAnimationToEnd:
     timeout: 1500
-- takeScreenshot: ../../harness/state/screens/gate/${MODE}-report
+- takeScreenshot: e2e/out/gate/${MODE}-report

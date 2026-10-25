@@ -42,6 +42,23 @@ public class LookAroundModule: Module {
       return result
     }
 
+    // Draws the 3D flyover the app is about to show (same camera as FlyoverHero) off screen and resolves once Apple
+    // has rendered it. The map view shares the tiles, so it fades in only when its picture is complete.
+    AsyncFunction("prepareFlyover") { (lat: Double, lng: Double, width: Double, height: Double) async throws -> Bool in
+      let camera = MKMapCamera()
+      camera.centerCoordinate = CLLocationCoordinate2D(latitude: lat, longitude: lng)
+      camera.altitude = 340
+      camera.pitch = 56
+      camera.heading = 20
+      let options = MKMapSnapshotter.Options()
+      options.camera = camera
+      options.mapType = .satelliteFlyover
+      options.size = CGSize(width: max(width, 1), height: max(height, 1))
+      options.pointOfInterestFilter = .excludingAll
+      _ = try await MKMapSnapshotter(options: options).start()
+      return true
+    }
+
     // The full, interactive Look Around (walk the street, look around), over the app. False if there is none.
     AsyncFunction("present") { (lat: Double, lng: Double, name: String?, allowPoint: Bool) async throws -> Bool in
       guard let (scene, _, _) = try await Self.findScene(lat: lat, lng: lng, name: name, allowPoint: allowPoint) else { return false }

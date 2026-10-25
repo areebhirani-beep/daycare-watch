@@ -1,6 +1,6 @@
 // Tour questions built from one daycare's own findings. Facts come from the record; questions are ours.
 
-import { formatDate, formatDateShort, isFixed, plural } from './format';
+import { formatDateShort, splitStandard } from './format';
 import type { Category, Finding } from './types';
 
 const QUESTIONS: Record<Category, string> = {
@@ -15,20 +15,8 @@ const QUESTIONS: Record<Category, string> = {
   other: 'What changed after your most recent state inspection?',
 };
 
-// The kind of problem in plain words: "The state found 6 safety problems".
-const KIND: Record<Category, string> = {
-  supervision: 'supervision',
-  background_checks: 'background check',
-  staff_ratio: 'staff ratio',
-  safety_hazards: 'safety',
-  health_medication: 'health or medication',
-  discipline: 'discipline',
-  parent_communication: 'parent communication',
-  paperwork_admin: 'paperwork',
-  other: 'other',
-};
-
-export type TourQuestion = { category: Category | null; fact: string | null; question: string; followUp?: string };
+/** fact: the latest thing the state found in this category, in plain words, with its date; the question follows from it. */
+export type TourQuestion = { category: Category | null; fact: string | null; question: string };
 
 export function buildTourQuestions(findings: Finding[], now = new Date()): TourQuestion[] {
   const cutoff = new Date(now.getFullYear() - 2, now.getMonth(), now.getDate()).toISOString().slice(0, 10);
@@ -43,20 +31,8 @@ export function buildTourQuestions(findings: Finding[], now = new Date()): TourQ
 
   const specific: TourQuestion[] = ranked.map(([cat, list]) => {
     const latest = list.reduce((a, b) => ((b.date ?? '') > (a.date ?? '') ? b : a));
-    const open = list.filter((f) => !isFixed(f)).length;
-    const fact = [
-      `The state found ${plural(list.length, `${KIND[cat]} problem`)} in the past 2 years, most recently ${formatDate(latest.date)}.`,
-      open > 0 ? `${open} ${open === 1 ? 'has' : 'have'} no state check on record yet.` : null,
-    ]
-      .filter(Boolean)
-      .join(' ');
-    const which = cat === 'other' ? 'problem' : `${KIND[cat]} problem`;
-    return {
-      category: cat,
-      fact,
-      question: `What changed after the ${which} the state found on ${formatDateShort(latest.date, today)}?`,
-      followUp: QUESTIONS[cat],
-    };
+    const what = (latest.plain ?? splitStandard(latest.standard)?.title ?? '').replace(/\s+/g, ' ').replace(/[.\s]+$/, '');
+    return { category: cat, fact: what ? `${what} (${formatDateShort(latest.date, today)})` : null, question: QUESTIONS[cat] };
   });
 
   const always: TourQuestion[] = [

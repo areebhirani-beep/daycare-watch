@@ -14,7 +14,7 @@ appId: com.areebhirani.daycare-watch
     visible: ".*\\. Last state visit .*"
     timeout: 30000
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/screens/light-find
+- takeScreenshot: e2e/out/light-find
 - tapOn:
     point: "47%,34%"
 - runFlow:
@@ -22,25 +22,25 @@ appId: com.areebhirani.daycare-watch
       visible: "Open the record"
     commands:
       - waitForAnimationToEnd
-      - takeScreenshot: ../../harness/state/screens/light-find-callout
+      - takeScreenshot: e2e/out/light-find-callout
       - tapOn: "Close"
 - openLink: daycarewatch://daycare/1459611
 - extendedWaitUntil:
     visible: "State record"
     timeout: 20000
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/screens/light-record-1
+- takeScreenshot: e2e/out/light-record-1
 - scroll
-- takeScreenshot: ../../harness/state/screens/light-record-2
+- takeScreenshot: e2e/out/light-record-2
 - openLink: daycarewatch://watching
 - extendedWaitUntil:
     visible: ".*\\. Latest: .*"
     timeout: 20000
-- takeScreenshot: ../../harness/state/screens/light-watching
+- takeScreenshot: e2e/out/light-watching
 - openLink: daycarewatch://rights
 - extendedWaitUntil:
     visible: "Read the law"
     timeout: 10000
-- takeScreenshot: ../../harness/state/screens/light-rights
+- takeScreenshot: e2e/out/light-rights
 - scroll
-- takeScreenshot: ../../harness/state/screens/light-rights-2
+- takeScreenshot: e2e/out/light-rights-2

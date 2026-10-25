@@ -11,7 +11,7 @@ import { byWeight, visitAnswer } from '@/components/ui/PlacePage';
 import { PlaceSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useAlertDetail, useDaycareRecord } from '@/lib/api';
-import { formatDate, formatLocalDay, plural, tidyCase, todayIso } from '@/lib/format';
+import { formatDate, formatDateShort, plural, tidyCase, todayIso } from '@/lib/format';
 import { type ActivityNoun, activityNoun, type Change, whatChanged } from '@/lib/record';
 import { lawCovers } from '@/lib/rights';
 import type { AlertDetail, Finding } from '@/lib/types';
@@ -58,7 +58,9 @@ export default function AlertScreen() {
   const a = alert.data;
   const change = record.data && a.finding ? whatChanged(record.data, a.finding.activity_id) : null;
   const visit = a.finding?.date ?? a.source_date;
-  const when = [visit ? `${change?.visit ? ACTIVITY_LABEL[activityNoun(change.visit)] : 'Dated'} ${formatDate(visit)}` : null, `posted by ${formatLocalDay(a.detected_at)}`]
+  // The day this phone's clock saw the post, e.g. "Posted Oct 24" (the year only when it isn't this year).
+  const posted = a.detected_at ? `Posted ${formatDateShort(todayIso(new Date(a.detected_at)), todayIso())}` : null;
+  const when = [visit ? `${change?.visit ? ACTIVITY_LABEL[activityNoun(change.visit)] : 'Dated'} ${formatDate(visit)}` : null, posted]
     .filter(Boolean)
     .join(' · ');
   // A new finding answers like the place page: what the state found at that visit, and where the fixes stand.
@@ -115,6 +117,11 @@ export default function AlertScreen() {
               <FindingCard key={f.non_compliance_id} finding={f} visitDate={visit} onOfficial={onOfficial} />
             ))}
           </Disclosure>
+        ) : null}
+        {visitFindings.length ? (
+          <Text variant="callout" tone="tertiary">
+            Risk levels are the state’s.
+          </Text>
         ) : null}
         {meaning(a) ? (
           <Text variant={a.finding ? 'footnote' : 'callout'} tone="secondary">

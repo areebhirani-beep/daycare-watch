@@ -22,8 +22,10 @@ psql() { docker exec supabase_db_daycare-watch psql -U postgres -d postgres -At 
 event=$(psql "select row_to_json(t) from (select e.operation_id, e.kind::text as kind, e.is_replay, e.source_date, e.before, e.after,
   (e.after ->> 'activity_id')::bigint as activity_id, d.name from core.change_events e join core.daycares d using (operation_id)
   where e.id = $EVENT_ID) t")
+# One replay call stamps all its events with one detected_at, the same batch notify sends; older replays of the visit stay out.
 ids=$(psql "select json_agg(id order by id) from core.change_events where operation_id = $OP and is_replay
-  and after ->> 'activity_id' = (select after ->> 'activity_id' from core.change_events where id = $EVENT_ID)")
+  and after ->> 'activity_id' = (select after ->> 'activity_id' from core.change_events where id = $EVENT_ID)
+  and detected_at = (select detected_at from core.change_events where id = $EVENT_ID)")
 payload=${PAYLOAD:-$(mktemp -t journey).apns}
 (cd ../../services/pipeline && uv run python -c '
 import datetime, json, sys

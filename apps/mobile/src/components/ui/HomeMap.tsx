@@ -1,5 +1,5 @@
 import BottomSheet, { BottomSheetFlatList, type BottomSheetFlatListMethods } from '@gorhom/bottom-sheet';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import MapView, { Marker, type Region } from 'react-native-maps';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
@@ -82,11 +82,16 @@ function cluster(rows: DaycareRow[], region: Region): Cluster[] {
   }));
 }
 
+// The near() RPC returns at most this many rows, so a full page means "the closest N", not "all".
+const NEAR_LIMIT = 50;
+
 type Props = {
   rows: DaycareRow[];
   loading: boolean;
   center: { lat: number; lng: number } | null;
   fallbackCenter: { lat: number; lng: number };
+  /** Subtitle when there is no device location, e.g. "Near Frisco". */
+  areaLabel?: string;
   watchedIds: Set<number>;
   onOpen: (operationId: number) => void;
   onToggleWatch?: (row: DaycareRow) => void;
@@ -102,6 +107,7 @@ export function HomeMap({
   loading,
   center,
   fallbackCenter,
+  areaLabel,
   watchedIds,
   onOpen,
   onToggleWatch,
@@ -132,6 +138,12 @@ export function HomeMap({
     () => [sheet.peek + TAB_BAR_CLEARANCE - 24, sheet.half, height - insets.top - 64],
     [height, insets.top],
   );
+
+  // The location can arrive after the first render; follow it once it does.
+  useEffect(() => {
+    if (!center) return;
+    map.current?.animateToRegion({ latitude: center.lat, longitude: center.lng, latitudeDelta: 0.12, longitudeDelta: 0.12 }, 450);
+  }, [center]);
   const sheetY = useSharedValue(height);
   const locateStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetY.value - 64 }],
@@ -171,10 +183,16 @@ export function HomeMap({
       <View style={styles.titleRow}>
         <View style={{ flex: 1 }}>
           <Text variant="largeTitle" accessibilityRole="header" numberOfLines={2}>
-            {loading && rows.length === 0 ? 'Finding daycares…' : `${shown.length} daycares`}
+            {loading && rows.length === 0
+              ? 'Finding daycares…'
+              : rows.length >= NEAR_LIMIT
+                ? filters.size > 0
+                  ? `${shown.length} of the closest ${rows.length}`
+                  : `Closest ${rows.length}`
+                : `${shown.length} daycares`}
           </Text>
           <Text variant="callout" tone="secondary">
-            {center ? 'Near you' : 'Near Rockwall'}
+            {center ? 'Near you' : (areaLabel ?? 'Near you')}
           </Text>
         </View>
         <IconButton icon="search" label="Search daycares" onPress={onSearch} size={40} />
@@ -218,7 +236,7 @@ export function HomeMap({
         />
       )}
       <View style={{ height: space.xxl }} />
-      <SectionHeader title="All nearby" detail={loading && rows.length === 0 ? undefined : `${shown.length} within 15 km`} />
+      <SectionHeader title="All nearby" detail={loading && rows.length === 0 ? undefined : 'Nearest first'} />
     </View>
   );
 

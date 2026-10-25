@@ -70,7 +70,9 @@ export default function RightsScreen() {
 
       <View style={styles.cards}>
         {RIGHTS.map((r) => {
-          const a = ACTIONS[r.id] ?? { icon: 'doc' as const, action: { law: true as const } };
+          const mapped = ACTIONS[r.id] ?? { icon: 'doc' as const, action: { law: true as const } };
+          // A listed family home isn't covered, so no letter citing the law: the card opens the law itself.
+          const a = covered || !('request' in mapped.action) ? mapped : { ...mapped, action: { law: true as const } };
           const trailing = 'route' in a.action ? 'chevronRight' : 'law' in a.action ? 'external' : 'share';
           const hint =
             'route' in a.action

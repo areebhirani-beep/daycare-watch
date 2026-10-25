@@ -53,7 +53,6 @@ export default function FindScreen() {
   const watchedIds = useMemo(() => new Set(watches.data?.map((d) => d.operation_id)), [watches.data]);
 
   const problem = configError ?? (near.isError ? 'We couldn’t reach the state records. Check your connection.' : null);
-  const notice = problem ?? (position === null ? 'Showing Frisco. Turn on location to see daycares near you.' : null);
 
   return (
     <View style={{ flex: 1 }}>
@@ -62,6 +61,7 @@ export default function FindScreen() {
         loading={!problem && (position === undefined || near.isPending)}
         center={position ?? null}
         fallbackCenter={DISTRICT_CENTER}
+        areaLabel={position === null ? 'Near Frisco · location off' : 'Finding your location…'}
         watchedIds={watchedIds}
         onOpen={(id) => router.push(`/daycare/${id}`)}
         onSearch={() => router.push('/search')}
@@ -69,15 +69,15 @@ export default function FindScreen() {
         onLocate={() => void locate()}
         footer={<LastChecked />}
       />
-      {notice ? (
+      {problem ? (
         <View
           style={[styles.notice, { top: insets.top + 76, backgroundColor: c.surface }]}
           accessibilityLiveRegion="polite"
         >
           <Text variant="callout" style={{ flex: 1 }}>
-            {notice}
+            {problem}
           </Text>
-          {problem && !configError ? (
+          {!configError ? (
             <Button label="Try again" kind="secondary" size="md" onPress={() => void near.refetch()} />
           ) : null}
         </View>

@@ -79,6 +79,20 @@ export function InfoChip({ icon, label, accessibilityLabel }: { icon: GlyphName;
   );
 }
 
+/** First-view facts cap (DESIGN.md §9). Anything past three belongs behind "More details". */
+export const MAX_FACTS = 3;
+
+/** The place page's fact row. It renders at most three facts, whatever it is given. */
+export function FactChips({ facts }: { facts: { icon: GlyphName; label: string; a11y?: string }[] }) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.facts} style={{ flexGrow: 0, marginHorizontal: -space.lg }}>
+      {facts.slice(0, MAX_FACTS).map((f) => (
+        <InfoChip key={f.label} icon={f.icon} label={f.label} accessibilityLabel={f.a11y} />
+      ))}
+    </ScrollView>
+  );
+}
+
 const chipShadow = {
   shadowColor: '#000',
   shadowOpacity: 0.12,
@@ -88,6 +102,7 @@ const chipShadow = {
 } as const;
 
 const styles = StyleSheet.create({
+  facts: { paddingHorizontal: space.lg, gap: space.sm, paddingTop: space.sm },
   chip: {
     minHeight: 36,
     paddingHorizontal: 14,

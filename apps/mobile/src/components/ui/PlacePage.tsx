@@ -29,12 +29,13 @@ import type { AreaCompare, DaycareRecord } from '@/lib/types';
 import { radius, space, useColors } from '@/theme';
 
 import { Button } from './Button';
-import { InfoChip } from './Chip';
+import { FactChips } from './Chip';
 import { ActionPill, IconButton, SquareButton, StickyBar } from './Chrome';
 import { FindingCard } from './FindingCard';
 import type { GlyphName } from './Glyph';
-import { MapSnapshot } from './MapSnapshot';
+import { Disclosure } from './Disclosure';
 import { RingCard, StatBand } from './NumberCard';
+import { type GeocodeQuality, PlaceGallery } from './PlaceGallery';
 import { RecordStrip, stripFromRecord } from './RecordStrip';
 import { RightCard } from './RightCard';
 import { Tabs } from './Tabs';
@@ -60,7 +61,10 @@ type Props = {
   onUnwatch: () => void;
   onBack: () => void;
   onShare: () => void;
+  /** Fallback when the two map-app handlers aren't passed. */
   onDirections: () => void;
+  onOpenAppleMaps?: () => void;
+  onOpenGoogleMaps?: () => void;
   onOfficial: () => void;
   onTour: () => void;
   onRequest: (kind: RequestKind) => void;
@@ -80,6 +84,8 @@ export function PlacePage({
   onBack,
   onShare,
   onDirections,
+  onOpenAppleMaps,
+  onOpenGoogleMaps,
   onOfficial,
   onTour,
   onRequest,
@@ -109,13 +115,20 @@ export function PlacePage({
   const findingVisits = shown.filter((v) => v.status === 'findings');
   const verified = s.findings - s.notFixed;
 
-  const chips: { icon: GlyphName; label: string; a11y: string }[] = [];
+  // First view: three facts a parent decides on (DESIGN.md §9). The rest sits in "More details".
+  const facts: { icon: GlyphName; label: string; a11y: string }[] = [];
+  const typeLabel = operationTypeLabel(daycare.operation_type);
+  facts.push({ icon: daycare.operation_type === 'Licensed Center' ? 'center' : 'home', label: typeLabel, a11y: typeLabel });
   const ages = agesLabel(daycare.ages);
-  if (ages) chips.push({ icon: 'ages', label: ages, a11y: `Ages: ${ages}` });
-  if (daycare.capacity) chips.push({ icon: 'capacity', label: `Up to ${daycare.capacity} kids`, a11y: `Licensed for ${daycare.capacity} children` });
+  if (ages) facts.push({ icon: 'ages', label: ages, a11y: `Ages: ${ages}` });
   const hours = [daysLabel(daycare.days), hoursLabel(daycare.hours)].filter(Boolean).join(' ');
-  if (hours) chips.push({ icon: 'clock', label: hours, a11y: `Hours: ${hours}` });
-  if (daycare.subsidies) chips.push({ icon: 'subsidy', label: 'Accepts subsidies', a11y: 'Accepts state child care subsidies' });
+  if (hours) facts.push({ icon: 'clock', label: hours, a11y: `Hours: ${hours}` });
+  const more = [
+    daycare.capacity ? `Licensed for up to ${daycare.capacity} children` : null,
+    daycare.subsidies ? 'Accepts state child care subsidies' : null,
+    daycare.issuance_date ? `Permit issued ${formatDate(daycare.issuance_date)}` : null,
+  ].filter((m): m is string => m !== null);
+  const quality = (daycare as typeof daycare & { geocode_quality?: GeocodeQuality | null }).geocode_quality;
 
   const notes = [
     daycare.status === 'inactive' ? 'The state lists this permit as inactive.' : null,
@@ -124,10 +137,10 @@ export function PlacePage({
     daycare.corrective_action ? 'The state lists this daycare on corrective action: it stays open under extra conditions and more inspections.' : null,
   ].filter((n): n is string => n !== null);
 
-  const meta = [
-    operationTypeLabel(daycare.operation_type),
-    tidyCase(daycare.city),
-    daycare.in_district && daycare.district_basis === 'point' ? 'In TX-04' : null,
+  const address = [
+    daycare.address ? tidyCase(daycare.address) : null,
+    [tidyCase(daycare.city), daycare.zip].filter(Boolean).join(' '),
+    daycare.in_district && daycare.district_basis === 'point' ? 'TX-04' : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -137,14 +150,14 @@ export function PlacePage({
       {/* Light status-bar text over the aerial photo. */}
       <StatusBar style={solid ? 'auto' : 'light'} />
       <Animated.ScrollView contentContainerStyle={{ paddingBottom: space.section }} onScroll={onScroll} scrollEventThrottle={16}>
-        <MapSnapshot lat={daycare.lat} lng={daycare.lng} zoom={17} watched={watching} pinY={0.5} attributionInset={radius.sheet} style={{ height: HERO + insets.top }} />
+        <PlaceGallery lat={daycare.lat} lng={daycare.lng} quality={quality} watched={watching} height={HERO + insets.top} bottomInset={radius.sheet} />
 
         <View style={[styles.head, { backgroundColor: c.surface }]}>
           <Text variant="display" accessibilityRole="header">
             {tidyCase(daycare.name)}
           </Text>
-          <Text variant="callout" tone="secondary">
-            {meta}
+          <Text variant="callout" tone="secondary" selectable>
+            {address}
           </Text>
           {notes.length > 0 ? (
             <View style={[styles.notes, { backgroundColor: c.sunken }]}>
@@ -155,15 +168,17 @@ export function PlacePage({
               ))}
             </View>
           ) : null}
+          <FactChips facts={facts} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} style={styles.bleed}>
-            {chips.map((ch) => (
-              <InfoChip key={ch.icon} icon={ch.icon} label={ch.label} accessibilityLabel={ch.a11y} />
-            ))}
-          </ScrollView>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} style={styles.bleed}>
-            <ActionPill icon="directions" label="Directions" onPress={onDirections} />
+            {onOpenAppleMaps && onOpenGoogleMaps ? (
+              <>
+                <ActionPill icon="map" label="Apple Maps" onPress={onOpenAppleMaps} />
+                <ActionPill icon="directions" label="Google Maps" onPress={onOpenGoogleMaps} />
+              </>
+            ) : (
+              <ActionPill icon="directions" label="Directions" onPress={onDirections} />
+            )}
             <ActionPill icon="record" label="State record" onPress={onOfficial} />
-            <ActionPill icon="list" label="Tour questions" onPress={onTour} />
           </ScrollView>
         </View>
 
@@ -193,15 +208,34 @@ export function PlacePage({
                   { label: 'On High risk rules', value: s.high, tint: s.high > 0 ? c.risk.High : undefined },
                 ]}
               />
-              {s.findings > 0 ? (
-                <RingCard
-                  value={verified}
-                  of={s.findings}
-                  title="Verified fixed by the state"
-                  sub={s.notFixed > 0 ? `${s.notFixed} not yet verified` : undefined}
+              <Disclosure title="More details" detail="Fixes verified, the county, tour questions">
+                {s.findings > 0 ? (
+                  <RingCard
+                    value={verified}
+                    of={s.findings}
+                    title="Verified fixed by the state"
+                    sub={s.notFixed > 0 ? `${s.notFixed} not yet verified` : undefined}
+                  />
+                ) : null}
+                {area && area.peer_count >= 3 ? <CountyCard area={area} /> : null}
+                {more.length > 0 ? (
+                  <View style={{ gap: space.xs }}>
+                    {more.map((m) => (
+                      <Text key={m} variant="callout">
+                        {m}
+                      </Text>
+                    ))}
+                  </View>
+                ) : null}
+                <RightCard
+                  icon="list"
+                  title="Questions to ask on a tour"
+                  detail="Built from this daycare's own findings"
+                  hint="Opens the tour questions"
+                  trailing="chevronRight"
+                  onPress={onTour}
                 />
-              ) : null}
-              {area && area.peer_count >= 3 ? <CountyCard area={area} /> : null}
+              </Disclosure>
             </>
           ) : null}
 

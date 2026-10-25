@@ -37,7 +37,7 @@
               └───────┬────────────────────────────────────────────┘
                       │ SQL (psycopg, COPY)
               ┌───────▼───────────────────────────────┐
-              │ POSTGRES 15 + PostGIS  (Supabase)     │
+              │ POSTGRES 17 + PostGIS  (Supabase)     │
               │ core tables · change_events · RLS ·   │
               │ RPC functions · materialized views    │
               └───────▲───────────────────────────────┘
@@ -53,7 +53,7 @@
 | Choice | Over | Why |
 |---|---|---|
 | **Postgres + PostGIS** (Supabase, free tier) | Firebase/Firestore | The whole product is joins (violation → inspection → daycare), geography (point-in-polygon for TX-04, nearest-N daycares), aggregates (area medians, district totals), and full-text search over inspector notes. Postgres does all of these natively in SQL. Firestore does none of them well. |
-| **React Native + Expo (SDK latest), TypeScript strict** | Swift only / web app | One codebase for iPhone **and** Android. About 4 in 10 US phones are Android, and a parent app that skips them cuts its reach. MapLibre maps with free OpenFreeMap tiles (same look on both platforms, no API keys), real push through Expo Push (APNs + FCM), EAS builds for TestFlight and an Android test build, and an iOS home-screen widget through an Expo Apple target. |
+| **React Native + Expo (SDK latest), TypeScript strict** | Swift only / web app | One codebase for iPhone **and** Android. About 4 in 10 US phones are Android, and a parent app that skips them cuts its reach. react-native-maps (Apple Maps on iPhone with no API key, Google Maps on Android), which also runs inside the Expo Go test app; real push through Expo Push (APNs + FCM); EAS builds for an installable iPhone build. |
 | **Expo Push** | Raw APNs + FCM | One API for both platforms, with receipts. Android push needs an FCM credential under the hood, used only as a transport, with no Firebase database. |
 | **Generated types** | Hand-written types | `supabase gen types typescript` produces the app's types from the real schema, so the app and the database can't drift apart. |
 | **Python pipeline** | Edge functions | Daily full-table diffs of 200k+ rows need COPY, a real test suite, and no 150-second timeout. It runs locally and on a schedule. |
@@ -86,14 +86,14 @@
 | 5 | **Diff** | New `non_compliance_id`s, plus field-level changes on operations, become `change_events` (type, before/after) | Idempotent: a re-run creates 0 new events |
 | 6 | **Classify** | Deterministic category rules on the standard number (744.1205 → supervision, 745.6xx → background checks, …). A plain summary from the narrative that never adds facts. | One test per rule, plus a golden file |
 | 7 | **Aggregate** | `REFRESH MATERIALIZED VIEW` for area medians, district totals, and the weekly pulse | Totals reconcile with core |
-| 8 | **Notify** | Events × watchers → Expo Push API (batched, with receipts checked; dead tokens pruned). Dedupe key per (user, event). Replay mode labelled "replaying a real state record from <date>". | A real push on an iPhone and on an Android phone |
+| 8 | **Notify** | Events × watchers → Expo Push API (batched, with receipts checked; dead tokens pruned). Dedupe key per (user, event). Replay mode labelled "replaying a real state record from <date>". | A real push on an iPhone (verified Oct 24 2026: replay event 43, receipt delivered_to_provider). Android push needs a standalone build |
 | 9 | **Log** | `ops.sync_runs`: counts per stage, newest source date, join rate, duration, error | The app shows "Last checked with the state" |
 
 ## 6. Database (core tables)
 
 | Table | Key | Notable columns |
 |---|---|---|
-| `core.daycares` | operation_id | name, type, address, city, county, zip, `geom geography(Point)` (state coords, else Census geocode), `geocode_source`, capacity, ages[], hours, subsidies, status, corrective/adverse/closed flags, `in_district`, `district_basis` (point/county) |
+| `core.daycares` | operation_id | name, type, address, city, county, zip, `geom geography(Point)` (state coords, else Census geocode), `geocode_source`, `geocode_quality` (exact/non_exact), capacity, ages[], hours, subsidies, status, corrective/adverse/closed flags, `in_district`, `district_basis` (point/county) |
 | `core.inspections` | activity_id | operation_id, date, type, violation_found, self_report |
 | `core.violations` | non_compliance_id | activity_id, operation_id, date, standard, risk_level, category, plain, narrative, corrected_at_inspection, corrected_date, verified_date, via_investigation |
 | `core.change_events` | id | operation_id, kind (`new_violation`/`status_change`/`corrective_action`/`adverse_action`/`closure`/`capacity_change`/`permit_conditions`), ref_id, before/after jsonb, `is_replay`, detected_at |

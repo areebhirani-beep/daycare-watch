@@ -9,7 +9,7 @@ DATABASE_URL=postgresql://... uv run scripts/figures.py
 
 Data pulled **Oct 25, 2026** (the newest successful pipeline run in `ops.sync_runs`, Texas time; `SQL_SOURCE_RUN`). Each figure comes in a light and a dark SVG and a CSV of the plotted numbers. Re-running on the same data rewrites identical files.
 
-**Ground rules on every figure.** A count of findings is not a verdict on a daycare; no figure names, scores, ranks, or rates a daycare. Risk level is the state's weight for the rule that was cited, not a rating of the daycare. TX-04 means the daycare's map point is inside the Census CD119 boundary; the state's county field is never used to claim the district. Home daycares are never drawn as points.
+**Ground rules on every figure.** A count of findings is not a verdict on a daycare; no figure names, scores, ranks, or rates a daycare. Risk level is the state's weight for the rule that was cited, not a rating of the daycare. TX-04 means the daycare's map point is inside the Census TIGERweb CD119 boundary; the state's county field is never used to claim the district. Home daycares are never drawn as points.
 
 **Time window.** The state's visit file holds about five years. On this pull, 546 visits are dated in the week starting Oct 25, 2021 (five years before the pull) and 95 in the week before it; the oldest visit is dated May 22, 2021 (`SQL_WINDOW`). Time series therefore start at the first whole month after Oct 25, 2021 and end at the last whole month before the newest finding (Oct 22, 2026).
 
@@ -433,4 +433,4 @@ where ok
 
 ## Colors
 
-One palette for every figure. Categorical slots in fixed order (blue, orange, aqua, yellow, magenta), with light and dark steps chosen for each surface (`#ffffff`, `#0d1117`); checked for color-vision-deficiency separation and contrast with the dataviz palette validator. Risk level uses the categorical slots because it is the state's label, not a good-to-bad scale. Gray marks the de-emphasized comparison (statewide, rest of Texas, neither on record). The map's hexagons use a single-hue blue ramp for counts. Text is always in ink colors, never in a series color; every chart has a CSV table view.
+The app's own palette: ink for the mark that matters (TX-04, licensed centers, a state check on record) and warm grays for context, with light and dark steps chosen for each surface (`#ffffff`, `#0d1117`). Risk level is ordinal, so it is one ramp from ink (High) to light gray (Low), in the state's order, never a set of hues. The map's hexagons use a gray ramp for counts. The app's yellow is left out, because in the app it means only watching and alerts. Labels on a filled bar are black or white, whichever reads on that fill; every chart has a CSV table view.

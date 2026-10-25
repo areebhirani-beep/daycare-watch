@@ -25,7 +25,7 @@ import datetime as dt
 import json
 import os
 import pathlib
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import matplotlib
 
@@ -265,8 +265,9 @@ select (select count(*) from core.daycares) as daycares_in_scope,
 """
 
 # ---------------------------------------------------------------------------
-# Theme. One palette for every figure, validated with the dataviz validator for
-# both surfaces (categorical slots 1-5 adjacent; the 2-colour pairs all-pairs).
+# Theme. The app's own palette: ink for the mark that matters, warm grays for context.
+# Risk level is ordinal, so it is one ramp from ink (High) to light gray (Low), never hues.
+# Yellow stays out: in the app it only means watching and alerts.
 # ---------------------------------------------------------------------------
 
 
@@ -281,8 +282,8 @@ class Theme:
     axis: str
     neutral: str  # de-emphasis mark ("rest of Texas", "statewide", "neither yet")
     series: tuple[str, ...]
-    seq: tuple[str, ...]  # sequential blue, low -> high count
-    on_fill: dict[str, str] = field(default_factory=dict)
+    seq: tuple[str, ...]  # sequential gray, low -> high count
+    risk: tuple[str, ...]  # RISK_ORDER, High first
 
 
 LIGHT = Theme(
@@ -293,10 +294,10 @@ LIGHT = Theme(
     muted="#6e6d68",
     grid="#e6e5df",
     axis="#c3c2b7",
-    neutral="#8b8a84",
-    series=("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"),
-    seq=("#b7d3f6", "#6da7ec", "#2a78d6", "#184f95"),
-    on_fill={"#eda100": "#0b0b0b"},
+    neutral="#bdbcb4",
+    series=("#0b0b0b", "#0b0b0b", "#76756f"),
+    seq=("#cfcec6", "#a09f97", "#6e6d68", "#2b2a28"),
+    risk=("#0b0b0b", "#46453f", "#76756f", "#a8a79f", "#d6d5ce"),
 )
 DARK = Theme(
     name="dark",
@@ -306,9 +307,10 @@ DARK = Theme(
     muted="#8b8a84",
     grid="#21262d",
     axis="#3d444d",
-    neutral="#6b6a65",
-    series=("#3987e5", "#d95926", "#199e70", "#c98500", "#d55181"),
-    seq=("#184f95", "#256abf", "#5598e7", "#9ec5f4"),
+    neutral="#4f4e4a",
+    series=("#f0efec", "#f0efec", "#8b8a84"),
+    seq=("#3d3c39", "#6b6a65", "#a3a29b", "#e6e5df"),
+    risk=("#f0efec", "#c3c2b7", "#8b8a84", "#5f5e59", "#3d3c39"),
 )
 
 RISK_ORDER = ["High", "Medium High", "Medium", "Medium Low", "Low"]
@@ -405,6 +407,12 @@ def baseline(ax, t: Theme, horizontal: bool = True, at: float = 0):
         ax.axhline(at, color=t.axis, linewidth=1, zorder=3)
     else:
         ax.axvline(at, color=t.axis, linewidth=1, zorder=3)
+
+
+def text_on(fill: str) -> str:
+    """Black or white label, whichever reads on this fill."""
+    r, g, b = (int(fill[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    return "#0b0b0b" if 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.45 else "#ffffff"
 
 
 def legend_row(fig, t: Theme, items: list[tuple[str, str]], x: float, y: float,
@@ -749,7 +757,7 @@ def fig_findings_by_month(d: Data, t: Theme) -> dict:
             v = d.by_month.get((m, r), 0)
             if not v:
                 continue
-            color = t.series[RISK_ORDER.index(r)]
+            color = t.risk[RISK_ORDER.index(r)]
             if r == present[-1]:
                 rounded_bar(ax, acc, acc + v, i - width / 2, i + width / 2, color, True,
                             radius_px=3, edge=t.surface, edge_w=0.9)
@@ -758,7 +766,7 @@ def fig_findings_by_month(d: Data, t: Theme) -> dict:
                            edge=t.surface, edge_w=0.9)
             acc += v
     baseline(ax, t)
-    legend_row(fig, t, [(t.series[i], f"{r}") for i, r in enumerate(RISK_ORDER)],
+    legend_row(fig, t, [(t.risk[i], f"{r}") for i, r in enumerate(RISK_ORDER)],
                0.075, 0.815)
     ob = d.outside
     footer(fig, t, d.pulled, [
@@ -889,9 +897,7 @@ def fig_fix(d: Data, t: Theme) -> dict:
             txt_w = len(label) * 7.5  # px estimate at 12.5 pt, checked below
             seg_px = ax.transData.transform((share, 0))[0] - ax.transData.transform((0, 0))[0]
             if seg_px > txt_w + 16:
-                ink = "#ffffff" if color != "#eda100" else "#0b0b0b"
-                if color == t.neutral:
-                    ink = t.surface
+                ink = text_on(color)
                 ax.text(acc + share / 2, i, label, ha="center", va="center", fontsize=12.5,
                         color=ink, zorder=5)
             acc += share
@@ -1151,7 +1157,7 @@ DATABASE_URL=postgresql://... uv run scripts/figures.py
 
 Data pulled **{long_date(d.pulled)}** (the newest successful pipeline run in `ops.sync_runs`, Texas time; `SQL_SOURCE_RUN`). Each figure comes in a light and a dark SVG and a CSV of the plotted numbers. Re-running on the same data rewrites identical files.
 
-**Ground rules on every figure.** A count of findings is not a verdict on a daycare; no figure names, scores, ranks, or rates a daycare. Risk level is the state's weight for the rule that was cited, not a rating of the daycare. TX-04 means the daycare's map point is inside the Census CD119 boundary; the state's county field is never used to claim the district. Home daycares are never drawn as points.
+**Ground rules on every figure.** A count of findings is not a verdict on a daycare; no figure names, scores, ranks, or rates a daycare. Risk level is the state's weight for the rule that was cited, not a rating of the daycare. TX-04 means the daycare's map point is inside the Census TIGERweb CD119 boundary; the state's county field is never used to claim the district. Home daycares are never drawn as points.
 
 **Time window.** The state's visit file holds about five years. On this pull, {fmt(w['visits_first_week_inside'])} visits are dated in the week starting {long_date(w['five_years_before_pull'])} (five years before the pull) and {fmt(w['visits_last_week_before'])} in the week before it; the oldest visit is dated {long_date(w['oldest_visit'])} (`SQL_WINDOW`). Time series therefore start at the first whole month after {long_date(w['five_years_before_pull'])} and end at the last whole month before the newest finding ({long_date(w['newest_finding'])}).
 
@@ -1265,7 +1271,7 @@ curl -s "https://data.texas.gov/resource/tqgd-mf4x.json?\\$select=:created_at,co
 
 ## Colors
 
-One palette for every figure. Categorical slots in fixed order (blue, orange, aqua, yellow, magenta), with light and dark steps chosen for each surface (`#ffffff`, `#0d1117`); checked for color-vision-deficiency separation and contrast with the dataviz palette validator. Risk level uses the categorical slots because it is the state's label, not a good-to-bad scale. Gray marks the de-emphasized comparison (statewide, rest of Texas, neither on record). The map's hexagons use a single-hue blue ramp for counts. Text is always in ink colors, never in a series color; every chart has a CSV table view.
+The app's own palette: ink for the mark that matters (TX-04, licensed centers, a state check on record) and warm grays for context, with light and dark steps chosen for each surface (`#ffffff`, `#0d1117`). Risk level is ordinal, so it is one ramp from ink (High) to light gray (Low), in the state's order, never a set of hues. The map's hexagons use a gray ramp for counts. The app's yellow is left out, because in the app it means only watching and alerts. Labels on a filled bar are black or white, whichever reads on that fill; every chart has a CSV table view.
 """
     (OUT / "README.md").write_text(text)
 

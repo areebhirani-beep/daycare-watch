@@ -8,7 +8,7 @@
   "mailing_address": "PO BOX 2019  ALLEN TX- 75013 0034",
   "phone_number": "9723967575",
   "county": "COLLIN",
-  "administrator_director_name": "Patricia  Morehead",
+  "administrator_director_name": null,
   "type_of_issuance": "Full Permit",
   "issuance_date": "1993-01-21T00:00:00.000",
   "conditions_on_permit": "NO",
@@ -36,7 +36,7 @@
    "longitude": "-96.667323",
    "human_address": "{\"address\": \"601 S GREENVILLE AVE ALLEN TX- 75002 3011\", \"city\": \"\", \"state\": \"\", \"zip\": \"\"}"
   },
-  "email_address": "playday@fumcallen.org",
+  "email_address": null,
   "care_type": "Child Care Program",
   "operation_status": "Y",
   "address_line": "601 S GREENVILLE AVE",
@@ -55,7 +55,7 @@
   "mailing_address": "2060 FARM ROAD 79  PARIS TX- 75460 1798",
   "phone_number": "9037829111",
   "county": "LAMAR",
-  "administrator_director_name": "Melissa  Young",
+  "administrator_director_name": null,
   "type_of_issuance": "Full Permit",
   "issuance_date": "2003-01-06T00:00:00.000",
   "conditions_on_permit": "YES",
@@ -81,7 +81,7 @@
   "location_address_geo": {
    "human_address": "{\"address\": \"2060 F M 79 PARIS TX- 75460\", \"city\": \"\", \"state\": \"\", \"zip\": \"\"}"
   },
-  "email_address": "myoung@tcaparis.com",
+  "email_address": null,
   "care_type": "Child Care Program",
   "operation_status": "Y",
   "address_line": "2060 F M 79",
@@ -101,7 +101,7 @@
   "phone_number": "4694436175",
   "county": "COLLIN",
   "website_address": "www.readintexas.com",
-  "administrator_director_name": "Nabila Shaikh",
+  "administrator_director_name": null,
   "type_of_issuance": "Full Permit",
   "issuance_date": "2010-07-21T00:00:00.000",
   "conditions_on_permit": "NO",
@@ -127,7 +127,7 @@
   "location_address_geo": {
    "human_address": "{\"address\": \"6509 INDEPENDENCE PKWY PLANO TX- 75023 3402\", \"city\": \"\", \"state\": \"\", \"zip\": \"\"}"
   },
-  "email_address": "info@readintexas.com",
+  "email_address": null,
   "care_type": "Child Care Program",
   "operation_status": "Y",
   "address_line": "6509 INDEPENDENCE PKWY",
@@ -147,7 +147,7 @@
   "phone_number": "9726360777",
   "county": "ROCKWALL",
   "website_address": "stonebrooklearning.com",
-  "administrator_director_name": "Tanya Morris",
+  "administrator_director_name": null,
   "type_of_issuance": "Full Permit",
   "issuance_date": "2012-05-14T00:00:00.000",
   "conditions_on_permit": "NO",
@@ -192,7 +192,7 @@
   "phone_number": "9034361172",
   "county": "GRAYSON",
   "website_address": "https://tuckstreeteec.wixsite.com/tuckst",
-  "administrator_director_name": "Jazmin Franco",
+  "administrator_director_name": null,
   "type_of_issuance": "Full Permit",
   "issuance_date": "2016-08-15T00:00:00.000",
   "conditions_on_permit": "NO",
@@ -218,7 +218,7 @@
   "location_address_geo": {
    "human_address": "{\"address\": \"2111 E TUCK ST SHERMAN TX- 75090 4112\", \"city\": \"\", \"state\": \"\", \"zip\": \"\"}"
   },
-  "email_address": "mavise1944@yahoo.com",
+  "email_address": null,
   "care_type": "Child Care Program",
   "operation_status": "Y",
   "address_line": "2111 E TUCK ST",
@@ -237,7 +237,7 @@
   "mailing_address": "8501 JACK FINNEY BLVD  GREENVILLE TX- 75402 3018",
   "phone_number": "9034547153",
   "county": "HUNT",
-  "administrator_director_name": "Christina Oakley",
+  "administrator_director_name": null,
   "type_of_issuance": "Full Permit",
   "issuance_date": "2016-09-14T00:00:00.000",
   "conditions_on_permit": "YES",
@@ -281,7 +281,7 @@
   "mailing_address": "2385 FM 896  LEONARD TX- 75452 5832",
   "phone_number": "9035870018",
   "county": "FANNIN",
-  "administrator_director_name": "Daretha Phelps",
+  "administrator_director_name": null,
   "type_of_issuance": "Full Permit",
   "issuance_date": "2017-01-20T00:00:00.000",
   "conditions_on_permit": "NO",
@@ -307,7 +307,7 @@
   "location_address_geo": {
    "human_address": "{\"address\": \"2385 FM 896 LEONARD TX- 75452 5832\", \"city\": \"\", \"state\": \"\", \"zip\": \"\"}"
   },
-  "email_address": "darethashouse@aol.com",
+  "email_address": null,
   "care_type": "Child Care Program",
   "operation_status": "Y",
   "address_line": "2385 FM 896",
@@ -326,7 +326,7 @@
   "mailing_address": "1815 W WHITE AVE  MCKINNEY TX- 75069 3478",
   "phone_number": "9725489071",
   "county": "COLLIN",
-  "administrator_director_name": "Fareeha Akram",
+  "administrator_director_name": null,
   "type_of_issuance": "Full Permit",
   "issuance_date": "2017-05-12T00:00:00.000",
   "conditions_on_permit": "NO",
@@ -352,7 +352,7 @@
   "location_address_geo": {
    "human_address": "{\"address\": \"1815 W WHITE AVE MCKINNEY TX- 75069 3478\", \"city\": \"\", \"state\": \"\", \"zip\": \"\"}"
   },
-  "email_address": "discoverykidsmckinney@gmail.com",
+  "email_address": null,
   "care_type": "Child Care Program",
   "operation_status": "Y",
   "address_line": "1815 W WHITE AVE",
@@ -371,7 +371,7 @@
   "mailing_address": "3020 EASTLAND ST  GREENVILLE TX- 75402 8915",
   "phone_number": "9034551444",
   "county": "HUNT",
-  "administrator_director_name": "Raajitha Yedluri",
+  "administrator_director_name": null,
   "type_of_issuance": "Full Permit",
   "issuance_date": "2017-06-26T00:00:00.000",
   "conditions_on_permit": "NO",
@@ -415,7 +415,7 @@
   "mailing_address": "407 1ST ST SW  PARIS TX- 75460 5746",
   "phone_number": "9035052071",
   "county": "LAMAR",
-  "administrator_director_name": "Thera Priske",
+  "administrator_director_name": null,
   "type_of_issuance": "Full Permit",
   "issuance_date": "2023-03-22T00:00:00.000",
   "conditions_on_permit": "NO",
@@ -441,7 +441,7 @@
   "location_address_geo": {
    "human_address": "{\"address\": \"407 1ST ST SW PARIS TX- 75460 5746\", \"city\": \"\", \"state\": \"\", \"zip\": \"\"}"
   },
-  "email_address": "thera.bluebonnetmontessori@proton.me",
+  "email_address": null,
   "care_type": "Child Care Program",
   "operation_status": "Y",
   "address_line": "407 1ST ST SW",
@@ -460,7 +460,7 @@
   "mailing_address": "907 W HOLIDAY  ROCKWALL TX- 75087 2151",
   "phone_number": "9727718441",
   "county": "ROCKWALL",
-  "administrator_director_name": "Breanna Blue",
+  "administrator_director_name": null,
   "type_of_issuance": "Full Permit",
   "issuance_date": "2024-03-28T00:00:00.000",
   "conditions_on_permit": "NO",
@@ -486,7 +486,7 @@
   "location_address_geo": {
    "human_address": "{\"address\": \"907 W HOLIDAY ROCKWALL TX- 75087 2151\", \"city\": \"\", \"state\": \"\", \"zip\": \"\"}"
   },
-  "email_address": "bblue@premierearlychildhood.com",
+  "email_address": null,
   "care_type": "Child Care Program",
   "operation_status": "Y",
   "address_line": "907 W HOLIDAY",
@@ -506,7 +506,7 @@
   "phone_number": "9035231585",
   "county": "GRAYSON",
   "website_address": "PinnacleMontessori.com/Sherman/",
-  "administrator_director_name": "Amanda  Orr",
+  "administrator_director_name": null,
   "type_of_issuance": "Full Permit",
   "issuance_date": "2024-05-07T00:00:00.000",
   "conditions_on_permit": "NO",
@@ -532,7 +532,7 @@
   "location_address_geo": {
    "human_address": "{\"address\": \"475 OLD DORCHESTER SHERMAN TX- 75092\", \"city\": \"\", \"state\": \"\", \"zip\": \"\"}"
   },
-  "email_address": "sherman@pinnaclemontessori.com",
+  "email_address": null,
   "care_type": "Child Care Program",
   "operation_status": "Y",
   "address_line": "475 OLD DORCHESTER",
@@ -577,7 +577,7 @@
   "location_address_geo": {
    "human_address": "{\"address\": \"1210 EVANS ST BONHAM TX- 75418 2831\", \"city\": \"\", \"state\": \"\", \"zip\": \"\"}"
   },
-  "email_address": "footstepsandfingerprints@gmail.com",
+  "email_address": null,
   "care_type": "Child Care Program",
   "operation_status": "Y",
   "address_line": "1210 EVANS ST",

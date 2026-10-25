@@ -7,10 +7,13 @@
 [![Pipeline CI](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml)
 [![Daily sync](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Platforms](https://img.shields.io/badge/platforms-iOS%20%C2%B7%20Android-lightgrey.svg)
+![Platforms](https://img.shields.io/badge/iPhone-tested%20on%20device-lightgrey.svg)
 ![Data](https://img.shields.io/badge/data-data.texas.gov-0b6e4f.svg)
 
-<img src="docs/screenshots/hero.jpg" alt="Daycare Watch: the home map, a daycare's state record, and a push alert for a new state finding" width="100%">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hero-dark.png">
+  <img src="docs/screenshots/hero-light.png" alt="Daycare Watch: nearby daycares, a daycare's state record, and the alert for a new state finding" width="100%">
+</picture>
 
 Built for the **2026 Congressional App Challenge · Texas's 4th District**
 
@@ -26,9 +29,11 @@ Built for the **2026 Congressional App Challenge · Texas's 4th District**
 
 ## Why
 
-Texas inspects every licensed daycare and publishes every finding, but the records sit in a state search site few parents ever open. Daycare Watch reads the state's own open data every day, shows each finding with its date, how serious the state rates the rule, and whether the fix was verified, and sends a push when the state posts something new at a daycare a parent is watching. It also turns the rights Texas parents already have under the **Kairo and the Kids' Law** (88(R) SB 1098, 2023) into ready-to-send requests. The rights features line up with Rep. Pat Fallon's proposed federal Kairo Act (H.R. 2425), which is not law.
+- **The gap:** Texas publishes every inspection finding, but in a state search site few parents ever open.
+- **What it does:** reads the state's open data every day and shows each finding in plain English: when, how serious the state rates the rule, and whether the state has checked the fix. A push arrives when the state posts something new at a daycare a parent watches.
+- **What a parent can do next:** ready-to-send requests under the **Kairo and the Kids' Law** (88(R) SB 1098, 2023), which line up with Rep. Pat Fallon's proposed federal Kairo Act (H.R. 2425, not law).
 
-> The app never calls a daycare safe or unsafe, and never scores, grades, or ranks one. It shows what the state found, when, and whether the state verified the fix.
+> The app never calls a daycare safe or unsafe, and never scores, grades, or ranks one. It shows what the state found, when, and whether the state has checked the fix.
 
 | | |
 |---|---|
@@ -36,7 +41,7 @@ Texas inspects every licensed daycare and publishes every finding, but the recor
 | **State records loaded** | 14,310 daycares · 157,358 state visits · 118,294 findings, about 5 years of history |
 | **Freshness** | Synced daily from data.texas.gov. Every data screen shows "Last checked with the state" |
 | **Proven end to end** | A real past state finding, replayed as a labelled alert, reached a real iPhone as a push (Expo receipt `delivered_to_provider`) and opened that daycare's record ([QA matrix B6](docs/QA_MATRIX.md)) |
-| **Platforms** | iPhone and Android from one TypeScript codebase |
+| **Platforms** | iPhone, tested on device. Android runs from the same code; Android push needs a standalone build |
 
 ## How a parent uses it
 
@@ -106,7 +111,7 @@ flowchart TB
 
 | Layer | Choice | Why |
 |---|---|---|
-| App | Expo (React Native), TypeScript strict, Expo Router, TanStack Query, react-native-maps, expo-notifications | One codebase for iPhone and Android |
+| App | Expo (React Native), TypeScript strict, Expo Router, TanStack Query, react-native-maps, expo-notifications | One codebase for iPhone and Android (Android push needs a standalone build) |
 | Database | Supabase Postgres + PostGIS, row-level security, RPC functions, materialized views | The product is joins, geography (point-in-polygon, nearest daycares), and medians, all native in SQL |
 | Pipeline | Python 3.12, httpx, pydantic v2, psycopg 3 (COPY), structlog | Daily full-table diffs of 200,000+ rows with a real test suite |
 | Push | Expo Push API with receipts | One API for both platforms. Tokens Apple or Google reject are disabled |
@@ -181,8 +186,8 @@ Run on Oct 25 2026. Details: [`docs/TESTING.md`](docs/TESTING.md) · every user 
 
 | Suite | Result | Command |
 |---|---|---|
-| Database (pgTAP): schema, row-level security, every RPC, views, photos rule, search | **167 tests in 10 files, all pass** | `supabase test db` |
-| Pipeline (pytest + hypothesis) | **237 tests, all pass · 91% coverage** | `cd services/pipeline && uv run pytest` |
+| Database (pgTAP): schema, row-level security, every RPC, views, photos rule, search | **177 tests in 11 files, all pass** | `supabase test db` |
+| Pipeline (pytest + hypothesis) | **244 tests, all pass · 92% coverage** | `cd services/pipeline && uv run pytest` |
 | Pipeline static checks | ruff + `mypy --strict` clean | `uv run ruff check . && uv run mypy --strict src` |
 | App unit (Jest) | **37 tests, all pass** | `cd apps/mobile && npx jest` |
 | App end-to-end (Maestro) | 11 flows, including find-to-alert and the largest text size | `maestro test apps/mobile/e2e/journey-find-watch.yaml` |

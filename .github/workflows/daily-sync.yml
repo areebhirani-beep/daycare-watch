@@ -7,16 +7,16 @@ on:
   workflow_dispatch:
     inputs:
       command:
-        description: "sync (daily) or backfill (first load of a new database)"
+        description: "sync (daily), backfill (first load of a new database), or photos (Mapillary street photos only)"
         type: choice
-        options: [sync, backfill]
+        options: [sync, backfill, photos]
         default: sync
       full:
         description: "sync only: re-pull every operation, not only those past the watermark"
         type: boolean
         default: false
       dry_run:
-        description: "sync only: do everything, then roll back; no pushes"
+        description: "sync and photos: do everything, then write nothing; no pushes"
         type: boolean
         default: false
 
@@ -40,6 +40,8 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SODA_APP_TOKEN: ${{ secrets.SODA_APP_TOKEN }}
       EXPO_ACCESS_TOKEN: ${{ secrets.EXPO_ACCESS_TOKEN }}
+      # Optional: without it the photo step logs "skipped" and the run stays ok.
+      MAPILLARY_TOKEN: ${{ secrets.MAPILLARY_TOKEN }}
       GEOCODE_CACHE: ""
     steps:
       - uses: actions/checkout@v4
@@ -52,12 +54,24 @@ jobs:
           set -euo pipefail
           if [ "${{ inputs.command }}" = "backfill" ]; then
             uv run --no-sync python -m pipeline backfill
+          elif [ "${{ inputs.command }}" = "photos" ]; then
+            args=(--record-dir "$RUNNER_TEMP/mapillary")
+            [ "${{ inputs.dry_run }}" = "true" ] && args+=(--dry-run)
+            uv run --no-sync python -m pipeline photos "${args[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
           else
             args=()
             [ "${{ inputs.full }}" = "true" ] && args+=(--full)
             [ "${{ inputs.dry_run }}" = "true" ] && args+=(--dry-run)
             uv run --no-sync python -m pipeline sync "${args[@]}"
           fi
+      - name: Keep the raw Mapillary answers (test fixtures)
+        if: inputs.command == 'photos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapillary-responses
+          path: ${{ runner.temp }}/mapillary
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Report
         if: always()
         run: uv run --no-sync python -m pipeline report | head -c 20000 >> "$GITHUB_STEP_SUMMARY" || true

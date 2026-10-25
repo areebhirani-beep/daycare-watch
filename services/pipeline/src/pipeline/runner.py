@@ -150,6 +150,8 @@ def run(settings: Settings, opts: RunOptions, soda: SodaClient | None = None) ->
 
             with connect(db_url) as nconn:
                 counts.update(notify(nconn, Expo(settings.expo_access_token)))
+        if not opts.dry_run and not backfill:
+            counts.update(_photos(db_url))
     except Exception as exc:
         ok, error = False, f"{type(exc).__name__}: {exc}"
         bound.error("run.failed", error=error, trace=traceback.format_exc(limit=5))
@@ -164,6 +166,22 @@ def run(settings: Settings, opts: RunOptions, soda: SodaClient | None = None) ->
     if not ok:
         raise RuntimeError(error)
     return run_id
+
+
+def _photos(db_url: str) -> dict[str, Any]:
+    """Street photos are a nice-to-have: no token or a Mapillary outage never fails the run."""
+    from pipeline import photos
+
+    token = photos.token_from_env()
+    if token is None:
+        log.info("photos.skipped", reason="MAPILLARY_TOKEN not set")
+        return {"photos_skipped": "no token"}
+    try:
+        with connect(db_url) as pconn:
+            return photos.fill(pconn, photos.Mapillary(token))
+    except Exception as exc:  # logged and reported in the run's counts
+        log.warning("photos.failed", error=f"{type(exc).__name__}: {exc}")
+        return {"photos_error": type(exc).__name__}
 
 
 def tx_rollback(tx: psycopg.Transaction) -> None:

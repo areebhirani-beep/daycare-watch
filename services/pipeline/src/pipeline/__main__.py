@@ -42,6 +42,11 @@ def main(argv: list[str] | None = None) -> int:
     receipts = sub.add_parser("receipts", help="check Expo push receipts now and show the newest sends")
     receipts.add_argument("--min-age", type=int, default=0, metavar="MINUTES",
                           help="only check tickets sent at least this long ago (default 0)")
+    photos = sub.add_parser("photos", help="fill Mapillary street photos for TX-04 centers (needs MAPILLARY_TOKEN)")
+    photos.add_argument("--record-dir", metavar="DIR", help="also save each raw API response here as JSON")
+    photos.add_argument("--coverage", action="store_true", help="only print coverage from stored photos")
+    photos.add_argument("--from-dir", metavar="DIR", help="use answers saved by --record-dir instead of the API")
+    photos.add_argument("--dry-run", action="store_true", help="query and select, write nothing, print coverage")
     args = parser.parse_args(argv)
     _configure_logging()
     settings = Settings.from_env()
@@ -55,6 +60,26 @@ def main(argv: list[str] | None = None) -> int:
         from pipeline.notify import receipts_now
 
         print(json.dumps(receipts_now(settings, args.min_age), indent=2, default=str))
+        return 0
+    if args.command == "photos":
+        from pathlib import Path
+
+        from pipeline import photos as ph
+        from pipeline.config import connect
+
+        with connect(settings.require_db()) as conn:
+            if not args.coverage:
+                token = ph.token_from_env()
+                if token is None and not args.from_dir:
+                    print("MAPILLARY_TOKEN is not set; nothing queried", file=sys.stderr)
+                    return 2
+                api = ph.Recorded(Path(args.from_dir)) if args.from_dir else ph.Mapillary(token or "")
+                counts = ph.fill(conn, api, Path(args.record_dir) if args.record_dir else None,
+                                 dry_run=args.dry_run)
+                if args.dry_run:
+                    print(json.dumps(counts, indent=2))
+                    return 0
+            print(json.dumps(ph.coverage(conn), indent=2))
         return 0
     if args.command == "sync" and args.replay is not None:
         from pipeline.notify import replay

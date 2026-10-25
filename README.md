@@ -2,6 +2,8 @@
 
 **What Texas state inspectors found at your child's daycare, in plain English, with an alert when the state posts something new.**
 
+![Daycare Watch: the home map, a daycare's state record, and a push alert for a new state finding](docs/screenshots/hero.jpg)
+
 Texas inspects every licensed daycare and publishes every finding, but the records sit in a state search site that few parents ever open. Daycare Watch reads the state's own open data every day. It shows each finding with its date, how serious the state rates the rule, and whether the fix was verified. It sends a push alert when the state posts a new finding at a daycare a parent is watching. It also turns the rights Texas parents already have under the **Kairo and the Kids' Law** (SB 1098, 88th Legislature, 2023) into ready-to-send requests.
 
 Built for the **2026 Congressional App Challenge, Texas's 4th District**. The rights features also line up with Rep. Pat Fallon's proposed federal Kairo Act (H.R. 2425), which is not law.
@@ -35,7 +37,17 @@ flowchart LR
 
 ## Screenshots
 
-Screens are captured from the running app on real state data. See [`docs/screenshots/`](docs/screenshots/).
+Every screen below is the running app on real state records. Dark-mode versions are in [`docs/screenshots/dark/`](docs/screenshots/dark/).
+
+| Find | Search | A daycare's record |
+|:-:|:-:|:-:|
+| <img src="docs/screenshots/01-home.jpg" width="250" alt="Home map with the closest daycares"> | <img src="docs/screenshots/02-search.jpg" width="250" alt="Search by name, city, or ZIP"> | <img src="docs/screenshots/03-place-overview.jpg" width="250" alt="Place page: what the state found at the latest visit"> |
+| **Past two years** | **Every finding** | **Your rights** |
+| <img src="docs/screenshots/03b-place-history.jpg" width="250" alt="State visits over the past two years"> | <img src="docs/screenshots/04-findings.jpg" width="250" alt="Each finding with the inspector's words and fix status"> | <img src="docs/screenshots/05-rights.jpg" width="250" alt="Kids' Law requests ready to send"> |
+| **Watch** | **Alert** | **Tour questions** |
+| <img src="docs/screenshots/06-watch.jpg" width="250" alt="Turning on alerts for a daycare"> | <img src="docs/screenshots/07-alert.jpg" width="250" alt="A push alert opened: what changed since the last visit"> | <img src="docs/screenshots/08-tour.jpg" width="250" alt="Tour questions built from this daycare's own findings"> |
+
+A home daycare's page shows only the city and ZIP, with no map of the house ([screenshot](docs/screenshots/09-home-daycare-privacy.jpg)).
 
 ## Architecture
 

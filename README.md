@@ -73,7 +73,7 @@ Every screen is the running app on real state records. Dark-mode versions are in
 | **Watch** | **Alert** | **Tour questions** |
 | <img src="docs/screenshots/06-watch.jpg" width="250" alt="Turning on alerts for a daycare"> | <img src="docs/screenshots/07-alert.jpg" width="250" alt="A push alert opened: what the state posted"> | <img src="docs/screenshots/08-tour.jpg" width="250" alt="Tour questions built from this daycare's own findings"> |
 
-A home daycare's page shows only the city and ZIP, with no map of the house ([screenshot](docs/screenshots/09-home-daycare-privacy.jpg)).
+A home daycare's page shows only the city and 5-digit ZIP, with no map of the house ([screenshot](docs/screenshots/09-home-daycare-privacy.jpg)).
 
 ## How it works
 
@@ -175,7 +175,7 @@ These rules are enforced in code and tests, not just in copy review.
 | "Fixed" appears only as "Fixed during the visit" or "Fixed · state checked", never on its own. The state's `corrected_date` is shown as "Fix due <date>" | 124 findings carry a `corrected_date` in the future, so it behaves like a deadline |
 | A daycare is labelled "in TX-04" only when its map point is inside the district | The state's county field can be wrong, and most of Collin and Denton counties are outside TX-04 |
 | Street photos are collected and measured (14 of 209 TX-04 centers, 6.7%), but not shown | A hand check found 2 of 5 showed the right building, because a Census address point sits on the street, not the building. A wrong photo on a daycare's page would be worse than none |
-| Home daycares (4,705 statewide) get no imagery, no map of the house, and no street address: city and ZIP only | They are private residences, often listed under a person's name |
+| Home daycares (4,705 statewide) get no imagery, no map of the house, and no street address: city and 5-digit ZIP only | They are private residences, often listed under a person's name |
 | Map links send the state's address line, not our estimated point | The geocode is an estimate |
 | Kids' Law request cards are hidden for listed family homes | HRC §42.04271(a) does not cover them |
 | The app never claims to alert when an investigation opens, or to be the only way to get updates | Findings appear only after state due process, and the state already offers email updates per daycare |

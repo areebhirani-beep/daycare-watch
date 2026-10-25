@@ -39,7 +39,8 @@ Location permission is optional. Without it the app starts from Frisco, inside T
 
 | Rule | How it is enforced |
 |---|---|
-| Home daycares (licensed, registered, and listed homes) show city and ZIP only: no street address, no aerial or street imagery, no directions link | Place page and list rows; `daycare_record` returns no photos for anything but a Licensed Center |
+| Home daycares (licensed, registered, and listed homes) show city and 5-digit ZIP only (never the ZIP+4): no street address, no aerial or street imagery, no directions link | Place page and list rows; `core.daycare_rows` returns `left(zip, 5)` for homes (migration `20261025110000_home_zip5.sql`; pgTAP `011_home_privacy`); `daycare_record` returns no photos for anything but a Licensed Center |
+| Public test fixtures replace a home's street with "withheld for privacy" and round its point to 2 decimals | `services/pipeline/fixtures/` (Census geocoder recordings, district test points) and the database seed |
 | Street photos (collected by the pipeline, not shown in the app) are fetched only for Licensed Centers with an exact address match, never for homes or approximate points. A photo older than the daycare's permit or more than 6 years old is dropped, so it can't show a different business | `services/pipeline/src/pipeline/photos.py` (`TARGETS`), and the `daycare_record` filter (pgTAP test 009) |
 | Map links send the state's address line, not our estimated point | The geocode sits along the street's address range, not on the rooftop |
 | The app never labels a daycare safe, unsafe, scored, graded, or ranked | Copy review plus tests on alert text (`services/pipeline/tests/test_notify.py`) |

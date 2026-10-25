@@ -19,7 +19,7 @@ Every row passes a pydantic data contract before it is loaded ([`models.py`](../
 |---|---|---|---|
 | Name | `operation_name` | `name` | As the state wrote it, except one repair: the state's file has a `?` where a character was lost in 70 names. We restore it only where it is certain (a dash in "Allen ? Frisco", an apostrophe in "Children?s", ñ in "Peque?os"): 69 names. The one we can't be sure of keeps its `?`. Runs of spaces collapsed only for display |
 | Type ("Licensed child care center", "Licensed child-care home", ...) | `operation_type` | `operation_type` | Four types are in scope: Licensed Center, Licensed Child-Care Home, Registered Child-Care Home, Listed Family Home |
-| Street address (centers only) | `address_line`, `city`, `zipcode` | `address_line`, `city`, `zip` | Home daycares show city and ZIP only |
+| Street address (centers only) | `address_line`, `city`, `zipcode` | `address_line`, `city`, `zip` | Home daycares show city and 5-digit ZIP only, never the ZIP+4 |
 | Ages | `licensed_to_serve_ages` | `ages` | Comma list split into chips |
 | Hours and days | `hours_of_operation`, `days_of_operation` | `hours`, `days` | |
 | Capacity | `total_capacity` | `capacity` | |

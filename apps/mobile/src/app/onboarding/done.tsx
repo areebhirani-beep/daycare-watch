@@ -24,7 +24,7 @@ export default function DoneScreen() {
 
   const go = (toRecord: boolean) => {
     markOnboarded();
-    router.dismissAll();
+    if (router.canDismiss()) router.dismissAll();
     router.replace('/');
     if (toRecord && id) router.push(`/daycare/${id}`);
   };

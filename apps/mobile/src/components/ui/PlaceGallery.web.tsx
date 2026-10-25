@@ -10,7 +10,7 @@ import { Text } from './Text';
  * react-native-maps has no web support, so nothing here imports it. Same exports as PlaceGallery.tsx.
  */
 
-/** How the pin was placed (integrator, Oct 24). Even "exact" is street-range interpolation, never a rooftop. */
+/** How the pin was placed. Even "exact" is street-range interpolation, never a rooftop. */
 export type GeocodeQuality = 'state' | 'exact' | 'non_exact';
 
 export function locationLabel(q: GeocodeQuality | null | undefined): string {

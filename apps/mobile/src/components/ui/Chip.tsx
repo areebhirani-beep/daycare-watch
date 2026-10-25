@@ -69,7 +69,7 @@ export function InfoChip({ icon, label, accessibilityLabel }: { icon: GlyphName;
     <View
       accessible
       accessibilityLabel={accessibilityLabel ?? label}
-      style={[styles.info, { backgroundColor: c.sunken }]}
+      style={[styles.info, { backgroundColor: c.surface }]}
     >
       <Glyph name={icon} size={14} color={c.textSecondary} />
       <Text variant="subhead" numberOfLines={1} maxFontSizeMultiplier={1.6} tabular>

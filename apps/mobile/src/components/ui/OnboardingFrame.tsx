@@ -40,7 +40,7 @@ export function ProgressBar({ step, of = ONBOARDING_STEPS, onImage }: { step: nu
 export function skipOnboarding() {
   haptic.select();
   markOnboarded();
-  router.dismissAll();
+  if (router.canDismiss()) router.dismissAll();
   router.replace('/');
 }
 

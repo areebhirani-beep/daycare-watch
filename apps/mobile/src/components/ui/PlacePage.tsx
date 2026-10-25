@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { type LayoutChangeEvent, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { type LayoutChangeEvent, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import Animated, {
   FadeIn,
@@ -24,10 +24,11 @@ import { placeAddress } from '@/lib/maps';
 import { buildTourQuestions } from '@/lib/tour';
 import { lawCovers, NOT_COVERED, REQUEST_CARDS, type RequestKind } from '@/lib/rights';
 import type { AreaCompare, DaycareRecord, Finding } from '@/lib/types';
-import { easeOut, haptic, motion, radius, riskRank, space, useColors } from '@/theme';
+import { elevation, easeOut, haptic, motion, radius, riskRank, space, useColors } from '@/theme';
 
 import { Button } from './Button';
 import { FactChips } from './Chip';
+import { CategoryIcon } from './CategoryIcon';
 import { ActionTile, IconButton, SquareButton, StickyBar } from './Chrome';
 import { FindingCard, SeriousTag } from './FindingCard';
 import { Glyph, type GlyphName } from './Glyph';
@@ -40,7 +41,7 @@ import { Tabs } from './Tabs';
 import { Text } from './Text';
 
 /**
- * The place page (googlemaps place sheet + doordash-3 store page + uber-3 sticky CTA, harness/state/refs).
+ * The place page (Google Maps place sheet + DoorDash store page + Uber sticky action bar).
  * It answers one question first: what did the state find here? Map hero, name, the answer in one sentence,
  * the top two problems in the state's own words, then chips, tiles and tabs. Overview holds the past two
  * years as one row per visit (Apple Weather's 10-day list) and the tour questions.
@@ -58,6 +59,8 @@ type Props = {
   record: DaycareRecord;
   area: AreaCompare | null | undefined;
   watching: boolean;
+  /** False when the OS has notifications off: the button must not claim alerts are on (QA D9). */
+  alertsOn?: boolean;
   watchPending?: boolean;
   onWatch: () => void;
   onUnwatch: () => void;
@@ -72,7 +75,7 @@ type Props = {
   onRequest: (kind: RequestKind) => void;
   /** Rights source line, e.g. "Texas Human Resources Code §42.04271". */
   lawCite: string;
-  /** "Last checked with the state …" (CONTRACT 3). */
+  /** "Last checked with the state …": every data screen says when it last matched the state. */
   footer: ReactNode;
 };
 
@@ -89,6 +92,7 @@ export function PlacePage({
   record,
   area,
   watching,
+  alertsOn = true,
   watchPending,
   onWatch,
   onUnwatch,
@@ -239,7 +243,7 @@ export function PlacePage({
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: c.surface }}>
+    <View style={{ flex: 1, backgroundColor: c.bg }}>
       {/* Light status-bar text over the aerial photo and the dimmed bar; the street maps follow the theme. */}
       <StatusBar style={(solid ? hasPoint : aerial) ? 'light' : 'auto'} />
       <Animated.ScrollView
@@ -258,7 +262,7 @@ export function PlacePage({
           bottomInset={radius.sheet}
         />
 
-        <View style={[styles.head, { backgroundColor: c.surface }]}>
+        <View style={[styles.head, { backgroundColor: c.bg }]}>
           <Animated.View style={[{ gap: space.xxs }, nameStyle]}>
             <Text variant="title">{tidyCase(daycare.name)}</Text>
             <Text variant="callout" tone="secondary" selectable>
@@ -266,7 +270,7 @@ export function PlacePage({
             </Text>
           </Animated.View>
           {notes.length > 0 ? (
-            <View style={[styles.notes, { backgroundColor: c.sunken }]}>
+            <View style={[styles.notes, elevation.card, { backgroundColor: c.surface }]}>
               {notes.map((n) => (
                 <Text key={n} variant="callout">
                   {n}
@@ -275,6 +279,8 @@ export function PlacePage({
             </View>
           ) : null}
 
+          {/* The answer and its top problems are one white card on the grey page (V4 surfaces). */}
+          <View style={[styles.card, elevation.card, { backgroundColor: c.surface }]}>
           <Answer last={last} today={today} />
           {top.length > 0 ? (
             <TopProblems
@@ -286,23 +292,24 @@ export function PlacePage({
               label={last && last.findings.length === 0 ? 'Earlier in the past 2 years' : null}
             />
           ) : null}
+          </View>
 
           <FactChips facts={facts} />
           <View style={styles.tiles}>
-            {privateHome ? null : onOpenAppleMaps && onOpenGoogleMaps ? (
-              <>
-                <ActionTile icon="map" label="Apple Maps" onPress={onOpenAppleMaps} />
-                <ActionTile icon="directions" label="Google Maps" onPress={onOpenGoogleMaps} />
-              </>
-            ) : (
-              <ActionTile icon="directions" label="Directions" onPress={onDirections} />
-            )}
+            {/* The state's own page leads (it's the source); one Directions action in the phone's own maps app. */}
             <ActionTile icon="record" label="State record" onPress={onOfficial} />
+            {privateHome ? null : (
+              <ActionTile
+                icon="directions"
+                label="Directions"
+                onPress={(Platform.OS === 'ios' ? onOpenAppleMaps : onOpenGoogleMaps) ?? onDirections}
+              />
+            )}
           </View>
         </View>
 
         <View
-          style={{ backgroundColor: c.surface }}
+          style={{ backgroundColor: c.bg }}
           onLayout={(e) => {
             bodyTop.current = e.nativeEvent.layout.y + e.nativeEvent.layout.height;
           }}
@@ -327,6 +334,7 @@ export function PlacePage({
               <History visits={visits} today={today} area={area} onPress={jumpTo} />
               <TourCard questions={tour} onOpen={onTour} />
               {more.length > 0 ? (
+                <View style={[styles.cardTight, elevation.card, { backgroundColor: c.surface }]}>
                 <Disclosure title="More details" detail="Capacity, subsidies, permit">
                   <View style={{ gap: space.xs }}>
                     {more.map((m) => (
@@ -336,13 +344,14 @@ export function PlacePage({
                     ))}
                   </View>
                 </Disclosure>
+                </View>
               ) : null}
             </>
           ) : null}
 
           {tab === 'findings' ? (
             findingVisits.length === 0 ? (
-              <View style={[styles.empty, { backgroundColor: c.sunken }]}>
+              <View style={[styles.empty, elevation.card, { backgroundColor: c.surface }]}>
                 <Text variant="subhead">{visits.length > 0 ? 'No problems posted in 2 years' : 'No state visits posted in 2 years'}</Text>
                 <Text variant="callout" tone="secondary">
                   {visits.length > 0
@@ -386,11 +395,13 @@ export function PlacePage({
           {tab === 'rights' ? (
             <View>
               {lawCovers(daycare.operation_type) ? (
-                REQUEST_CARDS.map((r) => (
-                  <RightCard key={r.kind} icon={r.icon} title={r.title} detail={r.detail} onPress={() => onRequest(r.kind)} />
-                ))
+                <View style={[styles.cardTight, elevation.card, { backgroundColor: c.surface }]}>
+                  {REQUEST_CARDS.map((r) => (
+                    <RightCard key={r.kind} icon={r.icon} title={r.title} detail={r.detail} onPress={() => onRequest(r.kind)} />
+                  ))}
+                </View>
               ) : (
-                <View style={[styles.empty, { backgroundColor: c.sunken }]}>
+                <View style={[styles.empty, elevation.card, { backgroundColor: c.surface }]}>
                   <Text variant="subhead">{NOT_COVERED}</Text>
                   <Text variant="callout" tone="secondary">
                     You can still read every inspection the state posts here.
@@ -457,9 +468,9 @@ export function PlacePage({
           <Animated.View style={[{ flex: 1 }, popStyle]}>
             {watching ? (
               <Button
-                label="Watching · alerts on"
-                kind="primary"
-                icon="bellFill"
+                label={alertsOn ? 'Watching · alerts on' : 'Watching · alerts off'}
+                kind={alertsOn ? 'primary' : 'secondary'}
+                icon={alertsOn ? 'bellFill' : 'bell'}
                 onPress={onUnwatch}
                 disabled={watchPending}
                 accessibilityHint="Stops alerts for this daycare"
@@ -503,7 +514,8 @@ export function visitAnswer(last: Visit | undefined, today: string): { headline:
   if (last && n > 0) {
     const open = latestOpen(last.findings);
     const openCount = last.findings.filter((f) => !isFixed(f)).length;
-    if (!open) sub = n === 1 ? 'Fixed' : 'All fixed';
+    // Never a bare "Fixed": say how it was fixed (at the visit, or checked by the state later).
+    if (!open) sub = `${n === 1 ? '' : 'All '}${visitStatus(last, new Date(today))}`.replace(/^All F/, 'All f');
     else {
       const status = plainStatus(open);
       sub = openCount > 1 ? status.replace(/^Fix due/, 'Fixes due by').replace(/^Fix date was/, 'Latest fix date was') : status;
@@ -556,11 +568,15 @@ function TopProblems({
           accessibilityLabel={`${f.risk_level === 'High' ? 'Serious. ' : ''}${f.plain ?? ''} ${formatDate(f.date)}. ${shortStatus(f)}.`}
           style={[styles.topRow, { borderBottomColor: c.hairline }]}
         >
+          {/* Every row leads with its category; "Serious" is an extra on High-risk rules only. */}
+          <CategoryIcon category={f.category} size={36} />
+          <View style={{ flex: 1, gap: space.xs }}>
+            <Text variant="subhead">{f.plain ?? 'The state did not publish a description.'}</Text>
+            <Text variant="callout" tone="secondary" tabular>
+              {`${formatDateShort(f.date, today)} · ${shortStatus(f)}`}
+            </Text>
+          </View>
           {f.risk_level === 'High' ? <SeriousTag /> : null}
-          <Text variant="subhead">{f.plain ?? 'The state did not publish a description.'}</Text>
-          <Text variant="callout" tone="secondary" tabular>
-            {`${formatDateShort(f.date, today)} · ${shortStatus(f)}`}
-          </Text>
         </View>
       ))}
       <Pressable accessibilityRole="button" onPress={onSeeAll} style={({ pressed }) => [styles.more, pressed && { opacity: 0.6 }]}>
@@ -593,8 +609,6 @@ function History({
   onPress: (id: number) => void;
 }) {
   const c = useColors();
-  // Past 1.3x text the four columns can't share a line: each row stacks into date + status, then count + bar.
-  const stacked = useWindowDimensions().fontScale > 1.3;
   const max = Math.max(1, ...visits.map((v) => v.findings.length));
   const median =
     area && area.peer_count >= 3
@@ -603,7 +617,7 @@ function History({
         : Number(area.median.findings.toFixed(1))
       : null;
   return (
-    <View style={{ gap: space.sm }}>
+    <View style={[styles.card, elevation.card, { backgroundColor: c.surface, gap: space.sm }]}>
       <Text variant="title">Past 2 years</Text>
       {visits.length === 0 ? (
         <Text variant="callout" tone="secondary">
@@ -615,7 +629,7 @@ function History({
             const n = v.findings.length;
             const status = visitStatus(v);
             const date = (
-              <Text variant="callout" tabular style={stacked ? { flex: 1 } : styles.hDate} numberOfLines={1}>
+              <Text variant="callout" tabular style={{ flex: 1 }} numberOfLines={1}>
                 {formatDateShort(v.date, today)}
               </Text>
             );
@@ -633,13 +647,15 @@ function History({
               <Text
                 variant="callout"
                 tone="secondary"
-                style={stacked ? { textAlign: 'right' } : styles.hStatus}
-                numberOfLines={stacked ? 2 : 1}
+                style={{ textAlign: 'right', flexShrink: 1 }}
+                numberOfLines={2}
               >
                 {status}
               </Text>
             );
-            const row = stacked ? (
+            // Two lines per visit: date and where it stands, then the count and its bar. Room for the
+            // full status words ("Fixed during the visit") at every text size, no truncation.
+            const row = (
               <View style={{ flex: 1, gap: space.xs, paddingVertical: space.sm }}>
                 <View style={styles.hLine}>
                   {date}
@@ -650,13 +666,6 @@ function History({
                   {bar}
                 </View>
               </View>
-            ) : (
-              <>
-                {date}
-                {count}
-                {bar}
-                {word}
-              </>
             );
             const label = `${formatDate(v.date)}: ${n === 0 ? 'no problems cited' : plural(n, 'problem')}. ${status}.`;
             return n > 0 ? (
@@ -694,7 +703,7 @@ function TourCard({ questions, onOpen }: { questions: ReturnType<typeof buildTou
   const c = useColors();
   if (questions.length === 0) return null;
   return (
-    <View style={[styles.tour, { backgroundColor: c.sunken }]}>
+    <View style={[styles.tour, elevation.card, { backgroundColor: c.surface }]}>
       <Text variant="title">Ask about these on your tour</Text>
       {questions.map((q, i) => (
         <View key={q.question} style={styles.tourRow}>
@@ -753,7 +762,10 @@ const styles = StyleSheet.create({
     gap: space.xs,
     marginTop: space.xs,
   },
-  answer: { gap: space.xs, paddingTop: space.lg },
+  answer: { gap: space.xs },
+  // V4 surfaces: white cards on the grouped grey page.
+  card: { borderRadius: radius.card + 4, padding: space.lg, marginTop: space.md },
+  cardTight: { borderRadius: radius.card + 4, paddingHorizontal: space.lg, paddingVertical: space.xs },
   top: {
     borderTopWidth: StyleSheet.hairlineWidth,
     marginTop: space.md,
@@ -762,7 +774,9 @@ const styles = StyleSheet.create({
   topLabelled: { borderTopWidth: 0 },
   topLabel: { paddingBottom: space.xs, paddingTop: space.sm },
   topRow: {
-    gap: space.xs,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: space.md,
     paddingVertical: space.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
@@ -782,12 +796,10 @@ const styles = StyleSheet.create({
     minHeight: 48,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  hDate: { width: 100 },
   hCount: { minWidth: 22, textAlign: 'right' },
   hLine: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   hTrack: { flex: 1, height: 8, borderRadius: 4, overflow: 'hidden' },
   hFill: { height: 8, borderRadius: 4 },
-  hStatus: { width: 128, textAlign: 'right' },
   tour: { borderRadius: radius.card, padding: space.lg, gap: space.lg },
   tourRow: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },
   tourNum: {

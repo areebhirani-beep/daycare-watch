@@ -32,7 +32,7 @@ export function FindingCard({
 }: {
   finding: Finding;
   visitDate?: string | null;
-  /** Opens the state's own page for this daycare (CONTRACT 1b: one tap from every finding). */
+  /** Opens the state's own page for this daycare (every finding links to its source in one tap). */
   onOfficial?: () => void;
 }) {
   const c = useColors();
@@ -58,13 +58,12 @@ export function FindingCard({
         accessibilityLabel={`${high ? 'Serious. ' : ''}${categoryLabel(f.category)}. ${summary}. ${status}.`}
         style={{ gap: space.sm }}
       >
-        {/* The category reads first, as a picture (CategoryIcon); "Serious" rides on the right, High only. */}
+        {/* The category reads first, as a picture (CategoryIcon). */}
         <View style={styles.head}>
           <CategoryIcon category={f.category} size={32} />
           <Text variant="callout" tone="secondary" numberOfLines={1} style={{ flex: 1 }}>
             {categoryLabel(f.category)}
           </Text>
-          {high ? <SeriousTag /> : null}
         </View>
         <Text variant="subhead">{summary}</Text>
         <View style={styles.status}>
@@ -73,8 +72,12 @@ export function FindingCard({
             {status}
           </Text>
         </View>
-        {/* "Serious" is our word; the state's own label stays on the finding (integrator, Oct 25). */}
-        <Text variant="callout" tone="tertiary">{`${riskLabel(f.risk_level)} rule, per the state`}</Text>
+        {/* One line carries both our word and the state's label, so the card never says it twice. */}
+        {high ? (
+          <Text variant="subhead">{`Serious · ${riskLabel(f.risk_level)} rule, per the state`}</Text>
+        ) : (
+          <Text variant="callout" tone="tertiary">{`${riskLabel(f.risk_level)} rule, per the state`}</Text>
+        )}
       </View>
       {f.narrative?.trim() ? <InspectorQuote text={f.narrative.trim()} plain={f.plain} source={rule} note={note} /> : null}
       {onOfficial ? (

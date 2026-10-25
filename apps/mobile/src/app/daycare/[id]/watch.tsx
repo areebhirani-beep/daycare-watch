@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/Button';
 import { visitAnswer } from '@/components/ui/PlacePage';
 import { useDaycareRecord, useIsWatching, useSetWatch } from '@/lib/api';
 import { tidyCase, todayIso } from '@/lib/format';
-import { type EnableResult, enableAlerts } from '@/lib/notifications';
+import { type EnableResult, enableAlerts, useAlertsOn } from '@/lib/notifications';
 import { groupByVisit } from '@/lib/record';
+import { isWeb } from '@/lib/runtime';
 import type { DaycareRecord } from '@/lib/types';
 import { haptic, radius, space, useColors } from '@/theme';
 
@@ -21,6 +22,7 @@ export default function WatchScreen() {
   const record = useDaycareRecord(operationId);
   const watching = useIsWatching(operationId);
   const setWatch = useSetWatch(operationId);
+  const alertsOn = useAlertsOn();
   const [step, setStep] = useState<Step>('explain');
   const [result, setResult] = useState<EnableResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -48,10 +50,15 @@ export default function WatchScreen() {
         </T>
         <LastVisit record={record.data} />
         <T variant="body" tone="secondary">
-          We&rsquo;ll alert you when the state posts a new problem, a permit change, or corrective action.
+          {alertsOn
+            ? 'We’ll alert you when the state posts a new problem, a permit change, or corrective action.'
+            : 'Notifications are off for this app, so alerts can’t reach this phone. New state records still show in the Watching tab.'}
         </T>
         <View style={styles.buttons}>
           <Button label="Done" onPress={() => router.back()} />
+          {!alertsOn && !isWeb ? (
+            <Button label="Open Settings" kind="plain" onPress={() => void Linking.openSettings()} />
+          ) : null}
           <Button
             label="Stop watching"
             kind="plain"

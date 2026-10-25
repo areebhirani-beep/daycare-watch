@@ -12,14 +12,14 @@ const DRIFT_DEG = 24;
 const DRIFT_MS = 9000;
 const START_HEADING = 20;
 
-/** Integrator rule: a 3D view only for a licensed center whose address geocoded exactly. */
+/** A 3D view only for a licensed center whose address geocoded exactly. */
 export function flyoverAllowed(d: Pick<DaycareHeader, 'operation_type' | 'geocode_quality'> | null | undefined): boolean {
   return Boolean(d && imageryAllowed(d.operation_type) && d.geocode_quality === 'exact');
 }
 
 /**
  * Apple's 3D flyover of a real place, turning slowly like a drone shot. Decoration only: no touch,
- * no pin, no labels. Licensed centers with an exact geocode only (integrator rule); the caller checks.
+ * no pin, no labels. Licensed centers with an exact geocode only (flyoverAllowed); the caller checks.
  * Android, web and Reduce Motion get a still aerial instead.
  */
 export function FlyoverHero({

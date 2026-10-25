@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, TextInput, type TextInputProps, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { haptic, minTap, radius, sheet, space, type as typeScale, useColors } from '@/theme';
+import { elevation, haptic, minTap, radius, sheet, space, type as typeScale, useColors } from '@/theme';
 
 import { Glyph, type GlyphName } from './Glyph';
 import { Text } from './Text';
@@ -232,7 +232,7 @@ export function ActionTile({ icon, label, onPress }: { icon: GlyphName; label: s
         haptic.select();
         onPress();
       }}
-      style={({ pressed }) => [styles.tile, { backgroundColor: c.sunken, transform: [{ scale: pressed ? 0.98 : 1 }], opacity: pressed ? 0.9 : 1 }]}
+      style={({ pressed }) => [styles.tile, elevation.card, { backgroundColor: c.surface, transform: [{ scale: pressed ? 0.98 : 1 }], opacity: pressed ? 0.9 : 1 }]}
     >
       <Glyph name={icon} size={20} color={c.text} weight="semibold" />
       <Text variant="subhead" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} maxFontSizeMultiplier={1.4}>

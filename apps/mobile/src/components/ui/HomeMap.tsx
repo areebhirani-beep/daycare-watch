@@ -14,6 +14,7 @@ import { Chip, ChipRow } from './Chip';
 import { IconButton, SearchPill, SectionHeader, SheetHandle } from './Chrome';
 import { DaycareCard, PlaceRow } from './DaycareCard';
 import { imageryAllowed } from '@/lib/imagery';
+import { regionFor } from '@/lib/region';
 
 import { AreaPin, ClusterBubble, MapPin, pinKind } from './MapPin';
 import { type RowVisit, stripFromRow } from './RecordStrip';
@@ -21,7 +22,7 @@ import { CardSkeleton, RowSkeleton } from './Skeletons';
 import { Text } from './Text';
 
 /**
- * The map home (uber-3 / googlemaps-4 / uber-4 / doordash-3 in harness/state/refs):
+ * The map home (Uber and Google Maps structure):
  * full-bleed map, floating search pill, locate button riding the sheet, a sheet with three detents.
  * Peek: count + filter chips. Half: a carousel of cards. Full: the dense list.
  * Data and navigation come in as props; this file only lays them out.
@@ -71,13 +72,17 @@ function matches(r: DaycareRow, f: Set<Filter>): boolean {
 
 type Cluster = { key: string; lat: number; lng: number; rows: DaycareRow[] };
 
-/** Screen-grid clustering: cheap, stable, fine for the 200 rows daycares_near returns. */
-function cluster(rows: DaycareRow[], region: Region): Cluster[] {
-  const cell = region.latitudeDelta / 7;
+// Pins closer than this on screen would overlap, so they share one bubble.
+const CLUSTER_PT = 44;
+
+/** Screen-grid clustering in points: cheap, stable, fine for the rows daycares_near returns. */
+function cluster(rows: DaycareRow[], region: Region, width: number, height: number): Cluster[] {
+  const latCell = (region.latitudeDelta * CLUSTER_PT) / height;
+  const lngCell = (region.longitudeDelta * CLUSTER_PT) / width;
   const groups = new Map<string, DaycareRow[]>();
   for (const r of rows) {
     if (r.lat == null || r.lng == null) continue;
-    const k = region.latitudeDelta < 0.03 ? String(r.operation_id) : `${Math.floor(r.lat / cell)}:${Math.floor(r.lng / cell)}`;
+    const k = `${Math.floor(r.lat / latCell)}:${Math.floor(r.lng / lngCell)}`;
     const g = groups.get(k);
     if (g) g.push(r);
     else groups.set(k, [r]);
@@ -90,8 +95,6 @@ function cluster(rows: DaycareRow[], region: Region): Cluster[] {
   }));
 }
 
-// The near() RPC returns at most this many rows, so a full page means "the closest N", not "all".
-const NEAR_LIMIT = 50;
 // From the screen bottom to just above the floating tab bar.
 const TAB_FLOOR = TAB_BAR_CLEARANCE - 20;
 
@@ -101,6 +104,8 @@ type Props = {
   center: { lat: number; lng: number } | null;
   fallbackCenter: { lat: number; lng: number };
   /** Subtitle when there is no device location, e.g. "Near Frisco". */
+  /** The town in the title when the list isn't around the parent's own location: 'Daycares near Frisco'. */
+  areaName?: string;
   areaLabel?: string;
   watchedIds: Set<number>;
   onOpen: (operationId: number) => void;
@@ -108,7 +113,7 @@ type Props = {
   onSearch: () => void;
   onAlerts: () => void;
   onLocate: () => void;
-  /** "Last checked with the state …" (CONTRACT 3), rendered at the end of the list. */
+  /** "Last checked with the state …" (every data screen says when it last matched the state), rendered at the end of the list. */
   footer?: React.ReactNode;
   /** A section between the closest cards and the full list (the "last week in TX-04" feed). */
   feed?: React.ReactNode;
@@ -122,6 +127,7 @@ export function HomeMap({
   loading,
   center,
   fallbackCenter,
+  areaName,
   areaLabel,
   watchedIds,
   onOpen,
@@ -151,7 +157,7 @@ export function HomeMap({
 
   const shown = useMemo(() => rows.filter((r) => matches(r, filters)), [rows, filters]);
   const mapped = useMemo(() => shown.filter((r) => r.lat != null && r.lng != null), [shown]);
-  const clusters = useMemo(() => cluster(mapped, region), [mapped, region]);
+  const clusters = useMemo(() => cluster(mapped, region, width, height), [mapped, region, width, height]);
   const featured = useMemo(() => shown.slice(0, 12), [shown]);
 
   const snapPoints = useMemo(
@@ -165,17 +171,22 @@ export function HomeMap({
   // fly back to the fallback area so the map matches the list.
   const targetLat = start.lat;
   const targetLng = start.lng;
-  useEffect(() => {
-    map.current?.animateToRegion({ latitude: targetLat, longitude: targetLng, latitudeDelta: 0.06, longitudeDelta: 0.06 }, 450);
-  }, [targetLat, targetLng]);
-  // Once the list arrives, fit the parent's point and the nearest pins into the strip above the sheet.
+  // The strip between the search pill and the half sheet is where the map can really be seen.
+  const view = useMemo(
+    () => ({ width, height, top: insets.top + 64, bottom: height - sheetCover }),
+    [width, height, insets.top, sheetCover],
+  );
+  // A camera move sent before the map has a size lands zoomed out to half of Texas, so nothing moves until the
+  // map is ready. Then show the parent's point and the nearest pins in that strip (just the point while loading).
+  const [ready, setReady] = useState(false);
   const fitKey = `${targetLat},${targetLng}:${mapped.slice(0, 8).map((r) => r.operation_id).join(',')}`;
   useEffect(() => {
+    if (!ready) return;
     const near = mapped.slice(0, 8).map((r) => ({ latitude: r.lat!, longitude: r.lng! }));
-    if (near.length === 0) return;
-    const points = center ? [{ latitude: center.lat, longitude: center.lng }, ...near] : near;
-    map.current?.fitToCoordinates(points, { edgePadding: { top: 24, right: 48, bottom: 24, left: 48 }, animated: true });
-  }, [fitKey]); // eslint-disable-line react-hooks/exhaustive-deps
+    const points = center || near.length === 0 ? [{ latitude: targetLat, longitude: targetLng }, ...near] : near;
+    const next = regionFor(points, view);
+    if (next) map.current?.animateToRegion(next, 450);
+  }, [ready, fitKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const sheetY = useSharedValue(height);
   const locateStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetY.value - 64 }],
@@ -197,7 +208,10 @@ export function HomeMap({
     sheetRef.current?.snapToIndex(1);
     if (i >= 0) carousel.current?.scrollToIndex({ index: i, animated: true, viewPosition: 0 });
     if (r.lat != null && r.lng != null)
-      map.current?.animateToRegion({ latitude: r.lat - region.latitudeDelta * 0.18, longitude: r.lng, latitudeDelta: region.latitudeDelta, longitudeDelta: region.longitudeDelta }, 350);
+      map.current?.animateToRegion(
+        { ...region, latitude: r.lat - ((height / 2 - (view.top + view.bottom) / 2) / height) * region.latitudeDelta, longitude: r.lng },
+        350,
+      );
   };
 
   const zoomInto = (k: Cluster) => {
@@ -215,19 +229,14 @@ export function HomeMap({
       <View style={styles.titleRow}>
         <View style={{ flex: 1 }}>
           <Text variant="largeTitle" accessibilityRole="header" numberOfLines={2}>
-            {loading && rows.length === 0
-              ? 'Finding daycares…'
-              : rows.length >= NEAR_LIMIT
-                ? filters.size > 0
-                  ? `${shown.length} of the ${rows.length} closest`
-                  : `${rows.length} closest daycares`
-                : `${shown.length} daycares`}
+            {loading && rows.length === 0 ? 'Finding daycares…' : `Daycares near ${areaName ?? 'you'}`}
           </Text>
-          <Text variant="callout" tone="secondary">
-            {areaLabel ?? 'Near you'}
-          </Text>
+          {areaLabel || filters.size > 0 ? (
+            <Text variant="callout" tone="secondary">
+              {areaLabel ?? `${shown.length} of ${rows.length} match`}
+            </Text>
+          ) : null}
         </View>
-        <IconButton icon="search" label="Search daycares" onPress={onSearch} size={40} />
       </View>
       <ChipRow style={{ paddingBottom: space.lg }}>
         <Chip label="Centers" icon="center" selected={filters.has('centers')} onPress={() => toggle('centers')} />
@@ -281,6 +290,7 @@ export function HomeMap({
         style={StyleSheet.absoluteFill}
         initialRegion={region}
         onRegionChangeComplete={setRegion}
+        onMapReady={() => setReady(true)}
         showsUserLocation
         showsMyLocationButton={false}
         showsCompass={false}
@@ -289,8 +299,8 @@ export function HomeMap({
         // Apple's standard map, as in Apple Maps: color, parks and water make the area recognizable.
         mapType="standard"
         showsBuildings
-        // Camera moves and fits treat the strip between the search pill and the half sheet as the map.
-        mapPadding={{ top: insets.top + 64, bottom: sheetCover, left: 0, right: 0 }}
+        // Apple's Legal link stays visible above the half sheet.
+        legalLabelInsets={{ top: 0, left: space.lg, bottom: sheetCover + space.sm, right: 0 }}
         onPress={() => setSelected(null)}
       >
         {clusters.map((k) =>

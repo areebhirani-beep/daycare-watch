@@ -9,6 +9,7 @@ import { PlaceSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useAreaCompare, useDaycareRecord, useIsWatching, useSetWatch } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
+import { useAlertsOn } from '@/lib/notifications';
 import { since } from '@/lib/perf';
 import { shareText } from '@/lib/share';
 import { appleMapsUrl, directionsAddress, googleMapsUrl } from '@/lib/maps';
@@ -23,6 +24,7 @@ export default function DaycareRecordScreen() {
   const area = useAreaCompare(operationId);
   const watching = useIsWatching(operationId);
   const setWatch = useSetWatch(operationId);
+  const alertsOn = useAlertsOn();
   const ready = Boolean(record.data);
   useEffect(() => {
     if (ready) since('place record shown');
@@ -57,9 +59,11 @@ export default function DaycareRecordScreen() {
         record={record.data}
         area={area.data}
         watching={watching}
+        alertsOn={alertsOn}
         watchPending={setWatch.isPending}
         onWatch={() => router.push(`/daycare/${operationId}/watch`)}
-        onUnwatch={() => setWatch.mutate(false)}
+        // Never unwatch on one tap: the watch sheet shows the status and has its own 'Stop watching'.
+        onUnwatch={() => router.push(`/daycare/${operationId}/watch`)}
         onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
         onShare={() => shareText(`${name}: Texas state inspection record`, `${name}: Texas state inspection record ${official_url}`)}
         onDirections={openMaps(Platform.OS === 'ios' ? appleMapsUrl : googleMapsUrl) ?? (() => undefined)}

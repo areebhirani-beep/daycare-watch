@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useColors } from '@/theme';
 
 /**
- * The app mark (same drawing as the icon, harness/state/design/mark.py): one visit on the rail. An ink ring
+ * The app mark (same drawing as the app icon): one visit on the rail. An ink ring
  * with a solid centre sits on a time line, an earlier visit to its left. It reads as a visit and as an eye.
  * `width` is the whole mark; the height follows (0.59 of it).
  */

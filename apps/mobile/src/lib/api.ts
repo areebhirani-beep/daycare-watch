@@ -154,5 +154,6 @@ export async function startOver(): Promise<void> {
   await resetSession();
   // Key owned by components/ui/onboarding.ts.
   storage.remove('onboarded.v1');
+  storage.remove('push-registered');
   forgetPosition();
 }

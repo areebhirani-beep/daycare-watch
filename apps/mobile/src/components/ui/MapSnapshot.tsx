@@ -12,7 +12,7 @@ import { Text } from './Text';
 // Tiles are fetched one zoom level deeper and drawn at half size, so they stay sharp on retina screens.
 const TILE = 128;
 
-// Home daycares are private residences (CONTRACT data rules, Oct 24; callers decide with lib/imagery):
+// Home daycares are private residences (privacy rule: no photo or exact point for a family's house; callers decide with lib/imagery):
 // never aerial imagery, never a pin on the house. A grey street map at neighborhood zoom with an area circle.
 const HOME_MAX_ZOOM = 14;
 const AREA_RADIUS_M = 400;
@@ -79,7 +79,7 @@ export function MapSnapshot({
     if (!size || Math.round(width) !== size.w || Math.round(height) !== size.h) setSize({ w: Math.round(width), h: Math.round(height) });
   };
 
-  // A home's circle centres on a 0.005° grid point (~500 m), never on the geocoded house (integrator, 23:17).
+  // A home's circle centres on a 0.005° grid point (~500 m), never on the geocoded house.
   const snap = (v: number | null | undefined) => (privateHome && typeof v === 'number' ? Math.round(v / 0.005) * 0.005 : v);
   const lat = snap(rawLat);
   const lng = snap(rawLng);

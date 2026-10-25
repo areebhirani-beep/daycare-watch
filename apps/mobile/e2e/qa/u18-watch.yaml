@@ -1,6 +1,6 @@
 # QA U18: watch, unwatch, re-watch on one real record (97587 Amarillo Wesley Community Center).
 # Watch opens the sheet ("Turn on alerts" → "You’re watching" → "Done"); the place button then reads
-# "Watching · alerts on". Tapping it unwatches; the Watching tab must follow each change.
+# "Watching · alerts on|off". Tapping it opens the sheet, where "Stop watching" unwatches.
 appId: host.exp.Exponent
 ---
 - runFlow: _open.yaml
@@ -11,9 +11,10 @@ appId: host.exp.Exponent
 # Start from not watching.
 - runFlow:
     when:
-      visible: "Watching · alerts on"
+      visible: "Watching ·.*"
     commands:
-      - tapOn: "Watching · alerts on"
+      - tapOn: "Watching ·.*"
+      - tapOn: "Stop watching"
       - extendedWaitUntil:
           visible: "Watch this daycare"
           timeout: 10000
@@ -38,12 +39,17 @@ appId: host.exp.Exponent
 - takeScreenshot: ../../harness/state/qa/u18-1-watching
 - tapOn: "Done"
 - extendedWaitUntil:
-    visible: "Watching · alerts on"
+    visible: "Watching ·.*"
     timeout: 10000
 - takeScreenshot: ../../harness/state/qa/u18-2-place-watching
 
-# Unwatch
-- tapOn: "Watching · alerts on"
+# Unwatch: the place button opens the watch sheet; "Stop watching" is the deliberate second tap (D10).
+- tapOn: "Watching ·.*"
+- extendedWaitUntil:
+    visible: "Stop watching"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/qa/u18-2b-stop-sheet
+- tapOn: "Stop watching"
 - extendedWaitUntil:
     visible: "Watch this daycare"
     timeout: 10000
@@ -60,6 +66,6 @@ appId: host.exp.Exponent
     timeout: 15000
 - tapOn: "Done"
 - extendedWaitUntil:
-    visible: "Watching · alerts on"
+    visible: "Watching ·.*"
     timeout: 10000
 - takeScreenshot: ../../harness/state/qa/u18-4-rewatched

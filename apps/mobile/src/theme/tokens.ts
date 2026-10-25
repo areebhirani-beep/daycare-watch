@@ -6,7 +6,7 @@ import { Platform, type TextStyle } from 'react-native';
 
 export type RiskLevel = 'High' | 'Medium High' | 'Medium' | 'Medium Low' | 'Low';
 
-/** The state's finding categories (CONTRACT 3), mirrored here so the theme needs no data import. */
+/** The state's finding categories (the violation_category enum), mirrored here so the theme needs no data import. */
 export type CategoryKey =
   | 'supervision'
   | 'background_checks'
@@ -225,7 +225,7 @@ export const elevation = {
   sheet: { shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
 } as const;
 
-// Motion rules (owner, Oct 25 01:58): minimal, for feedback, continuity or orientation only.
+// Motion rules: minimal, for feedback, continuity or orientation only.
 // 150–250 ms, enter eases out, exit eases in, nothing loops, Reduce Motion turns movement into fades.
 export const motion = { fast: 150, base: 200, slow: 250, stagger: 30, rise: 8, maxStagger: 3, pressScale: 0.98, pressOpacity: 0.9 } as const;
 

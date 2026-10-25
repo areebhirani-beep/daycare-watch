@@ -2,12 +2,17 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { AndroidImportance } from 'expo-notifications';
-import { router } from 'expo-router';
-import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect } from 'react';
 import { Platform } from 'react-native';
 
 import { registerDevice } from './api';
 import { isWeb } from './runtime';
+import { storage } from './storage';
+
+// Set once this phone's push token is saved with us, so 'alerts on' is only said when an alert can really arrive.
+const REGISTERED = 'push-registered';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -50,10 +55,30 @@ export async function enableAlerts(): Promise<EnableResult> {
     if (!projectId || !Device.isDevice) return { permission: status, registered: false };
     const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
     await registerDevice(token, Platform.OS === 'ios' ? 'ios' : 'android');
+    storage.set(REGISTERED, '1');
     return { permission: status, registered: true };
   } catch {
     return { permission: status, registered: false };
   }
+}
+
+/**
+ * True only when the OS allows notifications AND this phone is registered for pushes. Checked again whenever the
+ * screen comes back into focus, so returning from Settings updates the Watch button.
+ */
+export function useAlertsOn(): boolean {
+  const q = useQuery({
+    queryKey: ['alerts-on'],
+    queryFn: async () => !isWeb && (await getPermission()) === 'granted' && storage.getString(REGISTERED) === '1',
+    staleTime: 0,
+  });
+  const { refetch } = q;
+  useFocusEffect(
+    useCallback(() => {
+      void refetch();
+    }, [refetch]),
+  );
+  return q.data ?? false;
 }
 
 type AlertData = { event_id?: number | string; operation_id?: number | string };

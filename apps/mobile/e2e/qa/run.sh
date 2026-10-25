@@ -4,7 +4,7 @@
 #   e2e/qa/run.sh u01-first-launch # one flow
 # Screenshots land in harness/state/qa/.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 export JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk@17}
 export PATH="$JAVA_HOME/bin:$HOME/.maestro/bin:$PATH"
@@ -23,10 +23,19 @@ flows=("$@")
 pass=0; fail=0; failed=()
 for f in "${flows[@]}"; do
   [[ "$f" == u01-* ]] && xcrun simctl privacy "$DEVICE" reset location host.exp.Exponent
+  [[ "$f" == u03-* ]] && xcrun simctl privacy "$DEVICE" revoke location host.exp.Exponent
+  if [[ "$f" == u04-* ]]; then
+    xcrun simctl privacy "$DEVICE" grant location host.exp.Exponent
+    xcrun simctl location "$DEVICE" set 35.4676,-97.5164
+  fi
   if maestro --device "$DEVICE" test -e METRO="$METRO" "e2e/qa/$f.yaml"; then
     pass=$((pass + 1))
   else
     fail=$((fail + 1)); failed+=("$f")
+  fi
+  if [[ "$f" == u03-* || "$f" == u04-* ]]; then
+    xcrun simctl privacy "$DEVICE" grant location host.exp.Exponent
+    xcrun simctl location "$DEVICE" set 33.0198,-96.6989
   fi
 done
 echo "QA: $pass passed, $fail failed ${failed[*]:-}"

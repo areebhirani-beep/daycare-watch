@@ -1,0 +1,12 @@
+# QA U3: location permission revoked (run.sh revokes it with simctl first). Home still loads near
+# Frisco ("Location is off") or the last saved fix ("Near your last location"), and says so; it never shows an empty map or a spinner forever.
+appId: host.exp.Exponent
+---
+- stopApp
+- runFlow: _open.yaml
+- extendedWaitUntil:
+    visible: "(Location is off|Near your last location)"
+    timeout: 30000
+- assertNotVisible: "Finding your location…"
+- assertVisible: "Daycares near .*"
+- takeScreenshot: ../../harness/state/qa/u03-denied-0

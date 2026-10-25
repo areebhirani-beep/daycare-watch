@@ -8,6 +8,14 @@ const now = new Date('2026-10-25T12:00:00');
 const nc1022378716 = { corrected_at_inspection: false, verified_date: null, corrected_date: '2026-10-30', date: '2026-10-05' };
 
 describe('fix status copy', () => {
+  it('never returns a bare Fixed', () => {
+    const verified = { ...nc1022378716, verified_date: '2026-10-20' };
+    for (const f of [nc1022378716, verified, { ...nc1022378716, corrected_at_inspection: true }]) {
+      expect(shortStatus(f, now)).not.toBe('Fixed');
+      expect(visitStatus({ status: 'findings', findings: [f] }, now)).not.toBe('Fixed');
+    }
+  });
+
   it('never says Fixed for a finding with only a future corrected_date', () => {
     expect(plainStatus(nc1022378716, now)).toBe('Fix due Oct 30 · no state check on record yet');
     expect(shortStatus(nc1022378716, now)).toBe('Fix due Oct 30');
@@ -22,7 +30,10 @@ describe('fix status copy', () => {
   it('says Fixed only when every finding was corrected at the visit or verified', () => {
     const verified = { ...nc1022378716, verified_date: '2026-10-20' };
     const atVisit = { ...nc1022378716, corrected_at_inspection: true };
-    expect(visitStatus({ status: 'findings', findings: [verified, atVisit] }, now)).toBe('Fixed');
+    expect(visitStatus({ status: 'findings', findings: [verified, atVisit] }, now)).toBe('Fixed · state checked');
+    expect(visitStatus({ status: 'findings', findings: [atVisit, atVisit] }, now)).toBe('Fixed during the visit');
+    expect(shortStatus(atVisit, now)).toBe('Fixed during the visit');
+    expect(shortStatus(verified, now)).toBe('Fixed · state checked');
     expect(plainStatus(atVisit, now)).toBe('Fixed during the visit');
     expect(plainStatus(verified, now)).toBe('Fixed · the state checked Oct 20');
   });

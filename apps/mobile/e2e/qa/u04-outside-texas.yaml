@@ -1,0 +1,11 @@
+# QA U4: phone in Oklahoma City (run.sh sets the point and grants location). Home falls back to
+# Frisco and says why, so the map and the list agree.
+appId: host.exp.Exponent
+---
+- stopApp
+- runFlow: _open.yaml
+- extendedWaitUntil:
+    visible: "No Texas daycares near you"
+    timeout: 30000
+- assertVisible: "Daycares near Frisco"
+- takeScreenshot: ../../harness/state/qa/u04-outside-0

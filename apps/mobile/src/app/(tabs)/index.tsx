@@ -65,16 +65,17 @@ export default function FindScreen() {
         loading={problem !== null || near.isPending}
         center={outside ? null : origin}
         fallbackCenter={DISTRICT_CENTER}
-        // Set only when the list isn't from this phone's own location; HomeMap then says 'Near you'.
+        // Set only when the list isn't from this phone's own location.
+        areaName={outside || (!point && !saved) ? 'Frisco' : undefined}
         areaLabel={
           outside
-            ? 'Near Frisco · no Texas daycares near you'
+            ? 'No Texas daycares near you'
             : point || saved
               ? position === 'denied' && !point
                 ? 'Near your last location'
                 : undefined
               : position === 'denied'
-                ? 'Near Frisco · location off'
+                ? 'Location is off'
                 : 'Finding your location…'
         }
         watchedIds={watchedIds}

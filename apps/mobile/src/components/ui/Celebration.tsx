@@ -7,7 +7,7 @@ import { easeOut, haptic, motion, useColors } from '@/theme';
 import { Glyph } from './Glyph';
 
 /**
- * Watching confirmed (motion rules, owner 01:58): the yellow badge fades in, then the check draws
+ * Watching confirmed: the yellow badge fades in, then the check draws
  * once, left to right (350 ms), with a success haptic. No confetti, no burst, no pulse.
  */
 export function Celebration({ size = 120 }: { size?: number }) {

@@ -13,7 +13,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSequence,
-  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -24,7 +24,7 @@ import { placeAddress } from '@/lib/maps';
 import { buildTourQuestions } from '@/lib/tour';
 import { lawCovers, NOT_COVERED, REQUEST_CARDS, type RequestKind } from '@/lib/rights';
 import type { AreaCompare, DaycareRecord, Finding } from '@/lib/types';
-import { haptic, radius, riskRank, space, spring, useColors } from '@/theme';
+import { easeOut, haptic, motion, radius, riskRank, space, useColors } from '@/theme';
 
 import { Button } from './Button';
 import { FactChips } from './Chip';
@@ -85,7 +85,6 @@ export function byWeight(a: Finding, b: Finding): number {
   return riskRank[b.risk_level] - riskRank[a.risk_level] || (b.date ?? '').localeCompare(a.date ?? '');
 }
 
-
 export function PlacePage({
   record,
   area,
@@ -132,20 +131,31 @@ export function PlacePage({
     },
   );
   // The bar is fully in before the name reaches it, and the name fades as it passes under (large-title collapse).
-  const barStyle = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [heroH - 110, heroH - 50], [0, 1], 'clamp') }));
-  const nameStyle = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [heroH - 40, heroH + 10], [1, 0], 'clamp') }));
+  const barStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(y.value, [heroH - 110, heroH - 50], [0, 1], 'clamp'),
+  }));
+  const nameStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(y.value, [heroH - 40, heroH + 10], [1, 0], 'clamp'),
+  }));
 
-  // Watch confirm: success haptic and a spring pop the moment watching turns on.
+  // Watch confirm: success haptic and a 200 ms cross-fade into the watching state. No scale (motion rules).
   const pop = useSharedValue(1);
   const wasWatching = useRef(watching);
   useEffect(() => {
     if (watching && !wasWatching.current) {
       haptic.success();
-      pop.value = withSequence(withSpring(1.05, spring.pop), withSpring(1, spring.pop));
+      pop.value = withSequence(
+        withTiming(0.5, { duration: 0 }),
+        withTiming(1, {
+          duration: motion.base,
+          easing: easeOut,
+          reduceMotion: ReduceMotion.System,
+        }),
+      );
     }
     wasWatching.current = watching;
   }, [watching, pop]);
-  const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
+  const popStyle = useAnimatedStyle(() => ({ opacity: pop.value }));
 
   const { daycare } = record;
   // Today and the 24-month cutoff are read once per mount, so render stays pure.
@@ -163,7 +173,11 @@ export function PlacePage({
   // Three facts a parent decides on (DESIGN.md §9). The rest sits in "More details".
   const facts: { icon: GlyphName; label: string; a11y: string }[] = [];
   const typeLabel = operationTypeLabel(daycare.operation_type);
-  facts.push({ icon: daycare.operation_type === 'Licensed Center' ? 'center' : 'home', label: typeLabel, a11y: typeLabel });
+  facts.push({
+    icon: daycare.operation_type === 'Licensed Center' ? 'center' : 'home',
+    label: typeLabel,
+    a11y: typeLabel,
+  });
   const ages = agesLabel(daycare.ages);
   if (ages) facts.push({ icon: 'ages', label: ages, a11y: `Ages: ${ages}` });
   const hours = [daysLabel(daycare.days), hoursLabel(daycare.hours)].filter(Boolean).join(' ');
@@ -183,11 +197,16 @@ export function PlacePage({
     daycare.status === 'inactive' ? 'The state lists this permit as inactive.' : null,
     daycare.temporarily_closed ? 'State data marks this daycare as temporarily closed.' : null,
     daycare.adverse_action ? 'The state lists an adverse action against this permit, its most serious kind of action.' : null,
-    daycare.corrective_action ? 'The state lists this daycare on corrective action: it stays open under extra conditions and more inspections.' : null,
+    daycare.corrective_action
+      ? 'The state lists this daycare on corrective action: it stays open under extra conditions and more inspections.'
+      : null,
   ].filter((n): n is string => n !== null);
 
   // Centers: the state's full address line. Homes: city and ZIP only (lib/maps).
-  const address = [tidyCase(placeAddress(daycare)).replace(/\bTx\b/, 'TX'), daycare.in_district && daycare.district_basis === 'point' ? 'TX‑04' : null]
+  const address = [
+    tidyCase(placeAddress(daycare)).replace(/\bTx\b/, 'TX'),
+    daycare.in_district && daycare.district_basis === 'point' ? 'TX‑04' : null,
+  ]
     .filter(Boolean)
     .join(' · ');
   const tour = useMemo(() => buildTourQuestions(record.findings).slice(0, 2), [record.findings]);
@@ -195,7 +214,11 @@ export function PlacePage({
   // "See all" and a tap on a past visit open Problems, scrolled to the tabs or to that visit.
   const bodyTop = useRef(0);
   const [target, setTarget] = useState<number | null>(null);
-  const toTabs = () => scrollRef.current?.scrollTo({ y: Math.max(0, bodyTop.current - insets.top - 56 - 48), animated: true });
+  const toTabs = () =>
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, bodyTop.current - insets.top - 56 - 48),
+      animated: true,
+    });
   const seeAll = () => {
     haptic.select();
     setTab('findings');
@@ -208,7 +231,10 @@ export function PlacePage({
   };
   const onVisitLayout = (id: number) => (e: LayoutChangeEvent) => {
     if (id !== target) return;
-    scrollRef.current?.scrollTo({ y: Math.max(0, bodyTop.current + e.nativeEvent.layout.y - insets.top - 56 - space.md), animated: true });
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, bodyTop.current + e.nativeEvent.layout.y - insets.top - 56 - space.md),
+      animated: true,
+    });
     setTarget(null);
   };
 
@@ -216,7 +242,12 @@ export function PlacePage({
     <View style={{ flex: 1, backgroundColor: c.surface }}>
       {/* Light status-bar text over the aerial photo and the dimmed bar; the street maps follow the theme. */}
       <StatusBar style={(solid ? hasPoint : aerial) ? 'light' : 'auto'} />
-      <Animated.ScrollView ref={scrollRef} contentContainerStyle={{ paddingBottom: space.section }} onScroll={onScroll} scrollEventThrottle={16}>
+      <Animated.ScrollView
+        ref={scrollRef}
+        contentContainerStyle={{ paddingBottom: space.section }}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+      >
         <PlaceGallery
           lat={daycare.lat}
           lng={daycare.lng}
@@ -279,7 +310,10 @@ export function PlacePage({
           <Tabs
             tabs={[
               { key: 'overview', label: 'Overview' },
-              { key: 'findings', label: problems.length > 0 ? `Problems ${problems.length}` : 'Problems' },
+              {
+                key: 'findings',
+                label: problems.length > 0 ? `Problems ${problems.length}` : 'Problems',
+              },
               { key: 'rights', label: 'Your rights' },
             ]}
             value={tab}
@@ -375,7 +409,16 @@ export function PlacePage({
 
       <Animated.View
         pointerEvents="none"
-        style={[styles.bar, { height: insets.top + 56, paddingTop: insets.top, backgroundColor: c.surface, borderBottomColor: c.hairline }, barStyle]}
+        style={[
+          styles.bar,
+          {
+            height: insets.top + 56,
+            paddingTop: insets.top,
+            backgroundColor: c.surface,
+            borderBottomColor: c.hairline,
+          },
+          barStyle,
+        ]}
       >
         {/* The page keeps its picture: a slim, dimmed slice of the hero map behind the name. */}
         {hasPoint && barImage ? (
@@ -452,10 +495,10 @@ export function visitAnswer(last: Visit | undefined, today: string): { headline:
   const headline = !last
     ? 'No state visits in the past 2 years'
     : last.status === 'pending'
-    ? `Results from the ${when} visit aren’t posted yet`
-    : n > 0
-    ? `${plural(n, 'problem')} found at the ${when} visit`
-    : `No problems cited at the ${when} visit`;
+      ? `Results from the ${when} visit aren’t posted yet`
+      : n > 0
+        ? `${plural(n, 'problem')} found at the ${when} visit`
+        : `No problems cited at the ${when} visit`;
   let sub: string | null = null;
   if (last && n > 0) {
     const open = latestOpen(last.findings);
@@ -554,7 +597,11 @@ function History({
   const stacked = useWindowDimensions().fontScale > 1.3;
   const max = Math.max(1, ...visits.map((v) => v.findings.length));
   const median =
-    area && area.peer_count >= 3 ? (Number.isInteger(area.median.findings) ? area.median.findings : Number(area.median.findings.toFixed(1))) : null;
+    area && area.peer_count >= 3
+      ? Number.isInteger(area.median.findings)
+        ? area.median.findings
+        : Number(area.median.findings.toFixed(1))
+      : null;
   return (
     <View style={{ gap: space.sm }}>
       <Text variant="title">Past 2 years</Text>
@@ -583,7 +630,12 @@ function History({
               </View>
             );
             const word = (
-              <Text variant="callout" tone="secondary" style={stacked ? { textAlign: 'right' } : styles.hStatus} numberOfLines={stacked ? 2 : 1}>
+              <Text
+                variant="callout"
+                tone="secondary"
+                style={stacked ? { textAlign: 'right' } : styles.hStatus}
+                numberOfLines={stacked ? 2 : 1}
+              >
                 {status}
               </Text>
             );
@@ -667,7 +719,14 @@ function TourCard({ questions, onOpen }: { questions: ReturnType<typeof buildTou
           haptic.select();
           onOpen();
         }}
-        style={({ pressed }) => [styles.more, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.hairline }, pressed && { opacity: 0.6 }]}
+        style={({ pressed }) => [
+          styles.more,
+          {
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderTopColor: c.hairline,
+          },
+          pressed && { opacity: 0.6 },
+        ]}
       >
         <Text variant="subhead" style={{ flex: 1 }}>
           All tour questions
@@ -688,17 +747,41 @@ const styles = StyleSheet.create({
     paddingBottom: space.md,
     gap: space.sm,
   },
-  notes: { borderRadius: radius.card, padding: space.md, gap: space.xs, marginTop: space.xs },
+  notes: {
+    borderRadius: radius.card,
+    padding: space.md,
+    gap: space.xs,
+    marginTop: space.xs,
+  },
   answer: { gap: space.xs, paddingTop: space.lg },
-  top: { borderTopWidth: StyleSheet.hairlineWidth, marginTop: space.md, marginBottom: space.sm },
+  top: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    marginTop: space.md,
+    marginBottom: space.sm,
+  },
   topLabelled: { borderTopWidth: 0 },
   topLabel: { paddingBottom: space.xs, paddingTop: space.sm },
-  topRow: { gap: space.xs, paddingVertical: space.md, borderBottomWidth: StyleSheet.hairlineWidth },
-  more: { flexDirection: 'row', alignItems: 'center', minHeight: 48, paddingTop: space.xs },
+  topRow: {
+    gap: space.xs,
+    paddingVertical: space.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  more: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 48,
+    paddingTop: space.xs,
+  },
   tiles: { flexDirection: 'row', gap: space.sm, paddingTop: space.sm },
   body: { paddingHorizontal: space.lg, paddingTop: space.xl, gap: space.xxl },
   empty: { borderRadius: radius.card, padding: space.lg, gap: space.xs },
-  hRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48, borderBottomWidth: StyleSheet.hairlineWidth },
+  hRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    minHeight: 48,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
   hDate: { width: 100 },
   hCount: { minWidth: 22, textAlign: 'right' },
   hLine: { flexDirection: 'row', alignItems: 'center', gap: space.md },
@@ -707,8 +790,27 @@ const styles = StyleSheet.create({
   hStatus: { width: 128, textAlign: 'right' },
   tour: { borderRadius: radius.card, padding: space.lg, gap: space.lg },
   tourRow: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },
-  tourNum: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  tourNum: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   scrim: { backgroundColor: 'rgba(0,0,0,0.52)' },
-  bar: { position: 'absolute', left: 0, right: 0, top: 0, justifyContent: 'center', borderBottomWidth: StyleSheet.hairlineWidth },
-  floatTop: { position: 'absolute', left: space.lg, right: space.lg, flexDirection: 'row', justifyContent: 'space-between' },
+  bar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    justifyContent: 'center',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  floatTop: {
+    position: 'absolute',
+    left: space.lg,
+    right: space.lg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
 });

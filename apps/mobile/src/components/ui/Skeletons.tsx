@@ -22,10 +22,10 @@ export function Block({ style }: { style?: ViewStyle }) {
 }
 
 /** Shaped like DaycareCard. */
-export function CardSkeleton({ width = 280 }: { width?: number }) {
+export function CardSkeleton({ width = 280, heroRatio = 2 }: { width?: number; heroRatio?: number }) {
   return (
     <View style={{ width }} accessibilityLabel="Loading" accessible>
-      <Block style={{ aspectRatio: 1.8, borderRadius: radius.thumb }} />
+      <Block style={{ aspectRatio: heroRatio, borderRadius: radius.thumb }} />
       <Block style={{ marginTop: space.sm + 2, height: 18, width: '70%' }} />
       <Block style={{ marginTop: 6, height: 13, width: '50%' }} />
       <Block style={{ marginTop: space.sm, height: 16, width: '90%' }} />

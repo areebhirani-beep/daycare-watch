@@ -11,7 +11,7 @@ import { useDaycareRecord } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
 import { space, useColors } from '@/theme';
 
-/** The celebration after setup: the badge pops, marks burst, and the parent lands on the map or the record. */
+/** After setup: the badge fades in and its check draws once, then the name and the next step. */
 export default function DoneScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
@@ -19,8 +19,8 @@ export default function DoneScreen() {
   const id = params.id ? Number(params.id) : null;
   const record = useDaycareRecord(id ?? 0);
   const name = id && record.data ? tidyCase(record.data.daycare.name) : null;
-  const text = useRise(260);
-  const cta = useRise(420);
+  const text = useRise(400);
+  const cta = useRise(480);
 
   const go = (toRecord: boolean) => {
     markOnboarded();
@@ -35,17 +35,11 @@ export default function DoneScreen() {
         <Celebration />
         <Animated.View style={[styles.copy, text]}>
           <Text variant="display" align="center" accessibilityRole="header">
-            {id ? 'You’re watching.' : 'You’re all set.'}
+            {id ? (name ? `You’re watching ${name}.` : 'You’re watching.') : 'You’re all set.'}
           </Text>
-          {name ? (
-            <Text variant="title" tone="secondary" align="center" numberOfLines={2}>
-              {name}
-            </Text>
-          ) : (
-            <Text variant="callout" tone="secondary" align="center">
-              Watch a daycare any time from its page.
-            </Text>
-          )}
+          <Text variant="body" tone="secondary" align="center" style={{ maxWidth: 300 }}>
+            {id ? 'We’ll tell you when the state posts something new.' : 'Watch a daycare any time from its page.'}
+          </Text>
         </Animated.View>
       </View>
       <Animated.View style={[styles.actions, cta]}>

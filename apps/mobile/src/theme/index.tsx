@@ -4,6 +4,7 @@ import { dark, light, type Colors } from './tokens';
 
 export * from './tokens';
 export { haptic } from './haptics';
+export { easeIn, easeOut, enter, fade } from './motion';
 
 export function useColors(): Colors {
   return useColorScheme() === 'dark' ? dark : light;

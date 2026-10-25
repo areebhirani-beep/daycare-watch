@@ -2,8 +2,9 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { categoryLabel, formatDateShort, isFixed, riskLabel, splitStandard } from '@/lib/format';
 import type { Finding } from '@/lib/types';
-import { radius, space, useColors } from '@/theme';
+import { elevation, radius, space, useColors } from '@/theme';
 
+import { CategoryIcon } from './CategoryIcon';
 import { Glyph } from './Glyph';
 import { InspectorQuote } from './Prose';
 import { plainStatus } from './status';
@@ -48,30 +49,23 @@ export function FindingCard({
       .filter(Boolean)
       .join(' ') || null;
   const done = isFixed(f);
-  // A finding under a High-risk rule carries the page's only tag: an ink header that says "Serious".
+  // A finding under a High-risk rule carries the page's only tag ("Serious") and an ink outline.
   const high = f.risk_level === 'High';
   return (
-    <View style={[styles.card, { backgroundColor: c.surface, borderColor: high ? c.text : c.hairline }, high && styles.cardHigh]}>
-      {high ? (
-        <View style={[styles.highBar, { backgroundColor: c.text }]}>
-          <Text variant="subhead" color={c.surface}>
-            Serious
-          </Text>
-          <Text variant="callout" color={c.surface} numberOfLines={1} style={{ flexShrink: 1, opacity: 0.7 }}>
-            {categoryLabel(f.category)}
-          </Text>
-        </View>
-      ) : null}
+    <View style={[styles.card, elevation.card, { backgroundColor: c.surface, borderColor: high ? c.text : 'transparent' }, high && styles.cardHigh]}>
       <View
         accessible
         accessibilityLabel={`${high ? 'Serious. ' : ''}${categoryLabel(f.category)}. ${summary}. ${status}.`}
-        style={{ gap: space.xs }}
+        style={{ gap: space.sm }}
       >
-        {high ? null : (
-          <Text variant="callout" tone="secondary" numberOfLines={1}>
+        {/* The category reads first, as a picture (CategoryIcon); "Serious" rides on the right, High only. */}
+        <View style={styles.head}>
+          <CategoryIcon category={f.category} size={32} />
+          <Text variant="callout" tone="secondary" numberOfLines={1} style={{ flex: 1 }}>
             {categoryLabel(f.category)}
           </Text>
-        )}
+          {high ? <SeriousTag /> : null}
+        </View>
         <Text variant="subhead">{summary}</Text>
         <View style={styles.status}>
           <Glyph name={done ? 'check' : 'clock'} size={13} color={done ? c.text : c.textSecondary} weight="bold" />
@@ -102,16 +96,9 @@ export function FindingCard({
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.card, borderWidth: StyleSheet.hairlineWidth, padding: space.lg, gap: space.md, overflow: 'hidden' },
-  cardHigh: { borderWidth: 1.5, paddingTop: 0 },
-  highBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    marginHorizontal: -space.lg,
-    paddingHorizontal: space.lg,
-    paddingVertical: space.sm + 2,
-  },
+  card: { borderRadius: radius.card, borderWidth: 1.5, padding: space.lg, gap: space.md },
+  cardHigh: { borderWidth: 1.5 },
+  head: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   pill: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 1 },
   status: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   official: {

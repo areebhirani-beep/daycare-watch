@@ -1,92 +1,70 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, {
-  ReduceMotion,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { ReduceMotion, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { haptic, spring, useColors } from '@/theme';
+import { easeOut, haptic, motion, useColors } from '@/theme';
 
 import { Glyph } from './Glyph';
 
-// Twelve marks shaped like the record strip's, thrown out from the badge and left resting there.
-const MARKS = Array.from({ length: 12 }, (_, i) => {
-  const a = (i / 12) * Math.PI * 2 + (i % 2 ? 0.18 : -0.12);
-  const d = 92 + (i % 3) * 18;
-  return { x: Math.cos(a) * d, y: Math.sin(a) * d, r: (i * 47) % 90 - 45, solid: i % 3 !== 0, delay: (i % 4) * 25 };
-});
-
-function Mark({ x, y, r, solid, delay, color }: (typeof MARKS)[number] & { color: string }) {
-  const t = useSharedValue(0);
-  useEffect(() => {
-    t.value = withDelay(120 + delay, withSpring(1, { ...spring.pop, reduceMotion: ReduceMotion.System }));
-  }, [t, delay]);
-  const s = useAnimatedStyle(() => ({
-    opacity: Math.min(1, t.value * 1.5),
-    transform: [{ translateX: x * t.value }, { translateY: y * t.value }, { rotate: `${r * t.value}deg` }, { scale: 0.4 + t.value * 0.6 }],
-  }));
-  return (
-    <Animated.View
-      style={[styles.mark, solid ? { backgroundColor: color } : { borderWidth: 2.5, borderColor: color }, s]}
-    />
-  );
-}
-
-/** The moment watching starts: a badge pops, marks burst around it, a success haptic lands. */
+/**
+ * Watching confirmed (motion rules, owner 01:58): the yellow badge fades in, then the check draws
+ * once, left to right (350 ms), with a success haptic. No confetti, no burst, no pulse.
+ */
 export function Celebration({ size = 120 }: { size?: number }) {
   const c = useColors();
-  const pop = useSharedValue(0);
+  const badge = useSharedValue(0);
+  const draw = useSharedValue(0);
   useEffect(() => {
-    pop.value = withSpring(1, { ...spring.pop, reduceMotion: ReduceMotion.System });
-    const id = setTimeout(haptic.success, 140);
+    badge.value = withTiming(1, { duration: motion.base, easing: easeOut, reduceMotion: ReduceMotion.System });
+    draw.value = withDelay(motion.base, withTiming(1, { duration: 350, easing: easeOut, reduceMotion: ReduceMotion.System }));
+    const id = setTimeout(haptic.success, motion.base + 300);
     return () => clearTimeout(id);
-  }, [pop]);
-  const badge = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
-  const ring = useAnimatedStyle(() => ({
-    opacity: 1 - pop.value * 0.6,
-    transform: [{ scale: 0.8 + pop.value * 0.5 }],
-  }));
+  }, [badge, draw]);
+  const glyph = size * 0.46;
+  const badgeStyle = useAnimatedStyle(() => ({ opacity: badge.value }));
+  // A wipe that uncovers the check from its short stroke to its long one reads as the mark being drawn.
+  const wipe = useAnimatedStyle(() => ({ width: glyph * draw.value }));
   return (
-    <View style={{ width: size * 2.6, height: size * 2.6, alignItems: 'center', justifyContent: 'center' }} accessibilityElementsHidden>
-      <Animated.View style={[{ position: 'absolute', width: size * 1.5, height: size * 1.5, borderRadius: size, backgroundColor: c.accentSoft }, ring]} />
-      {MARKS.map((m, i) => (
-        <Mark key={i} {...m} color={i % 3 === 0 ? c.ink : c.signal} />
-      ))}
+    <View style={[styles.center, { width: size * 1.8, height: size * 1.8 }]} accessibilityElementsHidden>
+      <View style={[StyleSheet.absoluteFill, styles.center]}>
+        <View style={{ width: size * 1.6, height: size * 1.6, borderRadius: size, backgroundColor: c.accentSoft }} />
+      </View>
       <Animated.View
         style={[
+          styles.center,
           {
             width: size,
             height: size,
             borderRadius: size / 2,
             backgroundColor: c.signal,
-            alignItems: 'center',
-            justifyContent: 'center',
             // The same solid bottom edge as the 3D buttons, not a soft shadow.
             borderBottomWidth: 6,
             borderBottomColor: c.signalEdge,
           },
-          badge,
+          badgeStyle,
         ]}
       >
-        <Glyph name="bellFill" size={size * 0.42} color={c.onSignal} weight="bold" />
+        <View style={{ width: glyph, height: glyph, alignItems: 'flex-start' }}>
+          <Animated.View style={[{ height: glyph, overflow: 'hidden' }, wipe]}>
+            <View style={{ width: glyph, height: glyph }}>
+              <Glyph name="check" size={glyph} color={c.onSignal} weight="heavy" />
+            </View>
+          </Animated.View>
+        </View>
       </Animated.View>
     </View>
   );
 }
 
-/** A one-shot fade+rise for content that follows the burst. */
+/** A one-shot fade + 8 pt rise for content that follows the check. */
 export function useRise(delay = 0) {
   const t = useSharedValue(0);
   useEffect(() => {
-    t.value = withDelay(delay, withTiming(1, { duration: 360, reduceMotion: ReduceMotion.System }));
+    t.value = withDelay(delay, withTiming(1, { duration: motion.base, easing: easeOut, reduceMotion: ReduceMotion.System }));
   }, [t, delay]);
-  return useAnimatedStyle(() => ({ opacity: t.value, transform: [{ translateY: (1 - t.value) * 12 }] }));
+  return useAnimatedStyle(() => ({ opacity: t.value, transform: [{ translateY: (1 - t.value) * motion.rise }] }));
 }
 
 const styles = StyleSheet.create({
-  mark: { position: 'absolute', width: 14, height: 18, borderRadius: 5 },
+  center: { alignItems: 'center', justifyContent: 'center' },
 });

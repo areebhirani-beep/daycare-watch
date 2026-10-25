@@ -1,0 +1,65 @@
+# QA U18: watch, unwatch, re-watch on one real record (97587 Amarillo Wesley Community Center).
+# Watch opens the sheet ("Turn on alerts" → "You’re watching" → "Done"); the place button then reads
+# "Watching · alerts on". Tapping it unwatches; the Watching tab must follow each change.
+appId: host.exp.Exponent
+---
+- runFlow: _open.yaml
+- openLink: ${METRO}/--/daycare/97587
+- extendedWaitUntil:
+    visible: "Amarillo Wesley.*"
+    timeout: 20000
+# Start from not watching.
+- runFlow:
+    when:
+      visible: "Watching · alerts on"
+    commands:
+      - tapOn: "Watching · alerts on"
+      - extendedWaitUntil:
+          visible: "Watch this daycare"
+          timeout: 10000
+
+# Watch
+- tapOn: "Watch this daycare"
+- extendedWaitUntil:
+    visible: "Turn on alerts"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/qa/u18-0-sheet
+- tapOn: "Turn on alerts"
+# U19: the iOS permission prompt appears the first time; allow it.
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - takeScreenshot: ../../harness/state/qa/u19-0-os-prompt
+      - tapOn: "Allow"
+- extendedWaitUntil:
+    visible: "You’re watching.*"
+    timeout: 15000
+- takeScreenshot: ../../harness/state/qa/u18-1-watching
+- tapOn: "Done"
+- extendedWaitUntil:
+    visible: "Watching · alerts on"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/qa/u18-2-place-watching
+
+# Unwatch
+- tapOn: "Watching · alerts on"
+- extendedWaitUntil:
+    visible: "Watch this daycare"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/qa/u18-3-unwatched
+
+# Re-watch
+- tapOn: "Watch this daycare"
+- extendedWaitUntil:
+    visible: "Turn on alerts"
+    timeout: 10000
+- tapOn: "Turn on alerts"
+- extendedWaitUntil:
+    visible: "You’re watching.*"
+    timeout: 15000
+- tapOn: "Done"
+- extendedWaitUntil:
+    visible: "Watching · alerts on"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/qa/u18-4-rewatched

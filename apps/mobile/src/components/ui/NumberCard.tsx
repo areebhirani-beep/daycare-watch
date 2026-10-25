@@ -3,7 +3,7 @@ import { StyleSheet, useWindowDimensions, View, type ViewStyle } from 'react-nat
 import Animated, { ReduceMotion, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 
-import { radius, space, useColors } from '@/theme';
+import { easeOut, motion, radius, space, useColors } from '@/theme';
 
 import { Text } from './Text';
 
@@ -75,7 +75,7 @@ export function Ring({
   const len = 2 * Math.PI * r;
   const p = useSharedValue(0);
   useEffect(() => {
-    p.value = withTiming(Math.max(0, Math.min(1, value)), { duration: 700, reduceMotion: ReduceMotion.System });
+    p.value = withTiming(Math.max(0, Math.min(1, value)), { duration: motion.slow, easing: easeOut, reduceMotion: ReduceMotion.System });
   }, [p, value]);
   const props = useAnimatedProps(() => ({ strokeDashoffset: len * (1 - p.value) }));
   return (

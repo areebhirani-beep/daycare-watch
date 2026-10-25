@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 import { Pressable, type PressableProps, StyleSheet, View, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
-import { buttonEdge, haptic, minTap, radius, space, spring, useColors } from '@/theme';
+import { buttonEdge, haptic, minTap, radius, space, spring, useColors, motion } from '@/theme';
 
 import { Glyph, type GlyphName } from './Glyph';
 import { Text } from './Text';
 
-type Kind = 'primary' | 'ink' | 'secondary' | 'plain';
+type Kind = 'primary' | 'ink' | 'secondary' | 'plain' | 'onImage';
 
 type Props = Omit<PressableProps, 'children' | 'style'> & {
   label: string;
@@ -34,12 +34,18 @@ export function Button({ label, kind = 'primary', icon, size = 'lg', style, onPr
     ink: { face: c.ink, edge: c.inkEdge, fg: c.onInk, border: undefined },
     secondary: { face: c.surface, edge: c.secondaryEdge, fg: c.text, border: c.border },
     plain: { face: 'transparent', edge: 'transparent', fg: c.accent, border: undefined },
+    // White in both modes: sits on photos and the 3D flyover.
+    onImage: { face: '#FFFFFF', edge: '#BDBDC4', fg: '#0B0B0C', border: undefined },
   }[kind];
   const face = disabled && kind !== 'plain' ? c.sunken : palette.face;
   const edgeColor = disabled && kind !== 'plain' ? c.hairline : palette.edge;
   const fg = disabled ? c.textTertiary : palette.fg;
 
-  const faceStyle = useAnimatedStyle(() => ({ transform: [{ translateY: down.value * edge }] }));
+  // Press feedback (motion rules): 0.98 scale + 0.9 opacity, settles without bounce.
+  const faceStyle = useAnimatedStyle(() => ({
+    opacity: 1 - down.value * (1 - motion.pressOpacity),
+    transform: [{ scale: 1 - down.value * (1 - motion.pressScale) }],
+  }));
 
   return (
     <Pressable
@@ -114,7 +120,7 @@ export function FloatButton({
       }}
       style={({ pressed }) => [
         styles.float,
-        { backgroundColor: tone === 'accent' ? c.signal : c.surface, transform: [{ scale: pressed ? 0.94 : 1 }] },
+        { backgroundColor: tone === 'accent' ? c.signal : c.surface, transform: [{ scale: pressed ? motion.pressScale : 1 }], opacity: pressed ? motion.pressOpacity : 1 },
         floatShadow,
         style,
       ]}

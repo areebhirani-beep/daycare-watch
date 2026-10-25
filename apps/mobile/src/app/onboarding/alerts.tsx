@@ -1,45 +1,59 @@
-import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
+import { useEffect, useMemo, useState } from 'react';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
-import { Glyph } from '@/components/ui/Glyph';
-import { EXAMPLE_OPERATION_ID } from '@/components/ui/onboarding';
+import { FlyoverHero, flyoverAllowed } from '@/components/ui/FlyoverHero';
+import { EXAMPLE_OPERATION_ID, pushBody } from '@/components/ui/onboarding';
 import { OnboardingFrame } from '@/components/ui/OnboardingFrame';
 import { Block } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useDaycareRecord } from '@/lib/api';
-import { formatDateShort, tidyCase } from '@/lib/format';
+import { tidyCase } from '@/lib/format';
 import { enableAlerts } from '@/lib/notifications';
 import { groupByVisit } from '@/lib/record';
-import { radius, space, useColors } from '@/theme';
+import { radius, space } from '@/theme';
 
-const icon = require('../../../assets/images/icon.png') as number;
+function useClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 15_000);
+    return () => clearInterval(id);
+  }, []);
+  const h = now.getHours();
+  return {
+    time: `${((h + 11) % 12) + 1}:${String(now.getMinutes()).padStart(2, '0')}`,
+    day: now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+  };
+}
 
+/**
+ * Step 4: alerts. A lock screen (the real time, the watched daycare's 3D view as wallpaper when it's a
+ * center with an exact address, plain ink otherwise) and the push the pipeline would send for its
+ * latest posted visit, dropping in. One line, then the OS prompt.
+ */
 export default function AlertsScreen() {
-  const c = useColors();
   const params = useLocalSearchParams<{ id?: string }>();
   const watchedId = params.id ? Number(params.id) : null;
   const record = useDaycareRecord(watchedId ?? EXAMPLE_OPERATION_ID);
+  const clock = useClock();
+  const { height } = useWindowDimensions();
   const [denied, setDenied] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  // The alert this daycare's most recent posted visit would have sent, in the agreed push copy.
+  const d = record.data?.daycare;
   const example = useMemo(() => {
     if (!record.data) return null;
     const visit = groupByVisit(record.data).find((v) => v.findings.length > 0);
     if (!visit) return null;
-    const n = visit.findings.length;
     return {
-      title: watchedId ? tidyCase(record.data.daycare.name) : 'A licensed center in Rockwall',
-      body: `The state posted ${n === 1 ? 'a new finding' : `${n} new findings`} from a visit on ${formatDateShort(visit.date)}. Tap to read what inspectors wrote.`,
+      title: watchedId ? tidyCase(record.data.daycare.name) : `A licensed center in ${tidyCase(record.data.daycare.city)}`,
+      body: pushBody(visit.findings.length, visit.date),
     };
   }, [record.data, watchedId]);
 
-  const finish = () =>
-    router.replace({ pathname: '/onboarding/done', params: watchedId ? { id: String(watchedId) } : {} });
+  const finish = () => router.replace({ pathname: '/onboarding/done', params: watchedId ? { id: String(watchedId) } : {} });
 
   const turnOn = async () => {
     setBusy(true);
@@ -54,7 +68,7 @@ export default function AlertsScreen() {
 
   return (
     <OnboardingFrame
-      step={3}
+      step={4}
       actions={
         denied ? (
           <>
@@ -71,63 +85,41 @@ export default function AlertsScreen() {
         )
       }
     >
-      <Text variant="display" accessibilityRole="header">
-        Know the day the state posts something new.
-      </Text>
+      <View style={{ gap: space.sm }}>
+        <Text variant="display" accessibilityRole="header">
+          Turn on alerts.
+        </Text>
+        <Text variant="body" tone="secondary">
+          Only for daycares you watch, and only when the state posts something new.
+        </Text>
+      </View>
 
-      {example ? (
-        <Animated.View
-          entering={FadeInDown.springify().damping(16).reduceMotion(ReduceMotion.System)}
-          style={[styles.banner, { backgroundColor: c.sunken }]}
-          accessible
-          accessibilityLabel={`Example alert. ${example.title}. ${example.body}`}
-        >
-          <Image source={icon} style={styles.icon} />
-          <View style={{ flex: 1, gap: 2 }}>
-            <View style={styles.bannerTop}>
-              <Text variant="subhead" numberOfLines={1} style={{ flex: 1 }}>
-                {example.title}
-              </Text>
-              <Text variant="caption" tone="tertiary">
-                Example
-              </Text>
-            </View>
-            <Text variant="callout" tone="secondary">
-              {example.body}
-            </Text>
-          </View>
-        </Animated.View>
-      ) : record.isPending ? (
-        <Block style={{ height: 92, borderRadius: 22 }} />
-      ) : null}
-
-      <View style={{ gap: space.md }}>
-        <Point>Only new findings, permit changes, or closures</Point>
-        <Point>Only for daycares you watch</Point>
-        <Point>Posted after the state’s review, often weeks after a visit</Point>
+      <View style={[styles.phone, { height: Math.max(340, height * 0.46) }]} accessible={false}>
+        {flyoverAllowed(d) ? <FlyoverHero lat={d?.lat} lng={d?.lng} /> : null}
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.38)' }]} />
+        <View style={styles.clock} accessibilityElementsHidden>
+          <Text variant="headline" color="rgba(255,255,255,0.86)" maxFontSizeMultiplier={1.3}>
+            {clock.day}
+          </Text>
+          <Text color="#FFFFFF" style={styles.time} tabular maxFontSizeMultiplier={1}>
+            {clock.time}
+          </Text>
+        </View>
+        <View style={styles.bannerSlot}>
+          {example ? (
+            <AlertBanner title={example.title} body={example.body} tag="Example" delay={400} maxScale={1.3} />
+          ) : record.isPending ? (
+            <Block style={{ height: 96, borderRadius: 24 }} />
+          ) : null}
+        </View>
       </View>
     </OnboardingFrame>
   );
 }
 
-function Point({ children }: { children: string }) {
-  const c = useColors();
-  return (
-    <View style={styles.point}>
-      <View style={[styles.check, { backgroundColor: c.accentSoft }]}>
-        <Glyph name="check" size={12} color={c.accent} weight="heavy" />
-      </View>
-      <Text variant="callout" style={{ flex: 1 }}>
-        {children}
-      </Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  banner: { borderRadius: 22, padding: space.md, flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },
-  bannerTop: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  icon: { width: 38, height: 38, borderRadius: 9 },
-  point: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start', minHeight: 28 },
-  check: { marginTop: -1, width: 26, height: 26, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  phone: { borderRadius: radius.sheet + 4, overflow: 'hidden', backgroundColor: '#0B0B0C' },
+  clock: { alignItems: 'center', paddingTop: space.xxl },
+  time: { fontSize: 76, lineHeight: 84, fontWeight: '700', letterSpacing: -2 },
+  bannerSlot: { paddingHorizontal: space.md, paddingTop: space.xl },
 });

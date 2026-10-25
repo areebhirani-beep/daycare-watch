@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
+import { forgetPosition } from './location';
 import { isWeb } from './runtime';
 import { storage } from './storage';
 import { configError, ensureSession, resetSession, supabase } from './supabase';
@@ -151,7 +152,7 @@ export async function startOver(): Promise<void> {
   const watched = await rpc<DaycareRow[]>('my_watches');
   await Promise.all(watched.map((d) => rpc<void>('unwatch', { p_operation_id: d.operation_id })));
   await resetSession();
-  // Keys owned by components/ui/onboarding.ts and the Home screen.
+  // Key owned by components/ui/onboarding.ts.
   storage.remove('onboarded.v1');
-  storage.remove('last-position');
+  forgetPosition();
 }

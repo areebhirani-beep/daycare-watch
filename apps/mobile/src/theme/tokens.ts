@@ -6,6 +6,21 @@ import { Platform, type TextStyle } from 'react-native';
 
 export type RiskLevel = 'High' | 'Medium High' | 'Medium' | 'Medium Low' | 'Low';
 
+/** The state's finding categories (CONTRACT 3), mirrored here so the theme needs no data import. */
+export type CategoryKey =
+  | 'supervision'
+  | 'background_checks'
+  | 'staff_ratio'
+  | 'safety_hazards'
+  | 'health_medication'
+  | 'discipline'
+  | 'parent_communication'
+  | 'paperwork_admin'
+  | 'other';
+
+/** A category's glyph colour and the tinted disc behind it. */
+type Tint = { fg: string; bg: string };
+
 type Palette = {
   bg: string;
   surface: string;
@@ -34,12 +49,19 @@ type Palette = {
   mapPin: string;
   mapPinWatched: string;
   risk: Record<RiskLevel, string>;
+  /**
+   * One hue per finding category, like Google Maps category pins. Categorical only: no red, no green,
+   * no yellow (taken by watching), and no hue means better or worse. Every fg clears 3:1 on its bg.
+   */
+  cat: Record<CategoryKey, Tint>;
 };
 
 export const light: Palette = {
-  bg: '#FFFFFF',
+  // Grouped grey page, white cards on top (DoorDash / Uber Eats / iOS Settings).
+  bg: '#F2F2F5',
   surface: '#FFFFFF',
-  sunken: '#F2F2F4',
+  // Fills (search pill, chips, skeletons) must read on both the grey page and a white card.
+  sunken: '#E8E8ED',
   border: '#DCDCE1',
   hairline: '#E8E8EC',
   text: '#0B0B0C',
@@ -57,7 +79,7 @@ export const light: Palette = {
   inkEdge: '#3A3A40',
   secondaryEdge: '#D4D4DA',
   scrim: 'rgba(0,0,0,0.32)',
-  skeleton: '#ECECEF',
+  skeleton: '#E4E4E9',
   mapPin: '#0B0B0C',
   mapPinWatched: '#FFC800',
   risk: {
@@ -68,12 +90,24 @@ export const light: Palette = {
     'Medium Low': '#AA7658',
     Low: '#8C837D',
   },
+  cat: {
+    supervision: { fg: '#0B62E0', bg: '#E4EEFF' },
+    staff_ratio: { fg: '#007C8A', bg: '#DCF3F5' },
+    background_checks: { fg: '#4744C4', bg: '#E9E9FB' },
+    safety_hazards: { fg: '#B85600', bg: '#FFEEDB' },
+    health_medication: { fg: '#BF1F63', bg: '#FCE5EE' },
+    discipline: { fg: '#8439BF', bg: '#F2E7FB' },
+    parent_communication: { fg: '#0A76A6', bg: '#DFF1FA' },
+    paperwork_admin: { fg: '#765737', bg: '#F1E9E0' },
+    other: { fg: '#5C5C66', bg: '#EBEBEF' },
+  },
 };
 
 export const dark: Palette = {
+  // True black page, graphite cards.
   bg: '#000000',
-  surface: '#141416',
-  sunken: '#1F1F22',
+  surface: '#1C1C1E',
+  sunken: '#2C2C2E',
   border: '#38383E',
   hairline: '#26262A',
   text: '#F5F5F7',
@@ -101,6 +135,17 @@ export const dark: Palette = {
     Medium: '#C97A5C',
     'Medium Low': '#A3857A',
     Low: '#7F7874',
+  },
+  cat: {
+    supervision: { fg: '#6EA8FF', bg: '#132845' },
+    staff_ratio: { fg: '#4FD1DC', bg: '#0C3034' },
+    background_checks: { fg: '#A3A1FF', bg: '#222147' },
+    safety_hazards: { fg: '#FFAA5C', bg: '#402810' },
+    health_medication: { fg: '#FF7EAE', bg: '#401627' },
+    discipline: { fg: '#CE8FFF', bg: '#311B47' },
+    parent_communication: { fg: '#5CC4F2', bg: '#0F2E3D' },
+    paperwork_admin: { fg: '#D6B892', bg: '#33281B' },
+    other: { fg: '#AEAEB8', bg: '#333338' },
   },
 };
 
@@ -172,21 +217,25 @@ export const space = {
 
 export const radius = { sm: 8, thumb: 12, md: 12, button: 16, lg: 16, card: 16, stat: 22, sheet: 28, pill: 999 } as const;
 
-// Only things that float over the map cast a shadow. Everything else is flat.
+// White cards lift off the grouped grey page with one soft shadow (DoorDash); map chrome floats higher.
+// In dark mode the graphite card on black does the lifting, so shadows are near-invisible by design.
 export const elevation = {
-  card: { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  card: { shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
   float: { shadowColor: '#000', shadowOpacity: 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
   sheet: { shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
 } as const;
 
-// Durations in ms. Entrances ease out; nothing loops; Reduce Motion turns all of it off.
-export const motion = { fast: 150, base: 220, slow: 360, stagger: 30 } as const;
+// Motion rules (owner, Oct 25 01:58): minimal, for feedback, continuity or orientation only.
+// 150–250 ms, enter eases out, exit eases in, nothing loops, Reduce Motion turns movement into fades.
+export const motion = { fast: 150, base: 200, slow: 250, stagger: 30, rise: 8, maxStagger: 3, pressScale: 0.98, pressOpacity: 0.9 } as const;
 
-// Reanimated spring configs (withSpring). Sheet detents, 3D presses, celebratory pops.
+// Springs are critically damped: no visible overshoot or bounce anywhere (overshootClamping on).
 export const spring = {
-  sheet: { damping: 24, stiffness: 260, mass: 1 },
-  press: { damping: 18, stiffness: 500, mass: 0.6 },
-  pop: { damping: 12, stiffness: 220, mass: 0.8 },
+  /** Map sheet detents only (native-feeling physics). */
+  sheet: { damping: 30, stiffness: 260, mass: 1, overshootClamping: true },
+  press: { damping: 30, stiffness: 600, mass: 0.6, overshootClamping: true },
+  /** Kept for callers; now settles without overshoot. */
+  pop: { damping: 28, stiffness: 300, mass: 0.8, overshootClamping: true },
 } as const;
 
 // Bottom sheet detents for the map home (Apple Maps). Peek is in points above the bottom inset.

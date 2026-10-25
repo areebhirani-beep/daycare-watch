@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { type LayoutChangeEvent, Pressable, StyleSheet, Text as RNText, View } from 'react-native';
-import Animated, { ReduceMotion, ZoomIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { isFixed, parseDay } from '@/lib/format';
 import { groupByVisit } from '@/lib/record';
 import type { DaycareRecord } from '@/lib/types';
-import { type Colors, haptic, riskRank, useColors } from '@/theme';
+import { type Colors, haptic, enter, riskRank, useColors } from '@/theme';
 
 import { Glyph } from './Glyph';
 import { Text as T } from './Text';
@@ -234,9 +234,7 @@ export function RecordStrip({
             const selected = selectedId != null && selectedId === v.id;
             const body = (
               <Animated.View
-                entering={ZoomIn.delay(Math.min(i, 20) * 35)
-                  .duration(260)
-                  .reduceMotion(ReduceMotion.System)}
+                entering={enter(i)}
               >
                 <Visit v={v} g={g} c={c} selected={selected} />
               </Animated.View>

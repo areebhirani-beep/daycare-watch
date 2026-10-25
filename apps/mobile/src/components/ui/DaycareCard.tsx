@@ -82,8 +82,9 @@ export function DaycareCard({
   onPress,
   onToggleWatch,
   width = 280,
+  heroRatio = 2,
   style,
-}: Common & { width?: number | `${number}%`; style?: ViewStyle }) {
+}: Common & { width?: number | `${number}%`; heroRatio?: number; style?: ViewStyle }) {
   const c = useColors();
   return (
     <Pressable
@@ -93,9 +94,9 @@ export function DaycareCard({
         haptic.press();
         onPress();
       }}
-      style={({ pressed }) => [{ width, transform: [{ scale: pressed ? 0.98 : 1 }] }, style]}
+      style={({ pressed }) => [{ width, transform: [{ scale: pressed ? 0.98 : 1 }], opacity: pressed ? 0.9 : 1 }, style]}
     >
-      <View style={[styles.hero, { backgroundColor: c.sunken }]}>
+      <View style={[styles.hero, { backgroundColor: c.sunken, aspectRatio: heroRatio }]}>
         <MapSnapshot lat={lat} lng={lng} zoom={17} watched={watched} privateHome={!imageryAllowed(operationType)} style={StyleSheet.absoluteFill} />
         {onToggleWatch ? (
           <View style={styles.heroToggle}>

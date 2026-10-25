@@ -232,7 +232,7 @@ export function ActionTile({ icon, label, onPress }: { icon: GlyphName; label: s
         haptic.select();
         onPress();
       }}
-      style={({ pressed }) => [styles.tile, { backgroundColor: c.sunken, transform: [{ scale: pressed ? 0.96 : 1 }] }]}
+      style={({ pressed }) => [styles.tile, { backgroundColor: c.sunken, transform: [{ scale: pressed ? 0.98 : 1 }], opacity: pressed ? 0.9 : 1 }]}
     >
       <Glyph name={icon} size={20} color={c.text} weight="semibold" />
       <Text variant="subhead" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} maxFontSizeMultiplier={1.4}>

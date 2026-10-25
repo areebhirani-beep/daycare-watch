@@ -17,3 +17,14 @@ export function markOnboarded(): void {
  * city and type only, never by name, so the app does not single out one business.
  */
 export const EXAMPLE_OPERATION_ID = 1459611;
+
+/** Where the "near you" cards start before the parent shares a location: Frisco, inside TX-04. */
+export const ONBOARDING_AREA = { lat: 33.1507, lng: -96.8236, label: 'Near Frisco' } as const;
+
+/** The pipeline's push copy, word for word (services/pipeline/src/pipeline/notify.py NEW_FINDINGS). */
+export function pushBody(n: number, visitDate: string): string {
+  const d = /^(\d{4})-(\d{2})-(\d{2})/.exec(visitDate);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const when = d ? `${months[Number(d[2]) - 1]} ${Number(d[3])}, ${d[1]}` : visitDate;
+  return `The state posted ${n} new ${n === 1 ? 'finding' : 'findings'} from a visit on ${when}. Tap to read what inspectors wrote.`;
+}

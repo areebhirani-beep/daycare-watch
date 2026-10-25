@@ -1,0 +1,15 @@
+# QA U20: notifications denied while watching. The place button must not claim alerts are on.
+# Runs on the state u18 leaves (97587 watched, iOS prompt pending) or after revoking permission.
+appId: host.exp.Exponent
+---
+- runFlow:
+    when:
+      visible: "Don’t Allow"
+    commands:
+      - tapOn: "Don’t Allow"
+- openLink: ${METRO}/--/daycare/97587
+- extendedWaitUntil:
+    visible: "Amarillo Wesley.*"
+    timeout: 20000
+- takeScreenshot: ../../harness/state/qa/u20-0-place-denied
+- assertNotVisible: "Watching · alerts on"

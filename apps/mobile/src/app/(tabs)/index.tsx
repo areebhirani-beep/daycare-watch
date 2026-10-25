@@ -1,4 +1,3 @@
-import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -10,60 +9,27 @@ import { HomeMap } from '@/components/ui/HomeMap';
 import { Text } from '@/components/ui/Text';
 import { useDaycaresNear, useMyWatches, usePrefetchRecords } from '@/lib/api';
 import { mark, tapped } from '@/lib/perf';
-import { isWeb } from '@/lib/runtime';
-import { storage } from '@/lib/storage';
+import { findPosition, type Point, type Position, savedPosition } from '@/lib/location';
 import { configError } from '@/lib/supabase';
 import { radius, space, useColors } from '@/theme';
 
-type Point = { lat: number; lng: number };
-
 // Default view when location is off or slow: Frisco, in the district. Camera and query center only.
 const DISTRICT_CENTER: Point = { lat: 33.1507, lng: -96.8236 };
-const LOCATION_TIMEOUT_MS = 5_000;
-const LAST_POSITION = 'last-position';
-
-/** Where the parent was last time, kept on this phone only, so the list can load before location answers. */
-function savedPosition(): Point | null {
-  try {
-    const raw = storage.getString(LAST_POSITION);
-    return raw ? (JSON.parse(raw) as Point) : null;
-  } catch {
-    return null;
-  }
-}
-
-/** The parent's position, or null when location is denied, unavailable, or slower than 5 s. */
-async function findPosition(): Promise<Point | null> {
-  // The web link never asks: a browser location prompt is the wrong first screen for a judge.
-  if (isWeb) return null;
-  try {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') return null;
-    const last = await Location.getLastKnownPositionAsync();
-    const pos =
-      last ??
-      (await Promise.race([
-        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), LOCATION_TIMEOUT_MS)),
-      ]));
-    return pos ? { lat: pos.coords.latitude, lng: pos.coords.longitude } : null;
-  } catch {
-    return null;
-  }
-}
 
 export default function FindScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const [saved] = useState(savedPosition);
-  // undefined while asking, null when location is off or slow.
-  const [position, setPosition] = useState<Point | null | undefined>(undefined);
+  // undefined while asking; a late fix replaces 'slow' when the GPS answers after the 5 s timeout.
+  const [position, setPosition] = useState<Position | undefined>(undefined);
 
   const locate = useCallback(
     () =>
-      findPosition().then((p) => {
-        mark(p ? 'location found' : 'location fallback');
-        if (p) storage.set(LAST_POSITION, JSON.stringify(p));
+      findPosition((late) => {
+        mark('location late');
+        setPosition(late);
+      }).then((p) => {
+        mark(`location ${typeof p === 'string' ? p : 'found'}`);
         setPosition(p);
       }),
     [],
@@ -73,8 +39,9 @@ export default function FindScreen() {
     void locate();
   }, [locate]);
 
+  const point = typeof position === 'object' ? position : null;
   // Never wait on location: start from the last position (or the district), then re-center when it answers.
-  const origin = position ?? saved;
+  const origin = point ?? saved;
   const local = useDaycaresNear(origin ?? DISTRICT_CENTER, 15);
   // Outside Texas (a judge's phone, a simulator) nothing is within 15 km: show the district instead of an empty list.
   const outside = origin !== null && local.isSuccess && !local.isPlaceholderData && local.data.length === 0;
@@ -102,13 +69,13 @@ export default function FindScreen() {
         areaLabel={
           outside
             ? 'Near Frisco · no Texas daycares near you'
-            : position === null
-              ? saved
+            : point || saved
+              ? position === 'denied' && !point
                 ? 'Near your last location'
-                : 'Near Frisco · location off'
-              : position === undefined && !saved
-                ? 'Finding your location…'
                 : undefined
+              : position === 'denied'
+                ? 'Near Frisco · location off'
+                : 'Finding your location…'
         }
         watchedIds={watchedIds}
         onOpen={(id) => {

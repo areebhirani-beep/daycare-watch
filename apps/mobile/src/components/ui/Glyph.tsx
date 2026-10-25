@@ -30,6 +30,19 @@ const GLYPHS = {
   center: { ios: 'building.2.fill', android: 'apartment' },
   home: { ios: 'house.fill', android: 'home' },
   district: { ios: 'flag.fill', android: 'flag' },
+  schoolAge: { ios: 'backpack.fill', android: 'backpack' },
+  // One per state finding category (CategoryIcon).
+  catSupervision: { ios: 'eye.fill', android: 'visibility' },
+  catBackground: { ios: 'person.text.rectangle.fill', android: 'badge' },
+  catRatio: { ios: 'person.3.fill', android: 'groups' },
+  catHazard: { ios: 'exclamationmark.triangle.fill', android: 'warning' },
+  catHealth: { ios: 'cross.case.fill', android: 'medical_services' },
+  catDiscipline: { ios: 'hand.raised.fill', android: 'front_hand' },
+  catParents: { ios: 'bubble.left.and.bubble.right.fill', android: 'forum' },
+  catPaperwork: { ios: 'doc.text.fill', android: 'description' },
+  catOther: { ios: 'ellipsis', android: 'more_horiz' },
+  grid: { ios: 'square.grid.2x2.fill', android: 'grid_view' },
+  info: { ios: 'info.circle', android: 'info' },
 } as const;
 
 export type GlyphName = keyof typeof GLYPHS;

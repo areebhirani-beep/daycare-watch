@@ -1,6 +1,6 @@
 import BottomSheet, { BottomSheetFlatList, type BottomSheetFlatListMethods, useBottomSheetSpringConfigs } from '@gorhom/bottom-sheet';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { FlatList, StyleSheet, useWindowDimensions, View } from 'react-native';
 import MapView, { Marker, type Region } from 'react-native-maps';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,7 +13,9 @@ import { FloatButton } from './Button';
 import { Chip, ChipRow } from './Chip';
 import { IconButton, SearchPill, SectionHeader, SheetHandle } from './Chrome';
 import { DaycareCard, PlaceRow } from './DaycareCard';
-import { ClusterBubble, MapPin } from './MapPin';
+import { imageryAllowed } from '@/lib/imagery';
+
+import { AreaPin, ClusterBubble, MapPin, pinKind } from './MapPin';
 import { type RowVisit, stripFromRow } from './RecordStrip';
 import { CardSkeleton, RowSkeleton } from './Skeletons';
 import { Text } from './Text';
@@ -108,6 +110,11 @@ type Props = {
   onLocate: () => void;
   /** "Last checked with the state …" (CONTRACT 3), rendered at the end of the list. */
   footer?: React.ReactNode;
+  /** A section between the closest cards and the full list (the "last week in TX-04" feed). */
+  feed?: React.ReactNode;
+  /** Pull-to-refresh on the sheet's list. */
+  refreshing?: boolean;
+  onRefresh?: () => void;
 };
 
 export function HomeMap({
@@ -123,6 +130,9 @@ export function HomeMap({
   onAlerts,
   onLocate,
   footer,
+  feed,
+  refreshing = false,
+  onRefresh,
 }: Props) {
   const c = useColors();
   const isDark = useIsDark();
@@ -149,13 +159,23 @@ export function HomeMap({
     [height, insets.top],
   );
 
+  // The half sheet covers the bottom 64% of the screen, so the map's working area is the strip above it.
+  const sheetCover = Math.round(height * 0.64);
   // The location can arrive after the first render; follow it once it does. If it drops out (outside Texas),
   // fly back to the fallback area so the map matches the list.
   const targetLat = start.lat;
   const targetLng = start.lng;
   useEffect(() => {
-    map.current?.animateToRegion({ latitude: targetLat, longitude: targetLng, latitudeDelta: 0.12, longitudeDelta: 0.12 }, 450);
+    map.current?.animateToRegion({ latitude: targetLat, longitude: targetLng, latitudeDelta: 0.06, longitudeDelta: 0.06 }, 450);
   }, [targetLat, targetLng]);
+  // Once the list arrives, fit the parent's point and the nearest pins into the strip above the sheet.
+  const fitKey = `${targetLat},${targetLng}:${mapped.slice(0, 8).map((r) => r.operation_id).join(',')}`;
+  useEffect(() => {
+    const near = mapped.slice(0, 8).map((r) => ({ latitude: r.lat!, longitude: r.lng! }));
+    if (near.length === 0) return;
+    const points = center ? [{ latitude: center.lat, longitude: center.lng }, ...near] : near;
+    map.current?.fitToCoordinates(points, { edgePadding: { top: 24, right: 48, bottom: 24, left: 48 }, animated: true });
+  }, [fitKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const sheetY = useSharedValue(height);
   const locateStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetY.value - 64 }],
@@ -248,6 +268,7 @@ export function HomeMap({
           )}
         />
       )}
+      {feed ? <View style={{ paddingTop: space.xxl }}>{feed}</View> : null}
       <View style={{ height: space.xxl }} />
       <SectionHeader title="All nearby" detail={loading && rows.length === 0 ? undefined : 'Nearest first'} />
     </View>
@@ -264,11 +285,12 @@ export function HomeMap({
         showsMyLocationButton={false}
         showsCompass={false}
         showsPointsOfInterests={false}
-        showsBuildings={false}
         userInterfaceStyle={isDark ? 'dark' : 'light'}
-        // Apple's muted base (light grey / graphite): the map recedes so the pins and the yellow carry.
-        mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
-        mapPadding={{ top: insets.top + 64, bottom: 0, left: 0, right: 0 }}
+        // Apple's standard map, as in Apple Maps: color, parks and water make the area recognizable.
+        mapType="standard"
+        showsBuildings
+        // Camera moves and fits treat the strip between the search pill and the half sheet as the map.
+        mapPadding={{ top: insets.top + 64, bottom: sheetCover, left: 0, right: 0 }}
         onPress={() => setSelected(null)}
       >
         {clusters.map((k) =>
@@ -281,7 +303,21 @@ export function HomeMap({
               accessibilityLabel={tidyCase(k.rows[0]!.name)}
               zIndex={selected === k.rows[0]!.operation_id ? 10 : 1}
             >
-              <MapPin watched={watchedIds.has(k.rows[0]!.operation_id)} selected={selected === k.rows[0]!.operation_id} />
+              {/* A solid pin only for a center with an exact point; homes (privacy) and approximate points get an area. */}
+              {imageryAllowed(k.rows[0]!.operation_type) && k.rows[0]!.geocode_quality !== 'non_exact' ? (
+                <MapPin
+                  kind={pinKind(k.rows[0]!.operation_type)}
+                  watched={watchedIds.has(k.rows[0]!.operation_id)}
+                  selected={selected === k.rows[0]!.operation_id}
+                  label={selected === k.rows[0]!.operation_id ? tidyCase(k.rows[0]!.name) : undefined}
+                />
+              ) : (
+                <AreaPin
+                  kind={pinKind(k.rows[0]!.operation_type)}
+                  watched={watchedIds.has(k.rows[0]!.operation_id)}
+                  selected={selected === k.rows[0]!.operation_id}
+                />
+              )}
             </Marker>
           ) : (
             <Marker key={k.key} coordinate={{ latitude: k.lat, longitude: k.lng }} onPress={() => zoomInto(k)} tracksViewChanges={false}>
@@ -322,6 +358,8 @@ export function HomeMap({
           data={loading && rows.length === 0 ? [] : shown}
           keyExtractor={(r: DaycareRow) => String(r.operation_id)}
           ListHeaderComponent={header}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
           ListEmptyComponent={
             loading ? (
               <View>

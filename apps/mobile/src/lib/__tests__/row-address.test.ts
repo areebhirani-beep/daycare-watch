@@ -8,7 +8,11 @@ import type { DaycareRow } from '../types';
 // The row helpers are pure; the sheet, map and animation modules only matter on a device.
 jest.mock('@gorhom/bottom-sheet', () => ({}));
 jest.mock('react-native-maps', () => ({}));
-jest.mock('react-native-reanimated', () => ({}));
+// Theme modules build easings at import time, so every reanimated export is a callable no-op here.
+jest.mock('react-native-reanimated', () => {
+  const stub: object = new Proxy(() => stub, { get: (_target, key) => (key === '__esModule' ? true : stub) });
+  return stub;
+});
 
 // daycare_search('78626') row for operation 175268, a Listed Family Home, as returned Oct 24 2026.
 const row = {

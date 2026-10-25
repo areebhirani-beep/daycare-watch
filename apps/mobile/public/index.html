@@ -1,0 +1,43 @@
+<!doctype html>
+<!--
+  Page shell for the web build (web.output "single" reads this file; src/app/+html.tsx is only used by
+  static output). Keep the page CSS below in step with +html.tsx.
+-->
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="What Texas state inspectors found at a daycare, in plain English. Updated nightly from the state." />
+    <title>%WEB_TITLE%</title>
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        overflow: hidden;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+    <!-- A phone-width column centered on a neutral page, so a laptop shows the app as it looks on a phone. -->
+    <style id="page">
+      body { background: #EDEDF0; }
+      #root { max-width: 480px; margin: 0 auto; min-height: 100dvh; background: #FFFFFF; }
+      @media (prefers-color-scheme: dark) {
+        body { background: #000000; }
+        #root { background: #141416; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript> You need to enable JavaScript to run this app. </noscript>
+    <div id="root"></div>
+  </body>
+</html>

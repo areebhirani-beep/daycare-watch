@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { formatDateShort, plural, tidyCase } from '@/lib/format';
 import type { DaycareRow } from '@/lib/types';
-import { haptic, sheet, space, spring, TAB_BAR_CLEARANCE, useColors, useIsDark } from '@/theme';
+import { fade, haptic, sheet, space, spring, TAB_BAR_CLEARANCE, useColors, useIsDark } from '@/theme';
 
 import { FloatButton } from './Button';
 import { Chip, ChipRow } from './Chip';
@@ -256,32 +256,35 @@ export function HomeMap({
           <CardSkeleton width={cardW} />
         </View>
       ) : (
-        <FlatList
-          ref={carousel}
-          horizontal
-          data={featured}
-          keyExtractor={(r) => String(r.operation_id)}
-          showsHorizontalScrollIndicator={false}
-          snapToInterval={cardW + 12}
-          decelerationRate="fast"
-          contentContainerStyle={styles.carousel}
-          onScrollToIndexFailed={() => undefined}
-          renderItem={({ item }) => (
-            <DaycareCard
-              width={cardW}
-              name={tidyCase(item.name)}
-              meta={rowMeta(item)}
-              lat={item.lat}
-              lng={item.lng}
-              operationType={item.operation_type}
-              watched={watchedIds.has(item.operation_id)}
-              strip={rowStrip(item)}
-              fallback={rowFallback(item)}
-              onPress={() => onOpen(item.operation_id)}
-              onToggleWatch={onToggleWatch ? () => onToggleWatch(item) : undefined}
-            />
-          )}
-        />
+        // Skeleton to cards: one 200 ms cross-fade when the cards first mount; a refresh keeps them mounted, so no replay.
+        <Animated.View entering={fade()}>
+          <FlatList
+            ref={carousel}
+            horizontal
+            data={featured}
+            keyExtractor={(r) => String(r.operation_id)}
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={cardW + 12}
+            decelerationRate="fast"
+            contentContainerStyle={styles.carousel}
+            onScrollToIndexFailed={() => undefined}
+            renderItem={({ item }) => (
+              <DaycareCard
+                width={cardW}
+                name={tidyCase(item.name)}
+                meta={rowMeta(item)}
+                lat={item.lat}
+                lng={item.lng}
+                operationType={item.operation_type}
+                watched={watchedIds.has(item.operation_id)}
+                strip={rowStrip(item)}
+                fallback={rowFallback(item)}
+                onPress={() => onOpen(item.operation_id)}
+                onToggleWatch={onToggleWatch ? () => onToggleWatch(item) : undefined}
+              />
+            )}
+          />
+        </Animated.View>
       )}
       {feed ? <View style={{ paddingTop: space.xxl }}>{feed}</View> : null}
       <View style={{ height: space.xxl }} />
@@ -321,22 +324,26 @@ export function HomeMap({
               zIndex={selected === k.rows[0]!.operation_id ? 10 : 1}
             >
               {/* iOS ignores a Marker's own label when it draws a custom view, so the view carries it. */}
-              <View accessible accessibilityRole="button" accessibilityLabel={`${tidyCase(k.rows[0]!.name)}, ${SHORT_TYPE[k.rows[0]!.operation_type] ?? k.rows[0]!.operation_type}`}>
-              {/* A solid pin only for a center with an exact point; homes (privacy) and approximate points get an area. */}
-              {imageryAllowed(k.rows[0]!.operation_type) && k.rows[0]!.geocode_quality !== 'non_exact' ? (
-                <MapPin
-                  kind={pinKind(k.rows[0]!.operation_type)}
-                  watched={watchedIds.has(k.rows[0]!.operation_id)}
-                  selected={selected === k.rows[0]!.operation_id}
-                  label={selected === k.rows[0]!.operation_id ? tidyCase(k.rows[0]!.name) : undefined}
-                />
-              ) : (
-                <AreaPin
-                  kind={pinKind(k.rows[0]!.operation_type)}
-                  watched={watchedIds.has(k.rows[0]!.operation_id)}
-                  selected={selected === k.rows[0]!.operation_id}
-                />
-              )}
+              <View
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={`${tidyCase(k.rows[0]!.name)}, ${SHORT_TYPE[k.rows[0]!.operation_type] ?? k.rows[0]!.operation_type}`}
+              >
+                {/* A solid pin only for a center with an exact point; homes (privacy) and approximate points get an area. */}
+                {imageryAllowed(k.rows[0]!.operation_type) && k.rows[0]!.geocode_quality !== 'non_exact' ? (
+                  <MapPin
+                    kind={pinKind(k.rows[0]!.operation_type)}
+                    watched={watchedIds.has(k.rows[0]!.operation_id)}
+                    selected={selected === k.rows[0]!.operation_id}
+                    label={selected === k.rows[0]!.operation_id ? tidyCase(k.rows[0]!.name) : undefined}
+                  />
+                ) : (
+                  <AreaPin
+                    kind={pinKind(k.rows[0]!.operation_type)}
+                    watched={watchedIds.has(k.rows[0]!.operation_id)}
+                    selected={selected === k.rows[0]!.operation_id}
+                  />
+                )}
               </View>
             </Marker>
           ) : (
@@ -350,9 +357,7 @@ export function HomeMap({
       </MapView>
 
       <View style={[styles.top, { top: insets.top + space.sm }]} pointerEvents="box-none">
-        <SearchPill
-          onPress={onSearch}
-        />
+        <SearchPill onPress={onSearch} />
       </View>
 
       <Animated.View style={[styles.locate, locateStyle]} pointerEvents="box-none">
@@ -429,7 +434,14 @@ const styles = StyleSheet.create({
   floor: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopWidth: StyleSheet.hairlineWidth },
   top: { position: 'absolute', left: space.lg, right: space.lg },
   locate: { position: 'absolute', right: space.lg, top: 0 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingTop: space.xs, paddingBottom: space.md },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    paddingHorizontal: space.lg,
+    paddingTop: space.xs,
+    paddingBottom: space.md,
+  },
   carousel: { paddingHorizontal: space.lg, gap: 12 },
   carouselLoading: { flexDirection: 'row', gap: 12, paddingHorizontal: space.lg },
   sep: { height: StyleSheet.hairlineWidth, marginLeft: space.lg + 64 + space.md },

@@ -2,6 +2,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import { Linking, Platform, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { Button, LastChecked } from '@/components/ui';
 import { PlacePage, type RequestKind } from '@/components/ui/PlacePage';
@@ -14,7 +15,7 @@ import { since } from '@/lib/perf';
 import { shareText } from '@/lib/share';
 import { appleMapsUrl, directionsAddress, googleMapsUrl } from '@/lib/maps';
 import { LAW_CITE, requestText } from '@/lib/rights';
-import { space, useColors } from '@/theme';
+import { fade, space, useColors } from '@/theme';
 
 export default function DaycareRecordScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -53,7 +54,8 @@ export default function DaycareRecordScreen() {
   const openMaps = (url: (a: string) => string) => (destination ? () => void Linking.openURL(url(destination)) : undefined);
 
   return (
-    <>
+    // Skeleton to record: one cross-fade on arrival. Refetches keep the page mounted, so it never replays.
+    <Animated.View entering={fade()} style={{ flex: 1 }}>
       <Stack.Screen options={{ headerShown: false }} />
       <PlacePage
         record={record.data}
@@ -78,6 +80,6 @@ export default function DaycareRecordScreen() {
         lawCite={LAW_CITE}
         footer={<LastChecked fallback={last_checked_at} />}
       />
-    </>
+    </Animated.View>
   );
 }

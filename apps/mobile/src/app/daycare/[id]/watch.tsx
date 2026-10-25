@@ -11,7 +11,7 @@ import { type EnableResult, enableAlerts, useAlertsOn } from '@/lib/notification
 import { groupByVisit } from '@/lib/record';
 import { isWeb } from '@/lib/runtime';
 import type { DaycareRecord } from '@/lib/types';
-import { haptic, radius, space, useColors } from '@/theme';
+import { radius, space, useColors } from '@/theme';
 
 type Step = 'explain' | 'working' | 'done';
 
@@ -32,8 +32,8 @@ export default function WatchScreen() {
     setStep('working');
     setError(null);
     try {
+      // The place page underneath plays the one success haptic when watching starts.
       await setWatch.mutateAsync(true);
-      haptic.success();
       setResult(await enableAlerts().catch(() => ({ permission: 'undetermined' as const, registered: false })));
       setStep('done');
     } catch {
@@ -49,7 +49,6 @@ export default function WatchScreen() {
     setError(null);
     try {
       await setWatch.mutateAsync(true);
-      haptic.select();
       router.back();
     } catch {
       setError('We couldn’t save this right now. Check your connection and try again.');

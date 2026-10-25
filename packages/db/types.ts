@@ -90,6 +90,21 @@ export type Database = {
         }[]
       }
       district_pulse: { Args: { week_start?: string }; Returns: Json }
+      district_recent_visits: {
+        Args: { p_limit?: number }
+        Returns: {
+          activity_id: number
+          categories: Database["public"]["Enums"]["violation_category"][]
+          city: string
+          date: string
+          display_name: string
+          findings_posted_so_far: number
+          is_home: boolean
+          name: string
+          operation_id: number
+          operation_type: string
+        }[]
+      }
       last_sync: { Args: never; Returns: Json }
       my_watches: {
         Args: never

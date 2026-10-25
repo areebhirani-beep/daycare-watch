@@ -94,5 +94,21 @@ else
   bad "no access token (is anonymous sign-in enabled? supabase config push)"
 fi
 
+# Optional: EVENT_ID + EVENT_OP = a real change event and its daycare (e.g. replay event 43 on 1304920).
+if [[ -n "${EVENT_ID:-}" && -n "${EVENT_OP:-}" && -n "${jwt:-}" ]]; then
+  echo "Alerts follow the watch (event $EVENT_ID on $EVENT_OP)"
+  ev="{\"p_event_id\":$EVENT_ID}"
+  r="$(call POST /rest/v1/rpc/alert_detail "$ev" "$jwt")"
+  if [[ "$(body_of "$r")" == "null" ]]; then ok "alert_detail hidden before watching"; else bad "alert_detail visible before watching"; fi
+  call POST /rest/v1/rpc/watch "{\"p_operation_id\":$EVENT_OP}" "$jwt" >/dev/null
+  r="$(call POST /rest/v1/rpc/alert_detail "$ev" "$jwt")"
+  if body_of "$r" | jq -e ".event_id == $EVENT_ID and .operation_id == $EVENT_OP" >/dev/null; then
+    ok "alert_detail shown while watching (is_replay=$(body_of "$r" | jq -r .is_replay))"
+  else bad "alert_detail missing while watching"; fi
+  call POST /rest/v1/rpc/unwatch "{\"p_operation_id\":$EVENT_OP}" "$jwt" >/dev/null
+  r="$(call POST /rest/v1/rpc/alert_detail "$ev" "$jwt")"
+  if [[ "$(body_of "$r")" == "null" ]]; then ok "alert_detail hidden after unwatch"; else bad "alert_detail still visible after unwatch"; fi
+fi
+
 echo "Result: $pass passed, $fail failed"
 [[ "$fail" == 0 ]]

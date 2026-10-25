@@ -112,6 +112,13 @@ export type DistrictPulse = {
   by_category: { category: Category; n: number }[];
 };
 
+// district_recent_visits: newest TX-04 visits (by point), up to the end of the last complete week.
+// Home daycares: name is null and display_name is 'A <type> in <City>'; show display_name, never an address.
+export type DistrictRecentVisit = Omit<Rpc['district_recent_visits']['Returns'][number], 'name' | 'city'> & {
+  name: string | null;
+  city: string | null;
+};
+
 export type AlertDetail = {
   event_id: number;
   kind: ChangeKind;

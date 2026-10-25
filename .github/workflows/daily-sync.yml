@@ -1,9 +1,12 @@
 name: daily-sync
 
 # The state reloads activities and violations nightly around 09:00 UTC; run after it settles.
+# GitHub can start a scheduled run late or skip it, so a second run follows. A sync is idempotent
+# (a re-run creates no events, pushes are deduped) and the concurrency group keeps them in order.
 on:
   schedule:
     - cron: "15 10 * * *"
+    - cron: "47 11 * * *"
   workflow_dispatch:
     inputs:
       command:

@@ -81,9 +81,9 @@ select operation_id, issuance_date from core.daycares
 grant select on c to anon;
 
 delete from core.daycare_photos where operation_id = (select operation_id from c);
-insert into core.daycare_photos (operation_id, image_id, captured_at, distance_m)
-select operation_id, 'qa-before-permit', issuance_date - 30, 5 from c
-union all select operation_id, 'qa-current', now() - interval '30 days', 5 from c;
+insert into core.daycare_photos (operation_id, image_id, captured_at, distance_m, verified, verified_at)
+select operation_id, 'qa-before-permit', issuance_date - 30, 5, true, now() from c
+union all select operation_id, 'qa-current', now() - interval '30 days', 5, true, now() from c;
 
 set local role anon;
 select is(

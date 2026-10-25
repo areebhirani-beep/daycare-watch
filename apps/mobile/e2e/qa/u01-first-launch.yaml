@@ -35,10 +35,10 @@ appId: host.exp.Exponent
     commands:
       - tapOn: "Allow While Using App"
 - extendedWaitUntil:
-    visible: ".*Center · [0-9.]+ mi.*"
+    visible: ".*Center, [0-9.]+ mi.*"
     timeout: 20000
 - takeScreenshot: ../../harness/state/qa/u01-1-pick
-- tapOn: ".*Center · [0-9.]+ mi.*"
+- tapOn: ".*Center, [0-9.]+ mi.*"
 - tapOn: "Watch this daycare"
 - extendedWaitUntil:
     visible: "Turn on alerts"

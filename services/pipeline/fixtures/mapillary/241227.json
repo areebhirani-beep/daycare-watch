@@ -1,0 +1,890 @@
+{
+ "operation_id": 241227,
+ "lat": 33.007397864877,
+ "lng": -96.726221638342,
+ "bbox": "-96.7267578,33.0069482,-96.7256854,33.0078475",
+ "data": [
+  {
+   "id": "1373862803425457",
+   "captured_at": 1674499318730,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725945215489,
+     33.00745486034
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725938124324,
+     33.007454145946
+    ]
+   },
+   "compass_angle": 268.58535694623,
+   "computed_compass_angle": 0.7655297588081,
+   "is_pano": false
+  },
+  {
+   "id": "1148021440882211",
+   "captured_at": 1792209131021,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726703898769,
+     33.00726870694
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72673499,
+     33.0072713
+    ]
+   },
+   "compass_angle": 89.999946805317,
+   "computed_compass_angle": 75.510448224562,
+   "is_pano": false
+  },
+  {
+   "id": "499802948999615",
+   "captured_at": 1674499318930,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725978767235,
+     33.007454026841
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725971958158,
+     33.007453445245
+    ]
+   },
+   "compass_angle": 268.58535694623,
+   "computed_compass_angle": 0.72456351875292,
+   "is_pano": false
+  },
+  {
+   "id": "840628620337914",
+   "captured_at": 1674499317730,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725774237192,
+     33.007460228277
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725770597009,
+     33.007459023629
+    ]
+   },
+   "compass_angle": 266.41317776699,
+   "computed_compass_angle": 0.70891504154326,
+   "is_pano": false
+  },
+  {
+   "id": "553724383478625",
+   "captured_at": 1674499317330,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725705781834,
+     33.007462089424
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725705352742,
+     33.00746245334
+    ]
+   },
+   "compass_angle": 266.41317776699,
+   "computed_compass_angle": 0.6367017119635,
+   "is_pano": false
+  },
+  {
+   "id": "203727751409426",
+   "captured_at": 1564948821398,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725938025299,
+     33.007398674241
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725914,
+     33.007401
+    ]
+   },
+   "compass_angle": 47.487213134766,
+   "computed_compass_angle": 274.52407131597,
+   "is_pano": false
+  },
+  {
+   "id": "216118287446016",
+   "captured_at": 1674499323698,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726734399004,
+     33.007434960673
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726735216717,
+     33.007444167968
+    ]
+   },
+   "compass_angle": 268.69929890192,
+   "computed_compass_angle": 1.5018657376888,
+   "is_pano": false
+  },
+  {
+   "id": "28591447303830238",
+   "captured_at": 1792209134855,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725901545963,
+     33.007261651151
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72597004,
+     33.0072632
+    ]
+   },
+   "compass_angle": 89.999946805322,
+   "computed_compass_angle": 75.221590082644,
+   "is_pano": false
+  },
+  {
+   "id": "1298305259048021",
+   "captured_at": 1792209131688,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726564036508,
+     33.007267361504
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72660479,
+     33.007269833333
+    ]
+   },
+   "compass_angle": 91.399013558522,
+   "computed_compass_angle": 75.367762687444,
+   "is_pano": false
+  },
+  {
+   "id": "514552243891520",
+   "captured_at": 1674499317530,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725739937947,
+     33.00746101109
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725737974875,
+     33.007460738485
+    ]
+   },
+   "compass_angle": 266.41317776699,
+   "computed_compass_angle": 0.81463026172315,
+   "is_pano": false
+  },
+  {
+   "id": "1087146060984966",
+   "captured_at": 1792209131355,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726633491293,
+     33.007267853626
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72666989,
+     33.007271166667
+    ]
+   },
+   "compass_angle": 91.399013558522,
+   "computed_compass_angle": 75.40962456341,
+   "is_pano": false
+  },
+  {
+   "id": "542174557875080",
+   "captured_at": 1674499317930,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725808634655,
+     33.0074594152
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725803219143,
+     33.007457308774
+    ]
+   },
+   "compass_angle": 266.41317776699,
+   "computed_compass_angle": 0.54059647306912,
+   "is_pano": false
+  },
+  {
+   "id": "1640900837740759",
+   "captured_at": 1792209135355,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725796447035,
+     33.007261435407
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725871846667,
+     33.007263063333
+    ]
+   },
+   "compass_angle": 91.323545859462,
+   "computed_compass_angle": 75.008678440499,
+   "is_pano": false
+  },
+  {
+   "id": "146833174865720",
+   "captured_at": 1674499318330,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725876934484,
+     33.007457066293
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725870456657,
+     33.007455547347
+    ]
+   },
+   "compass_angle": 268.58535694623,
+   "computed_compass_angle": 0.66499241942279,
+   "is_pano": false
+  },
+  {
+   "id": "1786880182464706",
+   "captured_at": 1792209135188,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725831343082,
+     33.007261454998
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72590494,
+     33.0072632
+    ]
+   },
+   "compass_angle": 89.999946805322,
+   "computed_compass_angle": 75.046799470875,
+   "is_pano": false
+  },
+  {
+   "id": "2096232237923377",
+   "captured_at": 1792209131188,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726668799341,
+     33.007268265942
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72670244,
+     33.0072713
+    ]
+   },
+   "compass_angle": 89.999946805317,
+   "computed_compass_angle": 75.538980913105,
+   "is_pano": false
+  },
+  {
+   "id": "1844648715910455",
+   "captured_at": 1674499318131,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725842775186,
+     33.007458267294
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725836791992,
+     33.007456244545
+    ]
+   },
+   "compass_angle": 268.58535694623,
+   "computed_compass_angle": 0.56764051019707,
+   "is_pano": false
+  },
+  {
+   "id": "1115781564334528",
+   "captured_at": 1792209133855,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726112299528,
+     33.007263018105
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726172946667,
+     33.0072632
+    ]
+   },
+   "compass_angle": 89.99994236589,
+   "computed_compass_angle": 75.464202699262,
+   "is_pano": false
+  },
+  {
+   "id": "1745539040910477",
+   "captured_at": 1792209132688,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726356955317,
+     33.007266749627
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72640949,
+     33.007265796667
+    ]
+   },
+   "compass_angle": 91.433975739334,
+   "computed_compass_angle": 75.039119421752,
+   "is_pano": false
+  },
+  {
+   "id": "943789683667201",
+   "captured_at": 1674499323464,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726698765826,
+     33.007435642047
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726699542843,
+     33.007444847247
+    ]
+   },
+   "compass_angle": 268.69929890192,
+   "computed_compass_angle": 1.5300613336715,
+   "is_pano": false
+  },
+  {
+   "id": "936189415954012",
+   "captured_at": 1792209135021,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725866404238,
+     33.007261494232
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72593749,
+     33.0072632
+    ]
+   },
+   "compass_angle": 89.999946805322,
+   "computed_compass_angle": 75.12704937389,
+   "is_pano": false
+  },
+  {
+   "id": "1540526617882129",
+   "captured_at": 1792209136188,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725619116802,
+     33.007260799122
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725695513333,
+     33.007259646667
+    ]
+   },
+   "compass_angle": 91.323545859462,
+   "computed_compass_angle": 75.552302998719,
+   "is_pano": false
+  },
+  {
+   "id": "193767486667920",
+   "captured_at": 1674499323231,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726663680767,
+     33.007436832855
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726664021421,
+     33.007445523624
+    ]
+   },
+   "compass_angle": 268.69929890192,
+   "computed_compass_angle": 1.4176589338433,
+   "is_pano": false
+  },
+  {
+   "id": "1299675480890342",
+   "captured_at": 1674499319930,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726145603812,
+     33.007448874469
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726140226,
+     33.00745041
+    ]
+   },
+   "compass_angle": 268.7816238846,
+   "computed_compass_angle": 0.58669071048496,
+   "is_pano": false
+  },
+  {
+   "id": "1094607353328059",
+   "captured_at": 1792209135521,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725761243241,
+     33.007261337752
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72583658,
+     33.00726238
+    ]
+   },
+   "compass_angle": 91.323545859462,
+   "computed_compass_angle": 75.058926948398,
+   "is_pano": false
+  },
+  {
+   "id": "1677628107123769",
+   "captured_at": 1792209134521,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725971964927,
+     33.007261926385
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72603514,
+     33.0072632
+    ]
+   },
+   "compass_angle": 89.999946805322,
+   "computed_compass_angle": 75.379859058495,
+   "is_pano": false
+  },
+  {
+   "id": "154629884033616",
+   "captured_at": 1674499322064,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726484903747,
+     33.007439962605
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.7264840102,
+     33.0074462934
+    ]
+   },
+   "compass_angle": 269.95587721325,
+   "computed_compass_angle": 1.5421913681464,
+   "is_pano": false
+  },
+  {
+   "id": "1059888600403043",
+   "captured_at": 1792209134355,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72600752299,
+     33.00726239227
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72606769,
+     33.0072632
+    ]
+   },
+   "compass_angle": 89.999946805322,
+   "computed_compass_angle": 75.466845720689,
+   "is_pano": false
+  },
+  {
+   "id": "1416129740692812",
+   "captured_at": 1792209133355,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726217661695,
+     33.007264207193
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726278746667,
+     33.0072632
+    ]
+   },
+   "compass_angle": 89.99994236589,
+   "computed_compass_angle": 75.254910530554,
+   "is_pano": false
+  },
+  {
+   "id": "2465185533634239",
+   "captured_at": 1674499318530,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725911312215,
+     33.007455942886
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72590429049,
+     33.007454846647
+    ]
+   },
+   "compass_angle": 268.58535694623,
+   "computed_compass_angle": 0.66692453225824,
+   "is_pano": false
+  },
+  {
+   "id": "1319742978871321",
+   "captured_at": 1674499321831,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726448617027,
+     33.007440600455
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726447170724,
+     33.007446468008
+    ]
+   },
+   "compass_angle": 269.56899040898,
+   "computed_compass_angle": 1.3692026291401,
+   "is_pano": false
+  },
+  {
+   "id": "1759066066219920",
+   "captured_at": 1792209133188,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726252889241,
+     33.007264911004
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72631184,
+     33.007263746667
+    ]
+   },
+   "compass_angle": 91.433975739334,
+   "computed_compass_angle": 75.168943638282,
+   "is_pano": false
+  },
+  {
+   "id": "1101084859555329",
+   "captured_at": 1792209135855,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725690289002,
+     33.007261164616
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725766046667,
+     33.007261013333
+    ]
+   },
+   "compass_angle": 91.323545859462,
+   "computed_compass_angle": 75.256613410017,
+   "is_pano": false
+  },
+  {
+   "id": "1002684579546107",
+   "captured_at": 1792209135688,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.7257257772,
+     33.007261149935
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725801313333,
+     33.007261696667
+    ]
+   },
+   "compass_angle": 91.323545859462,
+   "computed_compass_angle": 75.102600331985,
+   "is_pano": false
+  },
+  {
+   "id": "1104371287019321",
+   "captured_at": 1674499321597,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726412349224,
+     33.007441271565
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726409857847,
+     33.007446703421
+    ]
+   },
+   "compass_angle": 269.56899040898,
+   "computed_compass_angle": 1.2416768911862,
+   "is_pano": false
+  },
+  {
+   "id": "1574910770617271",
+   "captured_at": 1792209133521,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72618247348,
+     33.007263821324
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72624348,
+     33.0072632
+    ]
+   },
+   "compass_angle": 89.99994236589,
+   "computed_compass_angle": 75.34133607763,
+   "is_pano": false
+  },
+  {
+   "id": "1116669117533888",
+   "captured_at": 1792209136021,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725654550683,
+     33.007260990619
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72573078,
+     33.00726033
+    ]
+   },
+   "compass_angle": 91.323545859462,
+   "computed_compass_angle": 75.452070310957,
+   "is_pano": false
+  },
+  {
+   "id": "222685629250621",
+   "captured_at": 1564948820202,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725671862694,
+     33.007399896671
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725703,
+     33.007397
+    ]
+   },
+   "compass_angle": 124.02252197266,
+   "computed_compass_angle": 273.80765645621,
+   "is_pano": false
+  },
+  {
+   "id": "1007654932346439",
+   "captured_at": 1792209132188,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726460225019,
+     33.007266671089
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72650714,
+     33.007267833333
+    ]
+   },
+   "compass_angle": 91.399013558522,
+   "computed_compass_angle": 75.121935297357,
+   "is_pano": false
+  },
+  {
+   "id": "167992661810260",
+   "captured_at": 1564948824122,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726532345022,
+     33.00740171487
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726557,
+     33.007403
+    ]
+   },
+   "compass_angle": 66.080230712891,
+   "computed_compass_angle": 274.53975355729,
+   "is_pano": false
+  },
+  {
+   "id": "1088186357444605",
+   "captured_at": 1792209132355,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.726426385269,
+     33.007267004862
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72647459,
+     33.007267163333
+    ]
+   },
+   "compass_angle": 91.433975739334,
+   "computed_compass_angle": 75.184800088662,
+   "is_pano": false
+  },
+  {
+   "id": "1648542733063582",
+   "captured_at": 1792209134688,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.725936973534,
+     33.007261754682
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.72600259,
+     33.0072632
+    ]
+   },
+   "compass_angle": 89.999946805322,
+   "computed_compass_angle": 75.337468679431,
+   "is_pano": false
+  }
+ ]
+}

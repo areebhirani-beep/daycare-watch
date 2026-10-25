@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +17,7 @@ import psycopg
 import pytest
 
 from pipeline import photos
-from pipeline.photos import Mapillary, angle_delta, bbox, bearing, candidates, choose, distance_m
+from pipeline.photos import Mapillary, angle_delta, bbox, bearing, candidates, choose, distance_m, not_before
 
 RECORDED = Path(__file__).parent.parent / "fixtures" / "mapillary"
 
@@ -89,6 +90,45 @@ def test_recorded_responses_obey_the_rules(path: Path) -> None:
     # Preferred-facing photos always come before wider ones, newest first within each group.
     keys = [(p.facing_delta > photos.FACING_PREFERRED, -p.captured_at.timestamp()) for p in kept]
     assert keys == sorted(keys)
+
+
+def _recorded(op: str) -> dict[str, Any]:
+    rec: dict[str, Any] = json.loads((RECORDED / f"{op}.json").read_text())
+    return rec
+
+
+NOW = datetime(2026, 10, 25, tzinfo=UTC)
+
+
+def test_not_before_is_the_later_of_permit_and_six_years() -> None:
+    assert not_before(None, NOW) == datetime(2020, 10, 25, tzinfo=UTC)
+    assert not_before(date(2016, 1, 4), NOW) == datetime(2020, 10, 25, tzinfo=UTC)
+    assert not_before(date(2024, 3, 1), NOW) == datetime(2024, 3, 1, tzinfo=UTC)
+    assert not_before(None, datetime(2028, 2, 29, tzinfo=UTC)) == datetime(2022, 2, 28, tzinfo=UTC)
+
+
+def test_recorded_plano_center_keeps_three_new_facing_photos() -> None:
+    rec = _recorded("241227")  # Messiah Lutheran Lambs, Plano: 42 images within the box
+    kept = choose(candidates(rec["data"], rec["lat"], rec["lng"], not_before(None, NOW)))
+    assert [p.image_id for p in kept] == ["1745539040910477", "1088186357444605", "1007654932346439"]
+    assert all(p.captured_at.date() == date(2026, 10, 17) and p.facing_delta <= 45 for p in kept)
+
+
+def test_recorded_old_photo_is_dropped_by_age() -> None:
+    rec = _recorded("1508243")  # Frisco: its one usable photo is from Jul 2019
+    assert [p.image_id for p in choose(candidates(rec["data"], rec["lat"], rec["lng"]))] == ["147745507366382"]
+    assert candidates(rec["data"], rec["lat"], rec["lng"], not_before(None, NOW)) == []
+
+
+def test_recorded_photo_before_the_permit_is_dropped() -> None:
+    rec = _recorded("241227")
+    assert candidates(rec["data"], rec["lat"], rec["lng"], not_before(date(2026, 10, 18), NOW)) == []
+
+
+def test_recorded_panoramas_are_never_kept() -> None:
+    rec = _recorded("1251368")  # 15 images near this center, all panoramas
+    assert rec["data"] and all(i["is_pano"] for i in rec["data"])
+    assert candidates(rec["data"], rec["lat"], rec["lng"]) == []
 
 
 # ---------------------------------------------------------------- local DB

@@ -6,6 +6,8 @@ for them). For each center one Graph API call lists the images in a box of +-RAD
 point. An image is kept when it lies within RADIUS_M, is not a panorama (a flat crop of an
 equirectangular image reads as broken), and its camera points at the daycare within +-FACING_MAX.
 Up to MAX_PHOTOS are kept: those facing within +-FACING_PREFERRED first, then newest, then nearest.
+A photo older than the daycare's permit may show a different business, and one older than
+MAX_AGE_YEARS may show a different street, so neither is kept.
 
 The token comes from MAPILLARY_TOKEN only and travels in a header, never in a URL or a log line.
 Without a token the stage is skipped and the run stays ok. A failed request leaves that center's
@@ -20,7 +22,7 @@ import os
 import time
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -37,11 +39,12 @@ RADIUS_M = 50.0
 MAX_PHOTOS = 3
 FACING_MAX = 60.0
 FACING_PREFERRED = 45.0
+MAX_AGE_YEARS = 6
 MAX_ATTEMPTS = 4
 EARTH_M = 6_371_008.8
 
 TARGETS = """
-select operation_id, st_y(geom::geometry) as lat, st_x(geom::geometry) as lng from core.daycares
+select operation_id, st_y(geom::geometry) as lat, st_x(geom::geometry) as lng, issuance_date from core.daycares
 where operation_type = 'Licensed Center' and operation_status = 'Y'
   and geocode_source = 'census' and geocode_quality = 'exact'
   and in_district and district_basis = 'point' and geom is not null
@@ -87,8 +90,21 @@ def bbox(lat: float, lng: float, radius_m: float = RADIUS_M) -> str:
     return f"{lng - dlng:.7f},{lat - dlat:.7f},{lng + dlng:.7f},{lat + dlat:.7f}"
 
 
-def candidates(images: Iterable[dict[str, Any]], lat: float, lng: float) -> list[Photo]:
-    """Images that show the daycare: close enough, flat, and facing it."""
+def not_before(issuance_date: date | None, now: datetime) -> datetime:
+    """The oldest capture time we keep: the permit's issue date or MAX_AGE_YEARS ago, whichever is later."""
+    try:
+        oldest = now.replace(year=now.year - MAX_AGE_YEARS)
+    except ValueError:  # Feb 29
+        oldest = now.replace(year=now.year - MAX_AGE_YEARS, day=28)
+    if issuance_date is not None:
+        oldest = max(oldest, datetime(issuance_date.year, issuance_date.month, issuance_date.day, tzinfo=UTC))
+    return oldest
+
+
+def candidates(
+    images: Iterable[dict[str, Any]], lat: float, lng: float, oldest: datetime | None = None
+) -> list[Photo]:
+    """Images that show the daycare as it is: close enough, flat, facing it, and not older than `oldest`."""
     out: list[Photo] = []
     for img in images:
         geom = img.get("computed_geometry") or img.get("geometry") or {}
@@ -104,6 +120,8 @@ def candidates(images: Iterable[dict[str, Any]], lat: float, lng: float) -> list
         if delta > FACING_MAX:
             continue
         captured = datetime.fromtimestamp(int(img["captured_at"]) / 1000, tz=UTC)
+        if oldest is not None and captured < oldest:
+            continue
         out.append(Photo(str(img["id"]), captured, round(dist, 1), float(angle) % 360, round(delta, 1)))
     return out
 
@@ -169,9 +187,10 @@ def fill(
     measured on a database that has no core.daycare_photos yet.
     """
     targets = conn.execute(TARGETS).fetchall()
+    now = datetime.now(UTC)
     counts: dict[str, Any] = {"photos_targets": len(targets), "photos_queried": 0, "photos_failed": 0,
                               "photos_seen": 0, "photos_kept": 0, "photos_centers_with_photo": 0}
-    for op, lat, lng in targets:
+    for op, lat, lng, issued in targets:
         try:
             images = api.images_near(lat, lng)
         except httpx.HTTPError as exc:
@@ -184,7 +203,7 @@ def fill(
             record_dir.mkdir(parents=True, exist_ok=True)
             (record_dir / f"{op}.json").write_text(json.dumps(
                 {"operation_id": op, "lat": lat, "lng": lng, "bbox": bbox(lat, lng), "data": images}, indent=1))
-        kept = choose(candidates(images, lat, lng))
+        kept = choose(candidates(images, lat, lng, not_before(issued, now)))
         counts["photos_kept"] += len(kept)
         counts["photos_centers_with_photo"] += bool(kept)
         if dry_run:

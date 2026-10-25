@@ -1,0 +1,113 @@
+{
+ "operation_id": 1508243,
+ "lat": 33.177193833336,
+ "lng": -96.768033577542,
+ "bbox": "-96.7685708,33.1767442,-96.7674963,33.1776435",
+ "data": [
+  {
+   "id": "1168275200287112",
+   "captured_at": 1564590599179,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.76801221837,
+     33.176496057117
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.767875,
+     33.177251
+    ]
+   },
+   "compass_angle": 359.88458251953,
+   "computed_compass_angle": 22.914333567131,
+   "is_pano": false
+  },
+  {
+   "id": "1044970315906637",
+   "captured_at": 1564590597186,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.767834976058,
+     33.176892974058
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.767879,
+     33.176875
+    ]
+   },
+   "compass_angle": 359.77081298828,
+   "computed_compass_angle": 177.54490782844,
+   "is_pano": false
+  },
+  {
+   "id": "147745507366382",
+   "captured_at": 1564590598174,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.767844295144,
+     33.177078551842
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.767877,
+     33.177063
+    ]
+   },
+   "compass_angle": 359.88470458984,
+   "computed_compass_angle": 358.24072372305,
+   "is_pano": false
+  },
+  {
+   "id": "294458792385656",
+   "captured_at": 1564590601154,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.767866692069,
+     33.177637244924
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.767869,
+     33.177627
+    ]
+   },
+   "compass_angle": 359.88616943359,
+   "computed_compass_angle": 358.50148528653,
+   "is_pano": false
+  },
+  {
+   "id": "530786544751159",
+   "captured_at": 1564590600170,
+   "computed_geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.767860558495,
+     33.177442771368
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.767871,
+     33.177436
+    ]
+   },
+   "compass_angle": 359.76519775391,
+   "computed_compass_angle": 358.11779429107,
+   "is_pano": false
+  }
+ ]
+}

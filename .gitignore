@@ -6,8 +6,6 @@ dist/
 # local build tooling
 harness/
 CONTRACT.md
-CLAUDE.md
-.claude/
 # never commit credentials
 *service-account*.json
 *serviceAccount*.json

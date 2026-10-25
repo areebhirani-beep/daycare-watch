@@ -285,6 +285,9 @@ Past 2 years
 ### Change log after the freeze
 | Date | Change | Why |
 |---|---|---|
+| Oct 25 06:20 | At ≥1.6× text, a history row stacks the date over its status | Dates truncated to "J…" at the largest size |
+| Oct 25 05:45 | The Home map is one VoiceOver element pointing to the list | The maps library reads every custom pin as "Map pin"; the list carries the same daycares with their records |
+| Oct 25 05:30 | Spoken labels are sentences: a card reads name, meta, record line, "Watching"; " · " becomes ", "; a clean visit is said once; stepped-back onboarding cards are hidden | Read back from the accessibility tree on every screen |
 | Oct 25 04:16 | Dark `accent` = near-white ink, not yellow | Plain buttons and the progress bar were yellow in dark, breaking "yellow = watching" |
 | Oct 25 03:04 | Reduce Motion keeps the 3D view, without drift | A swapped-in aerial ran under an Apple caption with no Esri credit |
 | Oct 25 02:36 | Street photos off; carousel = 3D → aerial → Street View link | 2 of 5 hand-checked photos showed the wrong building |

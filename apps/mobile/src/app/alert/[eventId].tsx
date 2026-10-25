@@ -4,17 +4,18 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { LastChecked } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
-import { ActionPill, SectionHeader, StickyBar } from '@/components/ui/Chrome';
+import { ActionTile, SectionHeader, StickyBar } from '@/components/ui/Chrome';
+import { Disclosure } from '@/components/ui/Disclosure';
 import { FindingCard } from '@/components/ui/FindingCard';
-import { visitAnswer } from '@/components/ui/PlacePage';
+import { byWeight, visitAnswer } from '@/components/ui/PlacePage';
 import { PlaceSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useAlertDetail, useDaycareRecord } from '@/lib/api';
 import { formatDate, formatLocalDay, plural, tidyCase, todayIso } from '@/lib/format';
 import { type Change, whatChanged } from '@/lib/record';
 import { lawCovers } from '@/lib/rights';
-import type { AlertDetail } from '@/lib/types';
-import { elevation, radius, space, useColors } from '@/theme';
+import type { AlertDetail, Finding } from '@/lib/types';
+import { elevation, radius, riskRank, space, useColors } from '@/theme';
 
 /** What the state posted → when → what it means → what you can do. */
 export default function AlertScreen() {
@@ -62,6 +63,18 @@ export default function AlertScreen() {
     .join(' · ');
   // A new finding answers like the place page: what the state found at that visit, and where the fixes stand.
   const answer = a.kind === 'new_violation' && change?.visit ? visitAnswer(change.visit, todayIso()) : null;
+  // Every problem from the visit the headline counts, highest risk first; the alerted one is always among them.
+  const visitFindings: Finding[] = a.finding
+    ? [
+        ...(change?.visit?.findings ?? []),
+        ...(change?.visit?.findings.some((f) => f.non_compliance_id === a.finding!.non_compliance_id) ? [] : [a.finding]),
+      ].sort(byWeight)
+    : [];
+  // Same rule as the place page: two or more Low / Medium Low findings fold into one row.
+  const lower = visitFindings.filter((f) => riskRank[f.risk_level] <= 2);
+  const fold = lower.length >= 2;
+  const shown = fold ? visitFindings.filter((f) => riskRank[f.risk_level] > 2) : visitFindings;
+  const onOfficial = record.data ? () => void WebBrowser.openBrowserAsync(record.data.official_url) : undefined;
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
@@ -93,12 +106,15 @@ export default function AlertScreen() {
 
         {change?.visit ? <WhatChanged change={change} /> : null}
 
-        {a.finding ? (
-          <FindingCard
-            finding={a.finding}
-            visitDate={a.finding.date}
-            onOfficial={record.data ? () => void WebBrowser.openBrowserAsync(record.data.official_url) : undefined}
-          />
+        {shown.map((f) => (
+          <FindingCard key={f.non_compliance_id} finding={f} visitDate={visit} onOfficial={onOfficial} />
+        ))}
+        {fold ? (
+          <Disclosure title={`${lower.length} less serious problems`}>
+            {lower.map((f) => (
+              <FindingCard key={f.non_compliance_id} finding={f} visitDate={visit} onOfficial={onOfficial} />
+            ))}
+          </Disclosure>
         ) : null}
         {meaning(a) ? (
           <Text variant={a.finding ? 'footnote' : 'callout'} tone="secondary">
@@ -108,10 +124,10 @@ export default function AlertScreen() {
 
         <View style={{ gap: space.md }}>
           <SectionHeader title="What you can do" inset={0} />
-          <View style={styles.pills}>
-            <ActionPill icon="list" label="Tour questions" onPress={() => router.push(`/daycare/${a.operation_id}/tour`)} />
+          <View style={styles.tiles}>
+            <ActionTile icon="list" label="Tour questions" onPress={() => router.push(`/daycare/${a.operation_id}/tour`)} />
             {!record.data || lawCovers(record.data.daycare.operation_type) ? (
-              <ActionPill
+              <ActionTile
                 icon="doc"
                 label="Request records"
                 onPress={() => router.push({ pathname: '/rights', params: { operationId: String(a.operation_id) } })}
@@ -207,6 +223,6 @@ function meaning(a: AlertDetail): string | null {
 const styles = StyleSheet.create({
   content: { padding: space.lg, gap: space.lg, paddingBottom: space.section },
   replay: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs },
-  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  tiles: { flexDirection: 'row', gap: space.sm },
   changed: { borderRadius: radius.card, paddingHorizontal: space.lg, paddingVertical: space.md, gap: space.xxs },
 });

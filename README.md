@@ -148,7 +148,7 @@ These rules are enforced in code and tests, not just in copy review.
 | Rule | Why |
 |---|---|
 | No scores, grades, rankings, or safe/unsafe labels. Color marks the state's risk level of one finding, never a daycare | A count of findings is not a verdict, and the state does not publish one |
-| "Fixed" means the state verified it. The state's `corrected_date` is shown as a due or listed date | 124 findings carry a `corrected_date` in the future, so it behaves like a deadline |
+| "Fixed" appears only when the inspector saw the fix during the visit or the state posted a check date. The state's `corrected_date` is shown as a due date, with "no state check on record yet" | 124 findings carry a `corrected_date` in the future, so it behaves like a deadline |
 | A daycare is labeled "in TX-04" only when its map point is inside the district | The state's county field can be wrong, and most of Collin and Denton counties are outside TX-04 |
 | Home daycares (4,705 statewide) get no aerial imagery, no map of the house, and no street address on the place page: city and ZIP only, with the full record one tap away on the state's site | They are private residences, often listed under a person's name, and a street-range geocode can land on the wrong house |
 | Map links send the state's address line, not our geocoded point | The geocode is an estimate |

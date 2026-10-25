@@ -181,11 +181,21 @@ def categorize(standard_number_description: str) -> Category:
 MAX_SUMMARY = 140
 ELLIPSIS = "…"
 
+# Some narratives lose the apostrophe to a space ("wasn t", "today s"). Possessives are repaired only for
+# nouns that recur in the data, never for any word followed by a lone "s".
+_SPACE_CONTRACTION = r"\b(wasn|weren|isn|aren|didn|doesn|don|hasn|haven|hadn|couldn|wouldn|shouldn|can|won) t\b"
+_SPACE_POSSESSIVE = (
+    r"\b(child|children|parent|school|caregiver|director|person|provider|daycare|physician|center|driver|today"
+    r"|home|year|toddler|infant|program|nurse|employee|doctor|operation|staff|teacher|owner|month|week) s\b"
+)
+
 # Fixed de-jargon table. Replacements contain no digits and no names.
 REPLACEMENTS: tuple[tuple[re.Pattern[str], str], ...] = tuple(
     (re.compile(pattern, re.IGNORECASE), replacement)
     for pattern, replacement in (
         (_LOST_APOSTROPHE, "'"),  # "child?s" -> "child's"
+        (_SPACE_CONTRACTION, r"\1't"),  # "wasn t" -> "wasn't"
+        (_SPACE_POSSESSIVE, r"\1's"),  # "child s file" -> "child's file"
         (r"\b(the|this|that) operation's\b", r"\1 daycare's"),
         (r"\b(the|this|that) operation\b", r"\1 daycare"),
         (r"\bw/o\b", "without"),
@@ -221,6 +231,18 @@ _META = re.compile(
     r"|an? (?:minimum )?standards? violation was found\.?$|[\w\s']{0,40}\b(?:was|were) reviewed\.$)",
     re.IGNORECASE,
 )
+# A sentence that only sets the scene ("Lunch was observed during today's inspection."). When one leads,
+# the summary takes the first later sentence that states what was wrong.
+_SCENE = re.compile(
+    r"^[\w\s'\u2019,/-]{0,60}?\b(?:was|were) (?:observed|reviewed|checked|inspected|monitored|conducted|looked at)\s+"
+    r"(?:during|at|on|while)\b[^.]{0,40}\b(?:inspection|visit|investigation|review)\.$",
+    re.IGNORECASE,
+)
+_DEFICIENCY = re.compile(
+    r"(?:n't|n t)\b|\b(?:not|no|never|without|fail(?:ed|s)?|missing|expired|need(?:ed|s)?|required|must"
+    r"|lack(?:ed|ing|s)?|unable|insufficient|incomplete)\b",
+    re.IGNORECASE,
+)
 _NO_SPLIT_AFTER = re.compile(r"(?:\b(?:Mr|Mrs|Ms|Dr|St|No|vs|approx|[ap]\.m)|\b[A-Z])\.$", re.IGNORECASE)
 _SENTENCE_END = re.compile(r"[.!?](?=\s+\S)")
 
@@ -239,7 +261,12 @@ def _sentences(text: str) -> list[str]:
 
 def _first_finding(text: str) -> str:
     sentences = _sentences(text)
-    return next((s for s in sentences if not _META.search(s)), sentences[0])
+    findings = [s for s in sentences if not _META.search(s)]
+    if not findings:
+        return sentences[0]
+    if _SCENE.search(findings[0]):
+        return next((s for s in findings[1:] if _DEFICIENCY.search(s)), findings[0])
+    return findings[0]
 
 
 def _truncate(text: str) -> str:

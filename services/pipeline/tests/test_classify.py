@@ -261,6 +261,31 @@ def test_plain_summary_empty(narrative: str | None) -> None:
             "Upon reviewing children's files, one child was missing a health statement.",
             "Upon reviewing children's files, one child was missing a health statement.",
         ),
+        # Real narratives (nc 1022260178, 1022499230): a scene-setting lead gives way to the deficiency.
+        (
+            "Lunch was observed during today's follow-up inspection.  The children had cheese pizza, apple sauce or "
+            "apple slices, with 100% fruit juice and water.  Milk was not served during lunch as required.",
+            "Milk was not served during lunch as required.",
+        ),
+        (
+            "Annual tranings were reviewed during today's inspection.  7 clock hours are needed to meet the required "
+            "30 clock hours of annual training.",
+            "7 clock hours are needed to meet the required 30 clock hours of annual training.",
+        ),
+        # With no later deficiency the scene sentence stays: nothing else is the finding.
+        (
+            "Lunch was observed during today's inspection. The children had pizza.",
+            "Lunch was observed during today's inspection.",
+        ),
+        # Real narrative (nc 1022315598): apostrophes lost to a space.
+        (
+            "Emergency drill documentation wasn t available for review during today s inspection",
+            "Emergency drill documentation wasn't available for review during today's inspection",
+        ),
+        (
+            "Two children s files did not have the child s physician.",
+            "Two children's files did not have the child's physician.",
+        ),
     ],
 )
 def test_plain_summary_cases(narrative: str, expected: str) -> None:

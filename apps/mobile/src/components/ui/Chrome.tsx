@@ -122,11 +122,14 @@ export function SectionHeader({
   title,
   detail,
   onMore,
+  moreLabel,
   inset = space.lg,
 }: {
   title: string;
   detail?: string;
   onMore?: () => void;
+  /** What VoiceOver says for the arrow; say what it opens, not the title again. */
+  moreLabel?: string;
   inset?: number;
 }) {
   return (
@@ -141,7 +144,7 @@ export function SectionHeader({
           </Text>
         ) : null}
       </View>
-      {onMore ? <IconButton icon="chevronRight" label={`See all: ${title}`} onPress={onMore} /> : null}
+      {onMore ? <IconButton icon="chevronRight" label={moreLabel ?? `See all ${title}`} onPress={onMore} /> : null}
     </View>
   );
 }

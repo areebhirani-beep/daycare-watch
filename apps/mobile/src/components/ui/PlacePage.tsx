@@ -551,8 +551,10 @@ export function visitAnswer(last: Visit | undefined, today: string): { headline:
 
 function Answer({ last, today }: { last: Visit | undefined; today: string }) {
   const { headline, sub } = visitAnswer(last, today);
+  // Read as two sentences: VoiceOver would otherwise join them with a comma ("visit, Fixes due") and may say the dot.
+  const spoken = sub ? `${headline}. ${sub.replace(/ · /g, ', ')}.` : `${headline}.`;
   return (
-    <View accessible accessibilityRole="header" style={styles.answer}>
+    <View accessible accessibilityRole="header" accessibilityLabel={spoken} style={styles.answer}>
       <Text variant="largeTitle">{headline}</Text>
       {sub ? (
         <Text variant="callout" tone="secondary" tabular>
@@ -694,7 +696,10 @@ function History({
                 </View>
               </View>
             );
-            const label = `${formatDate(v.date)}: ${n === 0 ? 'no problems cited' : plural(n, 'problem')}. ${status}.`;
+            const head = n === 0 ? 'no problems cited' : plural(n, 'problem');
+            // A clean visit's status repeats the count ("No problems cited"), so VoiceOver says it once.
+            const said = status.toLowerCase() === head ? '' : ` ${status.replace(/ · /g, ', ')}.`;
+            const label = `${formatDate(v.date)}: ${head}.${said}`;
             return n > 0 ? (
               <Pressable
                 key={v.activity_id}
@@ -731,9 +736,16 @@ function TourCard({ questions, onOpen }: { questions: ReturnType<typeof buildTou
   if (questions.length === 0) return null;
   return (
     <View style={[styles.tour, elevation.card, { backgroundColor: c.surface }]}>
-      <Text variant="title">Ask about these on your tour</Text>
+      <Text variant="title" accessibilityRole="header">
+        Ask about these on your tour
+      </Text>
       {questions.map((q, i) => (
-        <View key={q.question} style={styles.tourRow}>
+        <View
+          key={q.question}
+          accessible
+          accessibilityLabel={`Question ${i + 1}. ${q.question}${q.fact ? ` ${q.fact}` : ''}`}
+          style={styles.tourRow}
+        >
           <View style={[styles.tourNum, { backgroundColor: c.text }]}>
             <Text variant="subhead" color={c.surface} tabular maxFontSizeMultiplier={1.2}>
               {String(i + 1)}

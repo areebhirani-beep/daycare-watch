@@ -257,7 +257,7 @@ export function HomeMap({
         <Chip label="Homes" icon="home" selected={filters.has('homes')} onPress={() => toggle('homes')} />
         <Chip label="In TX-04" icon="district" selected={filters.has('district')} onPress={() => toggle('district')} />
       </ChipRow>
-      <SectionHeader title={areaLabel ? 'Closest first' : 'Closest to you'} onMore={() => sheetRef.current?.snapToIndex(2)} />
+      <SectionHeader title={areaLabel ? 'Closest first' : 'Closest to you'} onMore={() => sheetRef.current?.snapToIndex(2)} moreLabel="Show the full list" />
       {loading && rows.length === 0 ? (
         <View style={styles.carouselLoading}>
           <CardSkeleton width={cardW} />

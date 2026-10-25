@@ -59,7 +59,7 @@ export function FindingCard({
     <View style={[styles.card, elevation.card, { backgroundColor: c.surface, borderColor: high ? c.text : 'transparent' }, high && styles.cardHigh]}>
       <View
         accessible
-        accessibilityLabel={`${high ? 'Serious. ' : ''}${categoryLabel(f.category)}. ${summary}. ${status}.`}
+        accessibilityLabel={`${high ? 'Serious. ' : ''}${categoryLabel(f.category)}. ${summary.replace(/[.\s]+$/, '')}. ${status.replace(/ · /g, ', ')}.`}
         style={{ gap: space.sm }}
       >
         {/* The category reads first, as a picture (CategoryIcon). */}

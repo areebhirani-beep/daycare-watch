@@ -74,6 +74,8 @@ type Props = {
   onOpenGoogleMaps?: () => void;
   onOfficial: () => void;
   onTour: () => void;
+  /** Opens "What the categories mean" (CategoryGuide). Without it the link is hidden. */
+  onCategories?: () => void;
   onRequest: (kind: RequestKind) => void;
   /** Rights source line, e.g. "Texas Human Resources Code §42.04271". */
   lawCite: string;
@@ -105,6 +107,7 @@ export function PlacePage({
   onOpenGoogleMaps,
   onOfficial,
   onTour,
+  onCategories,
   onRequest,
   lawCite,
   footer,
@@ -396,6 +399,19 @@ export function PlacePage({
                 );
               })
             )
+          ) : null}
+          {tab === 'findings' && findingVisits.length > 0 && onCategories ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={onCategories}
+              style={({ pressed }) => [styles.more, { gap: space.sm }, pressed && { opacity: 0.6 }]}
+            >
+              <Glyph name="info" size={15} color={c.textSecondary} weight="semibold" />
+              <Text variant="callout" tone="secondary" style={{ flex: 1 }}>
+                What the categories mean
+              </Text>
+              <Glyph name="chevronRight" size={13} color={c.textSecondary} weight="bold" />
+            </Pressable>
           ) : null}
 
           {tab === 'rights' ? (

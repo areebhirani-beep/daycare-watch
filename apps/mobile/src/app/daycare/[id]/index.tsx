@@ -73,6 +73,7 @@ export default function DaycareRecordScreen() {
         onOpenGoogleMaps={openMaps(googleMapsUrl)}
         onOfficial={() => void WebBrowser.openBrowserAsync(official_url)}
         onTour={() => router.push(`/daycare/${operationId}/tour`)}
+        onCategories={() => router.push('/categories')}
         onRequest={(kind: RequestKind) => {
           const { subject, body } = requestText(kind, name);
           shareText(subject, body);

@@ -22,6 +22,7 @@ export function FlyoverHero({
   lat,
   lng,
   legalTop,
+  bottomInset,
   pin = true,
   watched,
   style,
@@ -30,6 +31,12 @@ export function FlyoverHero({
   lng: number | null | undefined;
   /** Moves Apple's required Maps mark up to this y (from the top) when the bottom is covered by content. */
   legalTop?: number;
+  /**
+   * Lifts the building above content that covers the bottom of the view: MapKit centers the camera above
+   * this margin. With it set, MapKit ignores legalLabelInsets and puts its legal mark about 38 pt above the
+   * margin, so the caller picks a margin that leaves that spot clear.
+   */
+  bottomInset?: number;
   /** Our white pin on the point (the same one the aerial and the map use). */
   pin?: boolean;
   watched?: boolean;
@@ -79,6 +86,7 @@ export function FlyoverHero({
         mapType="satelliteFlyover"
         initialCamera={{ center: { latitude: lat, longitude: lng }, pitch: 56, heading: START_HEADING, altitude: 340, zoom: 17 }}
         legalLabelInsets={{ top: 0, left: 16, right: 0, bottom: legalTop != null && h > 0 ? h - legalTop - 22 : 10 }}
+        mapPadding={bottomInset ? { top: 0, left: 0, right: 0, bottom: bottomInset } : undefined}
         scrollEnabled={false}
         zoomEnabled={false}
         rotateEnabled={false}

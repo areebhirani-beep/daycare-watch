@@ -15,6 +15,8 @@ export function FlyoverHero({
   lat: number | null | undefined;
   lng: number | null | undefined;
   legalTop?: number;
+  /** Native only: the still aerial has nothing to re-centre. */
+  bottomInset?: number;
   pin?: boolean;
   watched?: boolean;
   style?: ViewStyle;

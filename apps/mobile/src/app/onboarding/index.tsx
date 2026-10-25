@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -28,12 +28,15 @@ export default function HookScreen() {
   const insets = useSafeAreaInsets();
   const record = useDaycareRecord(EXAMPLE_OPERATION_ID);
   const d = record.data?.daycare;
+  // At large text the headline climbs to mid-screen, so the building is lifted into the clear top part
+  // (pin near 17% down, Apple's legal mark near 30%, both above the lockup).
+  const { height, fontScale } = useWindowDimensions();
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
       <Animated.View entering={fade(300)} style={StyleSheet.absoluteFill}>
-        <FlyoverHero lat={d?.lat} lng={d?.lng} legalTop={insets.top + 56} />
+        <FlyoverHero lat={d?.lat} lng={d?.lng} legalTop={insets.top + 56} bottomInset={fontScale >= 1.35 ? Math.round(height * 0.66) : undefined} />
       </Animated.View>
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.12)' }]} />
       <View pointerEvents="none" style={styles.scrim}>

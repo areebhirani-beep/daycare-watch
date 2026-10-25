@@ -1,17 +1,17 @@
 -- Home daycares are private residences: the API never returns a home's street or a point finer
--- than 2 decimals, search never matches a home on its street, and district_recent_visits stays
+-- than 2 decimals or a ZIP+4, search never matches a home on its street or ZIP+4, and district_recent_visits stays
 -- name-free. Also the photo age rule (no photo before the permit or older than 6 years).
 begin;
 create extension if not exists pgtap with schema extensions;
 -- Real records the asserts below name, so they hold on a fresh clone too (rolled back with the test).
 \ir fixtures/real_rows.psql
-select plan(10);
+select plan(13);
 
 create temp table h on commit drop as
-select d.operation_id, d.name, d.address, d.city,
+select d.operation_id, d.name, d.address, d.city, d.zip,
        extensions.st_y(d.geom::extensions.geometry) as lat, extensions.st_x(d.geom::extensions.geometry) as lng
   from core.daycares d
- where d.operation_type <> 'Licensed Center' and d.address ~ '^[0-9]+ ' and d.geom is not null
+ where d.operation_type <> 'Licensed Center' and d.address is not null and d.geom is not null
    and d.operation_status is distinct from 'N'
  order by d.operation_id
  limit 1;
@@ -56,6 +56,19 @@ select ok(
 select is(
   (select count(*) from public.district_recent_visits(50) where is_home and (name is not null or display_name !~ '^A ')),
   0::bigint, 'district_recent_visits stays name-free for homes');
+
+select is(
+  (select count(*) from public.daycares_near(33.2, -96.7, 50, '{}')
+    where operation_type <> 'Licensed Center' and zip !~ '^[0-9]{5}$'),
+  0::bigint, 'daycares_near returns a 5-digit ZIP for every home, never a ZIP+4');
+
+select ok(
+  (select (public.daycare_record(h.operation_id) -> 'daycare' ->> 'zip') ~ '^[0-9]{5}$' from h),
+  'daycare_record header returns a 5-digit ZIP for a home');
+
+select is(
+  (select count(*) from h, public.daycare_search(h.zip) s where length(h.zip) > 5 and s.operation_id = h.operation_id),
+  0::bigint, 'searching a home''s ZIP+4 does not find it');
 
 reset role;
 

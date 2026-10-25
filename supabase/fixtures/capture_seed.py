@@ -31,6 +31,8 @@ SELECTIONS = (
 )
 SINCE = f"{date.today().year - 5}-01-01T00:00:00"
 STANDARD = re.compile(r"^\s*(\S+)\s+-\s+(.*)$", re.S)
+# Marker for a home daycare's street (not an address), same rule as the API (docs/PRIVACY.md).
+WITHHELD = "withheld for privacy"
 
 
 def soda(dataset: str, **params: str) -> list[dict]:
@@ -69,6 +71,10 @@ def num(v: str | None) -> int | None:
     return int(v) if v not in (None, "") else None
 
 
+def coord(v: str, home: bool) -> float:
+    return round(float(v), 2) if home else float(v)
+
+
 def main() -> None:
     ops: dict[str, dict] = {}
     for where, n in SELECTIONS:
@@ -86,12 +92,15 @@ def main() -> None:
         f"-- on {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC by supabase/fixtures/capture_seed.py.",
         "-- plain is null and category is 'other' until the pipeline classifies them.",
         "-- Upserts are skipped on conflict so a pipeline load always wins.",
+        f"-- Home daycares are private residences: their street is replaced by '{WITHHELD}' and their point",
+        "-- rounded to 2 decimals (about 1 km), so this public file never republishes where a home is.",
         "",
     ]
     for o in ops.values():
         geo = o.get("location_address_geo") or {}
+        home = o["operation_type"] != "Licensed Center"
         point = (
-            f"extensions.st_setsrid(extensions.st_makepoint({float(geo['longitude'])}, {float(geo['latitude'])}), 4326)::extensions.geography"
+            f"extensions.st_setsrid(extensions.st_makepoint({coord(geo['longitude'], home)}, {coord(geo['latitude'], home)}), 4326)::extensions.geography"
             if geo.get("latitude")
             else "null"
         )
@@ -100,8 +109,8 @@ def main() -> None:
             "operation_number": o.get("operation_number"),
             "name": o["operation_name"],
             "operation_type": o["operation_type"],
-            "address": o.get("location_address"),
-            "address_line": o.get("address_line"),
+            "address": WITHHELD if home else o.get("location_address"),
+            "address_line": WITHHELD if home else o.get("address_line"),
             "city": o.get("city"),
             "county": o.get("county"),
             "zip": (o.get("zipcode") or "")[:5] or None,

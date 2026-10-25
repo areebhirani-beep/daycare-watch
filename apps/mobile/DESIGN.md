@@ -65,7 +65,7 @@ Android uses the same sizes on system Roboto with numeric weights (a loaded Robo
 | `text` | `#0B0B0C` | `#F5F5F7` | 17.6:1+ |
 | `textSecondary` | `#5C5C66` | `#A8A8B2` | 5.9:1+ on sunken |
 | `textTertiary` | `#6E6E78` | `#8C8C96` | 4.5:1 floor (AA) |
-| `accent` (links, rings, selected marks) | `#0B0B0C` | `#FFD21F` | |
+| `accent` (links, plain buttons, progress, selected marks) | `#0B0B0C` | `#F5F5F7` | ink in both modes; yellow never marks an action |
 | `accentSoft` (selected wash, halo) | `#FFF6C9` | `#2A2300` | |
 | `signal` (watched pin, alerts button, check badge) | `#FFC800` | `#FFD21F` | ink on it 12.7 / 14.5 |
 | `signalEdge` (3D edge) | `#D19E00` | `#A88200` | |
@@ -285,6 +285,7 @@ Past 2 years
 ### Change log after the freeze
 | Date | Change | Why |
 |---|---|---|
+| Oct 25 04:16 | Dark `accent` = near-white ink, not yellow | Plain buttons and the progress bar were yellow in dark, breaking "yellow = watching" |
 | Oct 25 03:04 | Reduce Motion keeps the 3D view, without drift | A swapped-in aerial ran under an Apple caption with no Esri credit |
 | Oct 25 02:36 | Street photos off; carousel = 3D → aerial → Street View link | 2 of 5 hand-checked photos showed the wrong building |
 | Oct 25 02:33 | Our pin on the 3D view | A whole block from above can't say which building is the daycare |

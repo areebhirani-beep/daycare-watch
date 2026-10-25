@@ -113,9 +113,10 @@ export const dark: Palette = {
   text: '#F5F5F7',
   textSecondary: '#A8A8B2',
   textTertiary: '#8C8C96',
-  accent: '#FFD21F',
+  // Actions are ink in dark too (near-white), as in light. Yellow stays reserved for watching and alerts.
+  accent: '#F5F5F7',
   onAccent: '#000000',
-  accentEdge: '#B88F00',
+  accentEdge: '#A8A8B2',
   accentSoft: '#2A2300',
   signal: '#FFD21F',
   onSignal: '#000000',

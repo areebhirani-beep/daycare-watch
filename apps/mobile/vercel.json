@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
-  "rewrites": [{ "source": "/((?!_expo/|assets/).*)", "destination": "/index.html" }],
+  "rewrites": [{ "source": "/((?!_expo/|assets/).*)", "destination": "/" }],
   "headers": [
     {
       "source": "/_expo/(.*)",

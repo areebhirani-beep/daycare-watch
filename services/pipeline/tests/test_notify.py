@@ -116,8 +116,9 @@ def test_replay_round_trip_dedupes_and_prunes() -> None:
             uid = uuid.uuid4()
             conn.execute("insert into auth.users (id, aud, role) values (%s, 'authenticated', 'authenticated')",
                          (uid,))
+            # Any real loaded finding works; the seed and the full backfill both have some.
             nc = conn.execute("""select non_compliance_id, operation_id from core.violations
-                                 where operation_id = 1206518 order by activity_date desc limit 1""").fetchone()
+                                 order by activity_date desc, non_compliance_id limit 1""").fetchone()
             assert nc
             conn.execute("insert into app.watches (user_id, operation_id) values (%s, %s)", (uid, nc[1]))
             conn.execute("""insert into app.devices (expo_push_token, user_id, platform) values
@@ -140,3 +141,34 @@ def test_replay_round_trip_dedupes_and_prunes() -> None:
             assert dead == (True,)
         finally:
             tx.__exit__(psycopg.Rollback, psycopg.Rollback(), None)
+
+
+@pytest.mark.db
+@pytest.mark.skipif(not DB, reason="DATABASE_URL not set")
+def test_replay_dry_run_never_calls_expo_and_keeps_nothing() -> None:
+    from pipeline.config import Settings
+    from pipeline.notify import replay
+
+    def handle(req: httpx.Request) -> httpx.Response:
+        raise AssertionError("dry run called Expo")
+
+    assert DB
+    with psycopg.connect(DB) as conn:
+        nc = conn.execute("select non_compliance_id from core.violations limit 1").fetchone()
+        before = conn.execute("select count(*) from core.change_events").fetchone()
+    assert nc and before
+    expo = Expo(None, httpx.Client(transport=httpx.MockTransport(handle)))
+    out = replay(Settings(DB, None, None), nc[0], expo, dry_run=True)
+    assert out["dry_run"] is True and out["event_id"] is None
+    with psycopg.connect(DB) as conn:
+        assert conn.execute("select count(*) from core.change_events").fetchone() == before
+
+
+def test_replay_unknown_finding_exits() -> None:
+    from pipeline.config import Settings
+    from pipeline.notify import replay
+
+    if not DB:
+        pytest.skip("DATABASE_URL not set")
+    with pytest.raises(SystemExit, match="no finding"):
+        replay(Settings(DB, None, None), -1, dry_run=True)

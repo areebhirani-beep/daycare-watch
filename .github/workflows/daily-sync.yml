@@ -1,0 +1,61 @@
+name: daily-sync
+
+# The state reloads activities and violations nightly around 09:00 UTC; run after it settles.
+on:
+  schedule:
+    - cron: "15 10 * * *"
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "sync (daily) or backfill (first load of a new database)"
+        type: choice
+        options: [sync, backfill]
+        default: sync
+      full:
+        description: "sync only: re-pull every operation, not only those past the watermark"
+        type: boolean
+        default: false
+      dry_run:
+        description: "sync only: do everything, then roll back; no pushes"
+        type: boolean
+        default: false
+
+concurrency:
+  group: daily-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: services/pipeline
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SODA_APP_TOKEN: ${{ secrets.SODA_APP_TOKEN }}
+      EXPO_ACCESS_TOKEN: ${{ secrets.EXPO_ACCESS_TOKEN }}
+      GEOCODE_CACHE: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --frozen --no-dev || uv sync --no-dev
+      - name: Run
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.command }}" = "backfill" ]; then
+            uv run --no-sync python -m pipeline backfill
+          else
+            args=()
+            [ "${{ inputs.full }}" = "true" ] && args+=(--full)
+            [ "${{ inputs.dry_run }}" = "true" ] && args+=(--dry-run)
+            uv run --no-sync python -m pipeline sync "${args[@]}"
+          fi
+      - name: Report
+        if: always()
+        run: uv run --no-sync python -m pipeline report | head -c 20000 >> "$GITHUB_STEP_SUMMARY" || true

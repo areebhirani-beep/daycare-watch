@@ -245,21 +245,30 @@ returning id, operation_id, source_date
 """
 
 
-def replay(settings: Settings, non_compliance_id: int, expo: Expo | None = None) -> dict[str, Any]:
-    """Resend a real past finding to everyone watching its daycare, labelled as a replay."""
-    expo = expo or Expo(settings.expo_access_token)
+def replay(settings: Settings, non_compliance_id: int, expo: Expo | None = None,
+           dry_run: bool = False) -> dict[str, Any]:
+    """Resend a real past finding to everyone watching its daycare, labelled as a replay.
+
+    Each call is a new event (replays are never deduped against each other). A dry run builds the
+    exact pushes, then rolls back: no event is kept, Expo is never called, no token is touched.
+    """
     with psycopg.connect(settings.require_db()) as conn:
-        with conn.transaction():
-            row = conn.execute(REPLAY_INSERT, (non_compliance_id,)).fetchone()
+        conn.execute("begin")
+        row = conn.execute(REPLAY_INSERT, (non_compliance_id,)).fetchone()
         if row is None:
+            conn.rollback()
             raise SystemExit(f"no finding with non_compliance_id {non_compliance_id} in core.violations")
         event_id, operation_id, source_date = row
-        watchers = conn.execute(
-            """select count(distinct w.user_id) from app.watches w
-               join app.devices dv on dv.user_id = w.user_id and dv.disabled_at is null
-               where w.operation_id = %s""", (operation_id,)).fetchone()
-        counts = send_groups(conn, expo, pending_groups(conn, [event_id]))
-    result = {"event_id": event_id, "operation_id": operation_id, "non_compliance_id": non_compliance_id,
-              "source_date": source_date, "watchers_with_devices": watchers[0] if watchers else 0, **counts}
-    log.info("replay.done", **{k: str(v) for k, v in result.items()})
+        groups = pending_groups(conn, [event_id])
+        result: dict[str, Any] = {
+            "event_id": event_id, "operation_id": operation_id, "non_compliance_id": non_compliance_id,
+            "source_date": source_date, "dry_run": dry_run, "recipients": len(groups),
+            "messages": [{**m, "to": m["to"][:22] + "…"} for g in groups for m in g.messages()]}
+        if dry_run:
+            conn.rollback()
+            result["event_id"] = None
+        else:
+            conn.commit()
+            result.update(send_groups(conn, expo or Expo(settings.expo_access_token), groups))
+    log.info("replay.done", event_id=result["event_id"], recipients=len(groups), dry_run=dry_run)
     return result

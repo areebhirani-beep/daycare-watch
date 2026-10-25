@@ -19,7 +19,7 @@ import psycopg
 import structlog
 from psycopg.types.json import Jsonb
 
-from pipeline import load
+from pipeline import district, geocode, load
 from pipeline.config import ACTIVITIES, VIOLATIONS, Settings
 from pipeline.models import Activity, Operation, Violation, validate_rows
 from pipeline.soda import SodaClient
@@ -38,6 +38,7 @@ class RunOptions:
     since: str | None = None
     dry_run: bool = False
     notify: bool = True
+    geocode: bool = True
 
 
 LAG_SQL = """
@@ -128,7 +129,10 @@ def run(settings: Settings, opts: RunOptions, soda: SodaClient | None = None) ->
                     conn, run_id, [(v, load.row_hash(r)) for v, r in zip(viols, viols_raw, strict=True)], backfill)
                 counts.update(vcounts)
                 # 5 district, 8 aggregate (platform functions, when present)
-                counts.update(load.assign_district(conn))
+                if opts.geocode:
+                    counts.update(geocode.geocode_pending(conn, priority_counties=district.TX04_COUNTIES,
+                                                          cache_path=geocode.cache_path_from_env()))
+                counts.update(load.assign_district(conn, full=opts.full or backfill))
                 counts["aggregates_refreshed"] = _call_if_exists(conn, "core.refresh_aggregates")
                 row = conn.execute(LAG_SQL, (run_id,)).fetchone()
                 if row:

@@ -173,10 +173,15 @@ on conflict (operation_id) do update set
     when d.geocode_source = 'census' and d.geocode_address is not distinct from excluded.geocode_address
       then 'census'
   end,
+  geocode_attempted_at = case when d.geocode_address is not distinct from excluded.geocode_address
+                              then d.geocode_attempted_at end,
   geocode_address = excluded.geocode_address,
+  -- Membership is recomputed only for rows whose point moved (see ASSIGN_POINT).
   district_basis = case
-    when excluded.geocode_source = 'state'
-      or (d.geocode_source = 'census' and d.geocode_address is not distinct from excluded.geocode_address)
+    when excluded.geocode_source = 'state' and d.geom::extensions.geometry = excluded.geom::extensions.geometry
+      then d.district_basis
+    when excluded.geocode_source is null and d.geocode_source = 'census'
+      and d.geocode_address is not distinct from excluded.geocode_address
       then d.district_basis
   end,
   capacity = excluded.capacity, ages = excluded.ages, hours = excluded.hours, days = excluded.days,
@@ -337,10 +342,11 @@ def load_violations(
 
 ASSIGN_POINT = """
 update core.daycares d
-set in_district = extensions.st_covers(g.geom, d.geom), district_basis = 'point'
+set in_district = extensions.st_covers(g.geom::extensions.geometry, d.geom::extensions.geometry),
+    district_basis = 'point'
 from geo.districts g
 where g.id = %(district)s and d.geom is not null
-  and (d.district_basis is distinct from 'point' or d.in_district is distinct from extensions.st_covers(g.geom, d.geom))
+  and (%(full)s or d.district_basis is distinct from 'point')
 """
 
 # No coordinates: fall back to the county, flagged. Only counties wholly inside the district
@@ -354,14 +360,15 @@ where d.geom is null
 """
 
 
-def assign_district(conn: Conn) -> dict[str, int]:
+def assign_district(conn: Conn, full: bool = False) -> dict[str, int]:
+    """Point-in-polygon for rows whose point is new or moved (all rows when full), then the county fallback."""
     from pipeline import district
 
     loaded = conn.execute("select 1 from geo.districts where id = %s", (district.DISTRICT_ID,)).fetchone()
     if not loaded:
         district.upsert_district(conn)
     with conn.cursor() as cur:
-        cur.execute(ASSIGN_POINT, {"district": district.DISTRICT_ID})
+        cur.execute(ASSIGN_POINT, {"district": district.DISTRICT_ID, "full": full})
         by_point = cur.rowcount
         cur.execute(ASSIGN_COUNTY, {"whole": sorted(district.TX04_COUNTIES_WHOLE)})
         by_county = cur.rowcount

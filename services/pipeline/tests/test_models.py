@@ -94,6 +94,7 @@ def test_missing_field_fails(acts_raw: list[dict[str, str]]) -> None:
 
 
 def test_optional_blanks_are_none(viols_raw: list[dict[str, str]]) -> None:
+    v: Violation
     (v,) = validate_rows(
         "violations", _one(viols_raw, narrative=" ", date_correction_verified=""), Violation.model_validate
     )

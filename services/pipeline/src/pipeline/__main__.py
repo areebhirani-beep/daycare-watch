@@ -48,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "sync" and args.replay is not None:
         from pipeline.notify import replay
 
-        print(json.dumps(replay(settings, args.replay), indent=2, default=str))
+        print(json.dumps(replay(settings, args.replay, dry_run=args.dry_run), indent=2, default=str))
         return 0
 
     from pipeline.runner import RunOptions, run

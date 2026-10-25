@@ -31,7 +31,7 @@
   └───────────────────┬──────────────────────────┘              │
                       │ SODA API, nightly ~09:00 UTC             │
               ┌───────▼────────────────────────────────────────┴──┐
-              │ PIPELINE (Python 3.12, runs daily 10:15 UTC)       │
+              │ PIPELINE (Python 3.12, daily 10:15 + 11:47 UTC)    │
               │ extract → validate → stage → transform → diff →    │
               │ classify → district → aggregate → notify → photos  │
               └───────┬────────────────────────────────────────────┘

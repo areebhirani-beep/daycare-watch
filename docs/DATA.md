@@ -66,4 +66,4 @@ Every row passes a pydantic data contract before it is loaded ([`models.py`](../
 
 ## Freshness
 
-The state reloads visits and findings in full each night and updates daycares row by row. The pipeline runs daily at 10:15 UTC ([`daily-sync.yml`](../.github/workflows/daily-sync.yml)) and writes one row per run to `ops.sync_runs`; the app's "Last checked with the state" line reads it through `last_sync()`. Findings appear only after the daycare has had due process, so they can post days to weeks after a visit.
+The state reloads visits and findings in full, usually overnight around 09:00 UTC, and updates daycares row by row. The pipeline runs daily at 10:15 UTC, with a second run at 11:47 UTC in case GitHub starts the first one late, ([`daily-sync.yml`](../.github/workflows/daily-sync.yml)) and writes one row per run to `ops.sync_runs`; the app's "Last checked with the state" line reads it through `last_sync()`. Findings appear only after the daycare has had due process, so they can post days to weeks after a visit.

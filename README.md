@@ -196,7 +196,7 @@ Run on Oct 25 2026. Details: [`docs/TESTING.md`](docs/TESTING.md) · every user 
 | App end-to-end (Maestro) | 11 flows, including find-to-alert and the largest text size | `maestro test apps/mobile/e2e/journey-find-watch.yaml` |
 | App static checks | `tsc --noEmit`, ESLint | `npm run typecheck --prefix apps/mobile` |
 
-GitHub Actions runs the pipeline checks on every push and the daily sync at 10:15 UTC, about an hour after the state's nightly reload.
+GitHub Actions runs the pipeline checks on every push and the daily sync at 10:15 UTC, about an hour after the state usually reloads its files, with a second run at 11:47 UTC in case GitHub starts the first one late or skips it (a re-run creates no new events).
 
 ## Getting started
 

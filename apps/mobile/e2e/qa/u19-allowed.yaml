@@ -1,0 +1,45 @@
+# QA U19: notifications allowed. Fresh Expo Go (run after a reinstall so iOS asks again): onboarding,
+# "Turn on alerts" -> iOS "Allow" -> done -> the watched page says "Watching · alerts on" or "off". A simulator
+# never registers for push (Device.isDevice guard), so it honestly reads "alerts off" here; "on" needs a real phone.
+appId: host.exp.Exponent
+---
+- runFlow:
+    file: _open.yaml
+    env:
+      CLEAR: "true"
+- extendedWaitUntil:
+    visible: "Get started"
+    timeout: 60000
+- tapOn: "Get started"
+- tapOn: "Next"
+- tapOn: "Next"
+- tapOn: "Find your daycare"
+- tapOn: "Use my location"
+- runFlow:
+    when:
+      visible: "Allow While Using App"
+    commands:
+      - tapOn: "Allow While Using App"
+- extendedWaitUntil:
+    visible: ".* mi"
+    timeout: 20000
+- tapOn: ".*Center · .* mi"
+- tapOn: "Watch this daycare"
+- extendedWaitUntil:
+    visible: "Turn on alerts"
+    timeout: 10000
+- tapOn: "Turn on alerts"
+- extendedWaitUntil:
+    visible: "Allow"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/qa/u19-0-os-prompt
+- tapOn: "Allow"
+- extendedWaitUntil:
+    visible: "You’re watching.*"
+    timeout: 15000
+- takeScreenshot: ../../harness/state/qa/u19-1-done
+- tapOn: "See its record"
+- extendedWaitUntil:
+    visible: "Watching · alerts (on|off)"
+    timeout: 20000
+- takeScreenshot: ../../harness/state/qa/u19-2-place-alerts-on

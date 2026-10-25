@@ -1,0 +1,29 @@
+# Shared setup for the alert rows (U21-U23): watch 1304920 (the daycare of real event 43), so the
+# alert is visible to this phone. MODE=background leaves the app in the background; MODE=cold quits it.
+appId: host.exp.Exponent
+---
+- runFlow: _open.yaml
+- openLink: ${METRO}/--/daycare/1304920
+- extendedWaitUntil:
+    visible: "(Watch this daycare|Watching ·.*)"
+    timeout: 20000
+- runFlow:
+    when:
+      visible: "Watch this daycare"
+    commands:
+      - tapOn: "Watch this daycare"
+      - tapOn: "Turn on alerts"
+      - extendedWaitUntil:
+          visible: "Done"
+          timeout: 15000
+      - tapOn: "Done"
+- runFlow:
+    when:
+      true: ${MODE == 'background'}
+    commands:
+      - pressKey: home
+- runFlow:
+    when:
+      true: ${MODE == 'cold'}
+    commands:
+      - stopApp

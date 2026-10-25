@@ -170,6 +170,9 @@ export function HomeMap({
 
   // The half sheet covers the bottom 64% of the screen, so the map's working area is the strip above it.
   const sheetCover = Math.round(height * 0.64);
+  // Apple's Legal link rides just above whichever detent the sheet rests at, clear of the pins it would cover.
+  const [detent, setDetent] = useState(1);
+  const legalBottom = (detent === 0 ? sheet.peek + TAB_BAR_CLEARANCE - 24 : sheetCover) + space.sm;
   // The location can arrive after the first render; follow it once it does. If it drops out (outside Texas),
   // fly back to the fallback area so the map matches the list.
   const targetLat = start.lat;
@@ -305,7 +308,7 @@ export function HomeMap({
         mapType="standard"
         showsBuildings
         // Apple's Legal link stays visible above the half sheet.
-        legalLabelInsets={{ top: 0, left: space.lg, bottom: sheetCover + space.sm, right: 0 }}
+        legalLabelInsets={{ top: 0, left: space.lg, bottom: legalBottom, right: 0 }}
         onPress={() => setSelected(null)}
       >
         {clusters.map((k) =>
@@ -361,6 +364,7 @@ export function HomeMap({
         accessible={false}
         ref={sheetRef}
         index={1}
+        onAnimate={(_from, to) => setDetent(to)}
         snapPoints={snapPoints}
         animatedPosition={sheetY}
         handleComponent={SheetHandle}

@@ -98,7 +98,7 @@ Every finding belongs to one of nine kinds of rule. Each kind gets one SF Symbol
 | Primitive | Spec |
 |---|---|
 | `CategoryIcon` | Disc `size` (default 36), glyph 0.5 × size in `fg` on `bg`. 32 on FindingCard, 36 in Place top problems, 40 in onboarding |
-| `CategoryRow` | Up to 4 overlapping 24 discs (18% overlap, 2 pt surface ring) + "+N" in `footnote`. On cards and rows: what kinds of problems the last visit found |
+| `CategoryRow` | Up to 4 overlapping 24 discs (18% overlap, 2 pt surface ring) + "+N" in `footnote`. On "This week" / recent-visit items (`district_recent_visits.categories`): what kinds of problems that visit found |
 
 No green and no red in the set; the safety-hazards orange and health pink sit at the same lightness as the blues, so neither reads as an alarm.
 
@@ -111,7 +111,7 @@ No green and no red in the set; the safety-hazards orange and health pink sit at
 | `Chip` / `InfoChip` | Filter chip (selected = ink fill) · info chip (glyph + label on `surface`) |
 | `SearchPill` / `FloatButton` | Map chrome, `float` elevation |
 | `ActionTile` | Equal-width tile, glyph over label, `surface` + `card` elevation |
-| `DaycareCard` | DoorDash card: picture on top (`heroRatio`, default 2:1), name 17/700 two lines (min height 44 so a carousel row stays even), one meta line, `CategoryRow`, one record line in words |
+| `DaycareCard` | DoorDash card: picture on top (`heroRatio`, default 2:1), name 17/700 two lines (min height 44 so a carousel row stays even), one meta line, one record line in words ("1 problem found Oct 5") |
 | `PlaceRow` | Dense row: 64 thumb, name two lines, meta, record line |
 | `MapSnapshot` | Aerial tile mosaic (Esri World Imagery) with our pin; credit on every image; tiles load on view only. Homes get a street canvas with an area circle (§8) |
 | `FlyoverHero` | Apple Maps `satelliteFlyover` camera: pitch 56, altitude 340 m, start heading 20°, drifts 24° every 9 s. iOS + exact address only; a still `MapSnapshot` elsewhere and under Reduce Motion. `legalTop` moves the Apple legal mark clear of text |
@@ -210,7 +210,7 @@ The record is **one answer and a list of rows**, like Apple Weather's 10-day for
 3 problems found at the Oct 5 visit        largeTitle 28, the answer
 Fixes due by Oct 30 · no state check yet   callout 15, grey
 (◉) <the problem, in plain words>  Serious  top 2 problems: CategoryIcon 36, tag on High only
- See all 9                              >
+ See all 9 from the past 2 years        >
 Past 2 years
  Oct 5                    Fix due Oct 30   two-line rows
  3  ███████████
@@ -241,13 +241,13 @@ Past 2 years
 
 | # | Screen | Structure |
 |---|---|---|
-| 1 | **Home** | Map full-bleed with `MapPin` / `AreaPin` / clusters. Search pill top (safe area + 8). Locate rides above the sheet. Sheet peek: "50 closest daycares" + chip row. Half: "Closest first" carousel of `DaycareCard` and the "This week near you" feed. Full: `PlaceRow` list. "What the categories mean" opens a sheet listing §4 |
+| 1 | **Home** | Map full-bleed with `MapPin` / `AreaPin` / clusters. Search pill top (safe area + 8). Locate rides above the sheet. Sheet peek: "Daycares near you" ("Daycares near Frisco" when the list is around a town, not the parent) + chip row. Half: "Closest to you" carousel ("Closest first" around a town) of `DaycareCard` and the "This week near you" feed. Full: `PlaceRow` list. "What the categories mean" opens a sheet listing §4 |
 | 2 | **Place** | `PlaceGallery` hero → head on `bg`: name `title`, address · TX‑04 → white card: the answer + top 2 problems + "See all" → info chips → action tiles (State record · Directions; homes: State record only) → tabs Overview / Problems N / Your rights. Overview: white card "Past 2 years" rows → "Ask about these on your tour" → "More details". Sticky ink "Watch this daycare" + share; when alerts are off it reads "Watching · alerts off" (secondary, outline bell) |
 | 3 | **Onboarding** | Five steps, progress bar + Skip on each (below) |
 | 4 | **Alert** | The push opens the visit: same answer as Place for the new visit, the findings posted so far as `FindingCard`s, what changed since the last visit, what you can do (rights cards) |
 | 5 | **Problems + Rights** | Problems: visits newest first, highest state risk first; 2+ Low / Medium Low fold into "N less serious problems". Rights: one `RightCard` per right, each opens the generated request |
 
-**"This week near you" feed:** heading "In TX-04 last week" with the date range; each item = date, `CategoryRow`, count "N findings posted so far". Centers are named; **home daycares are never named** ("A licensed home in <city>").
+**This week tab** (`(tabs)/pulse.tsx`): what the state posted for TX-04 daycares last week, with the date range. First view = one answer in `largeTitle` ("<N> findings posted so far from <V> state visits") + one grey line on High-risk-rule findings; no grid of stat cards. Then "By category" rows: `CategoryIcon` 32, label, a count bar in that category's `fg` on `sunken`, tabular count. Footnote: the state posts findings after due process, so recent weeks fill in. Any named item: centers by name, **home daycares never named** ("A licensed home in <city>").
 
 **Onboarding** (`src/app/onboarding/`):
 

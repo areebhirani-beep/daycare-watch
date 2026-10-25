@@ -106,7 +106,7 @@ export function DaycareCard({
       </View>
       <View style={styles.body}>
         {/* Two lines so long state names stay whole; the minimum keeps a carousel's cards even. */}
-        <Text variant="headline" numberOfLines={2} style={{ minHeight: 44 }}>
+        <Text variant="headline" numberOfLines={2}>
           {name}
         </Text>
         <Text variant="footnote" tone="secondary" numberOfLines={1} tabular>

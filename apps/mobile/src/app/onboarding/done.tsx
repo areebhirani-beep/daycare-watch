@@ -8,6 +8,7 @@ import { Celebration, useRise } from '@/components/ui/Celebration';
 import { markOnboarded } from '@/components/ui/onboarding';
 import { Text } from '@/components/ui/Text';
 import { useDaycareRecord } from '@/lib/api';
+import { useAlertsOn } from '@/lib/notifications';
 import { tidyCase } from '@/lib/format';
 import { space, useColors } from '@/theme';
 
@@ -19,6 +20,8 @@ export default function DoneScreen() {
   const id = params.id ? Number(params.id) : null;
   const record = useDaycareRecord(id ?? 0);
   const name = id && record.data ? tidyCase(record.data.daycare.name) : null;
+  // Only promise an alert when alerts really are on (permission granted and this phone registered).
+  const alertsOn = useAlertsOn();
   const text = useRise(400);
   const cta = useRise(480);
 
@@ -38,7 +41,11 @@ export default function DoneScreen() {
             {id ? (name ? `You’re watching ${name}.` : 'You’re watching.') : 'You’re all set.'}
           </Text>
           <Text variant="body" tone="secondary" align="center" style={{ maxWidth: 300 }}>
-            {id ? 'We’ll tell you when the state posts something new.' : 'Watch a daycare any time from its page.'}
+            {!id
+              ? 'Watch a daycare any time from its page.'
+              : alertsOn
+                ? 'We’ll tell you when the state posts something new.'
+                : 'New state records will show in your Watching tab. Turn on alerts any time from its page.'}
           </Text>
         </Animated.View>
       </View>

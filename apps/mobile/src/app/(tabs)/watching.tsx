@@ -49,7 +49,7 @@ export default function WatchingScreen() {
   return (
     <FlatList
       style={{ backgroundColor: c.bg, marginTop: insets.top }}
-      contentContainerStyle={{ paddingBottom: TAB_BAR_CLEARANCE, flexGrow: 1 }}
+      contentContainerStyle={{ paddingBottom: TAB_BAR_CLEARANCE + space.lg, flexGrow: 1 }}
       data={list}
       keyExtractor={(d) => String(d.operation_id)}
       renderItem={({ item }) =>

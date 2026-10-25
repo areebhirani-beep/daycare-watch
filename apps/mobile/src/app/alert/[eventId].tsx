@@ -14,7 +14,7 @@ import { formatDate, formatLocalDay, plural, tidyCase, todayIso } from '@/lib/fo
 import { type Change, whatChanged } from '@/lib/record';
 import { lawCovers } from '@/lib/rights';
 import type { AlertDetail } from '@/lib/types';
-import { radius, space, useColors } from '@/theme';
+import { elevation, radius, space, useColors } from '@/theme';
 
 /** What the state posted → when → what it means → what you can do. */
 export default function AlertScreen() {
@@ -101,9 +101,11 @@ export default function AlertScreen() {
             onOfficial={record.data ? () => void WebBrowser.openBrowserAsync(record.data.official_url) : undefined}
           />
         ) : null}
-        <Text variant={a.finding ? 'footnote' : 'callout'} tone="secondary">
-          {meaning(a)}
-        </Text>
+        {meaning(a) ? (
+          <Text variant={a.finding ? 'footnote' : 'callout'} tone="secondary">
+            {meaning(a)}
+          </Text>
+        ) : null}
 
         <View style={{ gap: space.md }}>
           <SectionHeader title="What you can do" inset={0} />
@@ -148,7 +150,7 @@ function WhatChanged({ change }: { change: Change }) {
     ...repeats.slice(0, 2).map((r) => `Rule ${r.rule} was also cited ${formatDate(r.lastCited)}`),
   ];
   return (
-    <View style={[styles.changed, { backgroundColor: c.sunken }]} accessible accessibilityLabel={`What changed. ${lines.join('. ')}`}>
+    <View style={[styles.changed, elevation.card, { backgroundColor: c.surface }]} accessible accessibilityLabel={`What changed. ${lines.join('. ')}`}>
       <Text variant="subhead">What changed</Text>
       {lines.map((l) => (
         <Text key={l} variant="callout" tone="secondary" tabular>
@@ -179,10 +181,11 @@ function headline(a: AlertDetail): string {
   }
 }
 
-function meaning(a: AlertDetail): string {
+/** What a kind of change means, for the kinds a parent can't read off the card. A finding card speaks for itself. */
+function meaning(a: AlertDetail): string | null {
   switch (a.kind) {
     case 'new_violation':
-      return 'An inspector found the daycare did not meet a state rule.';
+      return null;
     case 'corrective_action':
       return a.after?.corrective_action
         ? 'Corrective action in Texas is probation: the daycare stays open, meets extra conditions, and is inspected more often, for up to 12 months.'

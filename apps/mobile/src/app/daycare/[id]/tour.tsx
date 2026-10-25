@@ -10,7 +10,7 @@ import { useDaycareRecord } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
 import { shareText } from '@/lib/share';
 import { buildTourQuestions } from '@/lib/tour';
-import { radius, space, useColors } from '@/theme';
+import { elevation, radius, space, useColors } from '@/theme';
 
 export default function TourScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -43,7 +43,7 @@ export default function TourScreen() {
         {questions.map((q, i) => (
           <View
             key={i}
-            style={[styles.card, { backgroundColor: c.sunken }]}
+            style={[styles.card, elevation.card, { backgroundColor: c.surface }]}
             accessible
             accessibilityLabel={`Question ${i + 1}: ${q.question} ${q.fact ?? ''} ${q.followUp ?? ''}`}
           >

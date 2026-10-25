@@ -65,7 +65,7 @@ export function InspectorQuote({
   if (same) {
     return (
       <Text variant="callout" tone="tertiary">
-        {source ? `The inspector’s words, word for word · ${source}` : 'The inspector’s words, word for word'}
+        {source ? `The line above is the inspector’s own words · ${source}` : 'The line above is the inspector’s own words'}
       </Text>
     );
   }

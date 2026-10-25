@@ -34,6 +34,8 @@ import { FindingCard, SeriousTag } from './FindingCard';
 import { Glyph, type GlyphName } from './Glyph';
 import { Disclosure } from './Disclosure';
 import { MapSnapshot } from './MapSnapshot';
+import { flyoverAllowed } from './FlyoverHero';
+import { pinKind } from './MapPin';
 import { type GeocodeQuality, PlaceGallery } from './PlaceGallery';
 import { RightCard } from './RightCard';
 import { latestOpen, plainStatus, shortStatus, visitStatus } from './status';
@@ -208,7 +210,8 @@ export function PlacePage({
 
   // Centers: the state's full address line. Homes: city and ZIP only (lib/maps).
   const address = [
-    tidyCase(placeAddress(daycare)).replace(/\bTx\b/, 'TX'),
+    // Five-digit ZIP: the state's ZIP+4 is noise to a parent.
+    tidyCase(placeAddress(daycare)).replace(/\bTx\b/, 'TX').replace(/\b(\d{5})-\d{4}\b/, '$1'),
     daycare.in_district && daycare.district_basis === 'point' ? 'TX‑04' : null,
   ]
     .filter(Boolean)
@@ -257,6 +260,9 @@ export function PlacePage({
           lng={daycare.lng}
           quality={quality}
           imagery={!privateHome}
+          flyover={flyoverAllowed(daycare)}
+          photos={record.photos}
+          kind={pinKind(daycare.operation_type)}
           watched={watching}
           height={heroH + insets.top}
           bottomInset={radius.sheet}
@@ -517,7 +523,9 @@ export function visitAnswer(last: Visit | undefined, today: string): { headline:
     // Never a bare "Fixed": say how it was fixed (at the visit, or checked by the state later).
     if (!open) sub = `${n === 1 ? '' : 'All '}${visitStatus(last, new Date(today))}`.replace(/^All F/, 'All f');
     else {
-      const status = plainStatus(open);
+      // Short form + a short "not checked" tail held together, so the line never wraps an orphan word.
+      const short = shortStatus(open).replace(/(\w{3}) (\d)/g, '$1\u00A0$2');
+      const status = open.corrected_date ? `${short} · no\u00A0state\u00A0check\u00A0yet` : plainStatus(open);
       sub = openCount > 1 ? status.replace(/^Fix due/, 'Fixes due by').replace(/^Fix date was/, 'Latest fix date was') : status;
       if (openCount < n) sub = `${n - openCount} fixed · ${sub}`;
     }
@@ -572,16 +580,19 @@ function TopProblems({
           <CategoryIcon category={f.category} size={36} />
           <View style={{ flex: 1, gap: space.xs }}>
             <Text variant="subhead">{f.plain ?? 'The state did not publish a description.'}</Text>
-            <Text variant="callout" tone="secondary" tabular>
-              {`${formatDateShort(f.date, today)} · ${shortStatus(f)}`}
-            </Text>
+            {/* The tag rides the meta line so the finding keeps the full width at every text size. */}
+            <View style={styles.topMeta}>
+              {f.risk_level === 'High' ? <SeriousTag /> : null}
+              <Text variant="callout" tone="secondary" tabular style={{ flexShrink: 1 }}>
+                {`${formatDateShort(f.date, today)} · ${shortStatus(f)}`}
+              </Text>
+            </View>
           </View>
-          {f.risk_level === 'High' ? <SeriousTag /> : null}
         </View>
       ))}
       <Pressable accessibilityRole="button" onPress={onSeeAll} style={({ pressed }) => [styles.more, pressed && { opacity: 0.6 }]}>
         <Text variant="subhead" style={{ flex: 1 }}>
-          {total > items.length ? `See all ${total}` : 'See the details'}
+          {total > items.length ? `See all ${total} from the past 2 years` : 'See the details'}
         </Text>
         <Glyph name="chevronRight" size={13} color={c.textSecondary} weight="bold" />
       </Pressable>
@@ -773,6 +784,7 @@ const styles = StyleSheet.create({
   },
   topLabelled: { borderTopWidth: 0 },
   topLabel: { paddingBottom: space.xs, paddingTop: space.sm },
+  topMeta: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: space.sm },
   topRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',

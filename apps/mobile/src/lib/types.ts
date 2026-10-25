@@ -10,6 +10,7 @@ export type {
   DistrictPulse,
   Finding,
   Inspection,
+  Photo,
   LastSync,
   RiskLevel,
   Stats,

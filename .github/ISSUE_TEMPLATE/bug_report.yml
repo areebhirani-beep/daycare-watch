@@ -1,0 +1,40 @@
+name: Bug report
+description: Something in the app or the pipeline doesn't work as described.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - iPhone app
+        - Android app
+        - Web link
+        - Pipeline / daily sync
+        - Database / RPC
+    validations:
+      required: true
+  - type: input
+    id: daycare
+    attributes:
+      label: Daycare operation ID (if it's about one daycare)
+      description: The number at the end of the state's record link, e.g. 1459611.
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Search "Viva World"
+        2. Open the daycare
+        3. ...
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshot, log, or command output

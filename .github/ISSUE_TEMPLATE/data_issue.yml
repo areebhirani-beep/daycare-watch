@@ -1,0 +1,34 @@
+name: A state record looks wrong
+description: A finding, date, address, or district label doesn't match the state's own record.
+labels: [data]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every record comes from Texas HHSC open data on data.texas.gov and is shown as the state publishes it.
+        Please compare with the state's official page for the daycare (the "State record" button) before filing.
+  - type: input
+    id: operation
+    attributes:
+      label: Daycare operation ID
+      placeholder: "1459611"
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What looks wrong
+      options:
+        - A finding's plain summary doesn't match the inspector's words
+        - A date or fix status
+        - The map location
+        - Inside / outside TX-04
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: compare
+    attributes:
+      label: What the app shows vs. what the state's page shows
+    validations:
+      required: true

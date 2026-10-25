@@ -1,0 +1,9 @@
+# Every URL and phone number here traces to docs/OFFICIAL_SOURCES.md (verified Oct 24 2026).
+blank_issues_enabled: false
+contact_links:
+  - name: Report a daycare that isn't following state rules
+    url: https://childcare.hhs.texas.gov/Public/makeAReport
+    about: This project only shows public state records. Rule concerns go to Texas HHSC Child Care Regulation through this form (it is not for abuse or neglect).
+  - name: Report suspected abuse or neglect
+    url: https://www.txabusehotline.org/Login/Default.aspx
+    about: Call the Texas Abuse Hotline at 1-800-252-5400 (24/7) for anything urgent. Call 911 in an emergency.

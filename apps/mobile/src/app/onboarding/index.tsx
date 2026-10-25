@@ -63,9 +63,12 @@ export default function HookScreen() {
             Daycare Watch
           </Text>
         </Animated.View>
-        <Animated.View entering={rise(1)}>
+        <Animated.View entering={rise(1)} style={{ gap: space.sm }}>
           <Text variant="display" color="#FFFFFF" accessibilityRole="header" style={styles.shadow}>
-            Know what Texas inspectors found before you pick a daycare.
+            Find the right daycare for your family.
+          </Text>
+          <Text variant="callout" color="rgba(255,255,255,0.9)" style={styles.shadow}>
+            See what Texas inspectors found at any daycare, and get a heads-up when they post something new.
           </Text>
         </Animated.View>
         <Animated.View entering={rise(2)} style={{ gap: space.lg }}>

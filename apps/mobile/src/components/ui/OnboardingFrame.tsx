@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { type ComponentRef, type ReactNode, useEffect, useRef } from 'react';
+import { type ComponentRef, type ReactNode, useEffect, useRef, useState } from 'react';
 import { type LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { ReduceMotion, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -61,6 +61,29 @@ export function OnboardingTop({ step, onImage }: { step: number; onImage?: boole
   );
 }
 
+/**
+ * At the largest text sizes a step runs past the fold. Flash the scroll bar once and report `over`, so the pinned
+ * actions can draw a hairline: the cut reads as an edge with more under it, not as clipped text.
+ */
+export function useFold() {
+  const [node, attach] = useState<ComponentRef<typeof ScrollView> | null>(null);
+  const [view, setView] = useState(0);
+  const [content, setContent] = useState(0);
+  const over = view > 0 && content > view + 1;
+  const flashed = useRef(false);
+  useEffect(() => {
+    if (!over || !node || flashed.current) return;
+    flashed.current = true;
+    node.flashScrollIndicators();
+  }, [over, node]);
+  return {
+    attach,
+    over,
+    onLayout: (e: LayoutChangeEvent) => setView(e.nativeEvent.layout.height),
+    onContentSizeChange: (_w: number, h: number) => setContent(h),
+  };
+}
+
 type Props = {
   step: number;
   children: ReactNode;
@@ -73,34 +96,28 @@ export function OnboardingFrame({ step, children, actions, scroll = true }: Prop
   const c = useColors();
   const isDark = useIsDark();
   const insets = useSafeAreaInsets();
-  // At the largest text sizes the step runs past the fold: flash the scroll bar once so it reads as more, not cut.
-  const body = useRef<ComponentRef<typeof ScrollView>>(null);
-  const fit = useRef({ view: 0, content: 0, flashed: false });
-  const flashIfLonger = (next: Partial<{ view: number; content: number }>) => {
-    const f = Object.assign(fit.current, next);
-    if (f.flashed || !f.view || f.content <= f.view + 1) return;
-    f.flashed = true;
-    body.current?.flashScrollIndicators();
-  };
+  const { attach, over, onLayout, onContentSizeChange } = useFold();
   return (
     <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top + space.xs }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <OnboardingTop step={step} />
       {scroll ? (
         <ScrollView
-          ref={body}
+          ref={attach}
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          onLayout={(e: LayoutChangeEvent) => flashIfLonger({ view: e.nativeEvent.layout.height })}
-          onContentSizeChange={(_w, h) => flashIfLonger({ content: h })}
+          onLayout={onLayout}
+          onContentSizeChange={onContentSizeChange}
         >
           {children}
         </ScrollView>
       ) : (
         <View style={[styles.content, { flex: 1 }]}>{children}</View>
       )}
-      <View style={[styles.actions, { paddingBottom: Math.max(insets.bottom, space.lg) }]}>{actions}</View>
+      <View style={[styles.actions, { paddingBottom: Math.max(insets.bottom, space.lg) }, over && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.hairline }]}>
+        {actions}
+      </View>
     </View>
   );
 }

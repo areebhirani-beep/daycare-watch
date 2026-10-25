@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { useRise } from '@/components/ui/Celebration';
 import { DaycareCard } from '@/components/ui/DaycareCard';
 import { markOnboarded } from '@/components/ui/onboarding';
+import { useFold } from '@/components/ui/OnboardingFrame';
 import { CardSkeleton } from '@/components/ui/Skeletons';
 import { stripFromRecord } from '@/components/ui/strip';
 import { Text } from '@/components/ui/Text';
@@ -39,6 +40,8 @@ export default function DoneScreen() {
     if (id) haptic.success();
   }, [id]);
 
+  const { attach, over, onLayout, onContentSizeChange } = useFold();
+
   const go = (toRecord: boolean) => {
     markOnboarded();
     if (router.canDismiss()) router.dismissAll();
@@ -51,7 +54,13 @@ export default function DoneScreen() {
       {/* The welcome screen set light status text over its picture; this page is plain. */}
       <StatusBar style={isDark ? 'light' : 'dark'} />
       {/* Scrolls when a long name at large text outgrows the screen. */}
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.body}>
+      <ScrollView
+        ref={attach}
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.body}
+        onLayout={onLayout}
+        onContentSizeChange={onContentSizeChange}
+      >
         <Animated.View style={[styles.copy, head]}>
           <AppMark width={48} />
           <Text variant="display" accessibilityRole="header">
@@ -86,7 +95,7 @@ export default function DoneScreen() {
           </Animated.View>
         ) : null}
       </ScrollView>
-      <Animated.View style={[styles.actions, cta]}>
+      <Animated.View style={[styles.actions, over && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.hairline }, cta]}>
         {id ? (
           <>
             <Button label="See its record" kind="ink" onPress={() => go(true)} />

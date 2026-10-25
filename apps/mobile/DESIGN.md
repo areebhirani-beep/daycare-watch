@@ -46,7 +46,7 @@ v4 is frozen for the Oct 26 2026 submission. Changes after the freeze go into §
 | `title` | 22 / 27 | 700 | −0.4 | 1.7× | Daycare name, section heads |
 | `headline` | 17 / 22 | 700 | −0.2 | 2× | Card names, buttons |
 | `body` | 17 / 24 | 400 | −0.2 | 2.2× | Plain-English summaries |
-| `subhead` | 15 / 20 | 600 | −0.1 | 2× | A finding in plain words, small weighted labels |
+| `subhead` | 15 / 20 | 600 | −0.1 | 2× | A finding as one sentence a parent can follow, small weighted labels |
 | `callout` | 15 / 20 | 500 | −0.1 | 2× | Meta rows, chip labels, fix status |
 | `footnote` | 13 / 18 | 500 | 0 | 2× | Dates, sources, "Last checked" |
 | `caption` | 12 / 16 | 600 | 0 | 1.8× | Map credit, pin labels |
@@ -116,7 +116,7 @@ No green and no red in the set; the safety-hazards orange and health pink sit at
 | `FlyoverHero` | Apple Maps `satelliteFlyover` camera: pitch 56, altitude 340 m, start heading 20°, drifts 24° every 9 s. iOS + exact address only; a still `MapSnapshot` on Android and web. Reduce Motion keeps the 3D view and stops the drift, so the "3D view · Apple Maps" caption is always true. `legalTop` moves the Apple legal mark clear of text |
 | `PlaceGallery` | The Place hero carousel (§9) |
 | `MapPin` / `AreaPin` / `ClusterBubble` | §7 |
-| `FindingCard` | White card, `card` elevation. Header: `CategoryIcon` 32 + category in grey; High adds an ink "Serious" tag and a 1.5 pt ink border. Then the finding in plain words (`subhead`) and one meta line: "Rule N · <level> risk · Fix due …". Small neutral outline tags (Inspector's words, Coached, From a report) and "View on the state's site". "Risk levels are the state's." is said once under the list, never on each card |
+| `FindingCard` | White card, `card` elevation. Header: `CategoryIcon` 32 + category in grey; High adds an ink "Serious" tag and a 1.5 pt ink border. Then the finding as one sentence a parent can follow (`subhead`) and one meta line: "Rule N · <level> risk · Fix due …". Small neutral outline tags (Inspector's words, Coached, From a report) and "View on the state's site". "Risk levels are the state's." is said once under the list, never on each card |
 | `SeriousTag` | The only tag on Place: a small ink pill, on High-risk findings only |
 | `status.ts` | Fix-status copy, pure and tested (§10) |
 | `AlertBanner` | An iOS notification banner with our real push copy; the tag sits where iOS shows "now" ("Example", "Replay") |
@@ -216,7 +216,7 @@ The record is **one answer and a list of rows**, like Apple Weather's 10-day for
 ```
 3 problems found at the Oct 5 visit        largeTitle 28, the answer
 Fixes due Oct 30 · no state check on record yet   callout 15, grey (last three words never split)
-(◉) <the problem, in plain words>  Serious  top 2 problems: CategoryIcon 36, tag on High only
+(◉) <the problem, one sentence>    Serious  top 2 problems: CategoryIcon 36, tag on High only
  See all 9 from the past 2 years        >
 Past 2 years
  Oct 5                    Fix due Oct 30   two-line rows
@@ -260,8 +260,8 @@ Past 2 years
 
 | Step | File | What the parent sees |
 |---|---|---|
-| 1 | `index.tsx` | Full-bleed 3D flyover of a real licensed center, stepped scrims, the white mark and "Know what Texas inspectors found before you pick a daycare." Caption names the place and "3D view, Apple Maps". `onImage` "Get started" |
-| 2 | `how.tsx` | Three beats on one stage, advanced by Next or a tap: the raw state record → the same finding in plain words (CategoryIcon, Serious tag, fix status) → the alert banner tagged "Example" with our real push copy. Earlier layers sit under a 55% wash |
+| 1 | `index.tsx` | Full-bleed 3D flyover of a real licensed center, stepped scrims, the white mark and "Find the right daycare for your family." with the subline "See what Texas inspectors found at any daycare, and get a heads-up when they post something new." Caption names the place and "3D view, Apple Maps". `onImage` "Get started" |
+| 2 | `how.tsx` | Three beats on one stage, advanced by Next or a tap: the raw state record → the same finding written so any parent can follow it (CategoryIcon, Serious tag, fix status) → the alert banner tagged "Example" with our real push copy. Earlier layers sit under a 55% wash |
 | 3 | `find.tsx` | Search pill, "Centers near Frisco" + "Use my location", a carousel of real licensed centers (cards 1.2:1). Picking lifts the card 2 pt with a yellow check and a select haptic |
 | 4 | `alerts.tsx` | "Turn on alerts." + "Only for daycares you watch, and only when the state posts something new." A lock-screen panel (flyover wallpaper, live time) with the banner arriving. Then the OS prompt on "Turn on alerts"; "Not now" always works |
 | 5 | `done.tsx` | The check draws once: "You're watching <name>." and one line on what happens next |
@@ -275,8 +275,8 @@ From 768 px wide, the web shows the live app inside a drawn iPhone, not a deskto
                                          ╭───────────────────────╮
  [icon 64]                              │ 9:41   ▬▬▬▬▬   ▂▄▆ ◠ ▭│ ← drawn by the app inside
  Daycare Watch                         ▕│                       │▏ ← side buttons, 3 px slabs
- Know what Texas inspectors            ▕│     the live app,     │
- found before you pick a daycare.       │     393 × 852 iframe, │
+ Find the right daycare                ▕│     the live app,     │
+ for your family.                       │     393 × 852 iframe, │
  Checked against data.texas.gov daily   │     scaled to fit     │
  ┌──────┐                              ▕│                       │
  │  QR  │ Open on your phone             │        ▬▬▬▬           │ ← home indicator
@@ -289,7 +289,7 @@ From 768 px wide, the web shows the live app inside a drawn iPhone, not a deskto
 | Breakpoints | < 768: the app, full screen, no frame. 768–1023: the frame alone, centred. ≥ 1024: the column and the frame as one centred group |
 | Frame | Titanium ring 4 px, flat two tones with no gradient: light `#8E8A84` with a 1 px `#5E5B57` inner line; dark scheme `#3A3A3C` / `#1C1C1E`. Black bezel 12. Screen radius 55. Dynamic Island 126 × 37 pill at top 11. Side buttons as 3 px slabs in the ring colour, measured from the frame top: left action 122 (h 34), volume 190 and 268 (h 64); right side button 230 (h 104). Shadow `0 30px 80px rgba(0,0,0,.18)`. Scale `min(1, (window h − 80) / 884)`, centred vertically |
 | Screen | `<iframe title="Daycare Watch app">` of the current path at 393 × 852, `transform: scale(s)`. On load the page gives the app iPhone insets (top 59, bottom 34) through the safe-area provider's measured element, then fires `resize`. The app draws its own 9:41 status bar (white over the place hero and onboarding step 1, ink elsewhere, white in dark) and a home indicator 134 × 5 |
-| Column | App icon 64, radius 14. "Daycare Watch" 20/700 as the page's one `h1`. The line "Know what Texas inspectors found before you pick a daycare." 40/44, weight 800, tracking −0.8. "Checked against data.texas.gov every day. Built for the 2026 Congressional App Challenge, TX-04." 17 `textSecondary`, a sentence, not a bullet. QR 128 on a white card (padding 12, radius 16), caption "Open on your phone" 13. Links as text, 17 semibold: GitHub, and the video only once its real URL exists |
+| Column | App icon 64, radius 14. "Daycare Watch" 20/700 as the page's one `h1`. The line "Find the right daycare for your family." with the subline "See what Texas inspectors found at any daycare, and get a heads-up when they post something new." 40/44, weight 800, tracking −0.8. "Checked against data.texas.gov every day. Built for the 2026 Congressional App Challenge, TX-04." 17 `textSecondary`, a sentence, not a bullet. QR 128 on a white card (padding 12, radius 16), caption "Open on your phone" 13. Links as text, 17 semibold: GitHub, and the video only once its real URL exists |
 | Deep links | The page URL is the app's URL: `/daycare/<id>` opens that place inside the frame with no onboarding. When the app navigates, the page URL follows (`replaceState`) and the QR re-encodes it, so a scan opens the same page on a phone |
 | Page | Background is the theme `bg` (light `#F2F2F7`, dark `#000`). One `<main>` landmark. Lighthouse accessibility ≥ 90 |
 | Never | A floating box or a fake phone screenshot; a re-laid-out desktop version of a screen; gloss or gradient on the frame; a second scrollbar on the page; horizontal page scroll at any width |
@@ -314,6 +314,7 @@ From 768 px wide, the web shows the live app inside a drawn iPhone, not a deskto
 | Oct 25 13:54 | Place answer lists every problem from the latest visit (up to 3), rows skip the date and status the headline already says, link reads "Past 2 years (N)" | Three different numbers and a status said twice in one card |
 | Oct 25 14:11 | New mark and app icon: a building with its door and one dot for something new, ink on school-bus yellow; iOS light, dark and tinted icons, Android adaptive and monochrome | The old ring on a rail read as abstract tech; the building plus the dot says what the app does in one second at 29 pt |
 | Oct 25 14:11 | Large text: past 1.6x the Find card picture drops to 3:1, and onboarding steps flash the scroll bar once when they run past the fold | Text never truncates at those sizes, so the picture gives up height and the fold reads as more, not cut |
+| Oct 25 14:35 | Tagline "Find the right daycare for your family." with the subline "See what Texas inspectors found at any daycare, and get a heads-up when they post something new." on the welcome, the web column, the cover and the end card | The old line described the app's method; the new one is the parent's goal. The app still never calls a daycare the best, right or safe |
 | Oct 25 12:29 | Web ≥ 768 px is a map with a 420 px panel (360 on tablets); onboarding becomes a centred card | Desktop must not be a phone column; judges open the link on laptops |
 | Oct 25 13:02 | Replaces 12:29: web ≥ 768 px is the live app in a real iPhone frame (iframe at 393 × 852), with a calm left column from 1024 px; the split layout and the onboarding card are retired | Judges should see the real app on a real-looking phone, not a desktop re-layout |
 | Oct 25 12:28 | Carousel = up to 2 verified street photos of the building, then ONE overhead; Street View tile cut | Two pictures of the building itself, then the satellite view, not three satellite angles |

@@ -20,7 +20,7 @@ import { easeOut, elevation, fade, haptic, motion, radius, space, useColors } fr
 
 const BEATS = [
   'Inspectors write down what they find.',
-  'We put it in plain words.',
+  'We put it in words any parent can follow.',
   'And tell you when the state posts something new.',
 ];
 

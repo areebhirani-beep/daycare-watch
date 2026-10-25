@@ -1,70 +1,42 @@
-# QA U16a-d: street photos on real records (daycare_record.photos):
-#   1396589 3 photos (The Nest School Plano)   136712 2 photos   157569 1 photo   1459611 0 photos (3D first)
-#   98685   approximate geocode: no photos   1462404  home: neighborhood map only, no photos
+# QA U16: street photos are collected but NOT shown for the submission (lib/mapillary.ts SHOW_STREET_PHOTOS =
+# false). On centers that do have photo rows (1396589 has 3, 136712 has 2), every gallery page is swiped
+# through and no street photo or Mapillary credit may appear. Homes and approximate points keep their own rules.
 appId: host.exp.Exponent
 ---
 - runFlow: _open.yaml
-# 3 photos: page one is the place itself, photos follow with month + credit; the viewer shows them too.
 - openLink: ${METRO}/--/daycare/1396589
 - extendedWaitUntil:
     visible: "3D view · Apple Maps"
     timeout: 20000
-- takeScreenshot: ../../harness/state/qa/u16a-3-0
-- swipe:
-    start: 80%, 18%
-    end: 15%, 18%
-- extendedWaitUntil:
-    visible: ".*Mapillary contributors.*"
-    timeout: 10000
-- takeScreenshot: ../../harness/state/qa/u16a-3-1-photo
-- tapOn:
-    point: 50%, 15%
-- extendedWaitUntil:
-    visible: "Close"
-    timeout: 10000
-- assertVisible: ".*Mapillary contributors.*"
-- takeScreenshot: ../../harness/state/qa/u16d-viewer
-- tapOn: "Close"
-# 2 photos
+- repeat:
+    times: 4
+    commands:
+      - assertNotVisible: ".*Mapillary.*"
+      - assertNotVisible: "Street view near the address"
+      - swipe:
+          start: 80%, 18%
+          end: 15%, 18%
+- takeScreenshot: ../../harness/state/qa/u16-off-1396589
 - openLink: ${METRO}/--/daycare/136712
 - extendedWaitUntil:
     visible: "3D view · Apple Maps"
     timeout: 20000
-- swipe:
-    start: 80%, 18%
-    end: 15%, 18%
-- extendedWaitUntil:
-    visible: ".*Mapillary contributors.*"
-    timeout: 10000
-- takeScreenshot: ../../harness/state/qa/u16a-2-photo
-# 1 photo
-- openLink: ${METRO}/--/daycare/157569
-- extendedWaitUntil:
-    visible: "3D view · Apple Maps"
-    timeout: 20000
-- swipe:
-    start: 80%, 18%
-    end: 15%, 18%
-- extendedWaitUntil:
-    visible: ".*Mapillary contributors.*"
-    timeout: 10000
-- takeScreenshot: ../../harness/state/qa/u16a-1-photo
-# 0 photos
-- openLink: ${METRO}/--/daycare/1459611
-- extendedWaitUntil:
-    visible: "Viva World School.*"
-    timeout: 20000
-- assertNotVisible: ".*Mapillary.*"
-- takeScreenshot: ../../harness/state/qa/u16a-0
-# approximate: no photos
+- repeat:
+    times: 4
+    commands:
+      - assertNotVisible: ".*Mapillary.*"
+      - assertNotVisible: "Street view near the address"
+      - swipe:
+          start: 80%, 18%
+          end: 15%, 18%
+# approximate: no 3D, no photos
 - openLink: ${METRO}/--/daycare/98685
 - extendedWaitUntil:
     visible: "Play House.*"
     timeout: 20000
 - assertVisible: "Approximate location"
 - assertNotVisible: ".*Mapillary.*"
-- takeScreenshot: ../../harness/state/qa/u16c-approx
-# home: neighborhood only, no photos
+# home: neighborhood only
 - openLink: ${METRO}/--/daycare/1462404
 - extendedWaitUntil:
     visible: "Neighborhood only · private home"

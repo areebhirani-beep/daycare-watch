@@ -1,0 +1,12 @@
+# QA M4: Reduce Motion on (run.sh sets it with simctl). The place page drops the moving 3D view for the still
+# aerial with its pin, and screens still load.
+appId: host.exp.Exponent
+---
+- runFlow: _open.yaml
+- openLink: ${METRO}/--/daycare/1459611
+- extendedWaitUntil:
+    visible: "Viva World School.*"
+    timeout: 20000
+- assertNotVisible: "3D view · Apple Maps"
+- assertVisible: "Placed from the street address"
+- takeScreenshot: ../../harness/state/qa/m04-place

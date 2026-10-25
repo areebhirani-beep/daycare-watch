@@ -18,13 +18,14 @@ xcrun simctl ui "$DEVICE" appearance light
 xcrun simctl ui "$DEVICE" content_size large
 
 flows=("$@")
-[[ ${#flows[@]} -eq 0 ]] && flows=($(ls e2e/qa/u*.yaml | xargs -n1 basename | sed 's/\.yaml$//'))
+[[ ${#flows[@]} -eq 0 ]] && flows=($(ls e2e/qa/[um][0-9]*.yaml | xargs -n1 basename | sed 's/\.yaml$//'))
 
 pass=0; fail=0; failed=()
 for f in "${flows[@]}"; do
   [[ "$f" == u01-* ]] && xcrun simctl privacy "$DEVICE" reset location host.exp.Exponent
   [[ "$f" == u03-* ]] && xcrun simctl privacy "$DEVICE" revoke location host.exp.Exponent
   [[ "$f" == u28-* ]] && xcrun simctl ui "$DEVICE" appearance dark
+  [[ "$f" == m04-* ]] && xcrun simctl spawn "$DEVICE" defaults write com.apple.Accessibility ReduceMotionEnabled -bool true
   [[ "$f" == u29-* ]] && xcrun simctl ui "$DEVICE" content_size accessibility-extra-extra-extra-large
   if [[ "$f" == u04-* ]]; then
     xcrun simctl privacy "$DEVICE" grant location host.exp.Exponent
@@ -36,6 +37,7 @@ for f in "${flows[@]}"; do
     fail=$((fail + 1)); failed+=("$f")
   fi
   [[ "$f" == u28-* ]] && xcrun simctl ui "$DEVICE" appearance light
+  [[ "$f" == m04-* ]] && xcrun simctl spawn "$DEVICE" defaults write com.apple.Accessibility ReduceMotionEnabled -bool false
   [[ "$f" == u29-* ]] && xcrun simctl ui "$DEVICE" content_size large
   if [[ "$f" == u03-* || "$f" == u04-* ]]; then
     xcrun simctl privacy "$DEVICE" grant location host.exp.Exponent

@@ -11,7 +11,7 @@ const MARGIN = 1.4; // room around the outermost pins so none sits on the edge
  * The full-screen region that shows `points` inside the visible strip. Computed here instead of with the map's
  * own padding, because iOS squeezes padded camera moves into a sliver and lands zoomed out to half of Texas.
  */
-export function regionFor(points: LatLng[], view: Viewport): Region | null {
+export function regionFor(points: LatLng[], view: Viewport, maxLatitudeDelta = Infinity): Region | null {
   if (points.length === 0) return null;
   const lats = points.map((p) => p.latitude);
   const lngs = points.map((p) => p.longitude);
@@ -27,7 +27,8 @@ export function regionFor(points: LatLng[], view: Viewport): Region | null {
   // Tall enough that the pins' north-south span fills the strip, wide enough that their east-west span fits.
   const fromLat = Math.max(maxLat - minLat, MIN_SPAN) * MARGIN * (view.height / strip);
   const fromLng = Math.max(maxLng - minLng, MIN_SPAN) * MARGIN * cos * (view.height / view.width);
-  const latitudeDelta = Math.max(fromLat, fromLng);
+  // A cap lets a cluster tap always zoom in, even when its daycares sit closer together than MIN_SPAN.
+  const latitudeDelta = Math.min(Math.max(fromLat, fromLng), maxLatitudeDelta);
   const longitudeDelta = (latitudeDelta * view.width) / view.height / cos;
 
   // Move the camera south so the pins' middle lands in the middle of the strip, not under the sheet.

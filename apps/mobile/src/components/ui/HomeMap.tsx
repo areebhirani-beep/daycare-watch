@@ -1,6 +1,6 @@
 import BottomSheet, { BottomSheetFlatList, type BottomSheetFlatListMethods, useBottomSheetSpringConfigs } from '@gorhom/bottom-sheet';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import MapView, { Marker, type Region } from 'react-native-maps';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -76,6 +76,14 @@ type Cluster = { key: string; lat: number; lng: number; rows: DaycareRow[] };
 const CLUSTER_PT = 52;
 
 /** Screen-grid clustering in points: cheap, stable, fine for the rows daycares_near returns. */
+// Under this span (degrees, about 20 m) a cluster's daycares share one point and can't be split by zooming.
+const STACKED = 0.0002;
+const stacked = (k: Cluster) => {
+  const lats = k.rows.map((r) => r.lat!);
+  const lngs = k.rows.map((r) => r.lng!);
+  return Math.max(...lats) - Math.min(...lats) < STACKED && Math.max(...lngs) - Math.min(...lngs) < STACKED;
+};
+
 /** Map layering: translucent home/approximate areas under solid pins, watched above, clusters above, the picked one on top. */
 function markerZ(r: DaycareRow, selected: boolean, watched: boolean): number {
   if (selected) return 10;
@@ -157,6 +165,9 @@ export function HomeMap({
   const list = useRef<BottomSheetFlatListMethods>(null);
   const [filters, setFilters] = useState<Set<Filter>>(new Set());
   const [selected, setSelected] = useState<number | null>(null);
+  // Daycares that share one map point (homes are placed by a rounded point, so a street's homes stack): a tap on
+  // their bubble lists them in the sheet, because no zoom can split them.
+  const [group, setGroup] = useState<ReadonlySet<number> | null>(null);
   const start = center ?? fallbackCenter;
   const [region, setRegion] = useState<Region>({ latitude: start.lat, longitude: start.lng, latitudeDelta: 0.12, longitudeDelta: 0.12 });
 
@@ -168,7 +179,9 @@ export function HomeMap({
     const topLat = region.latitude + region.latitudeDelta / 2 - (pillBottom / height) * region.latitudeDelta;
     return cluster(mapped, region, width, height).filter((k) => k.lat < topLat);
   }, [mapped, region, width, height, pillBottom]);
-  const featured = useMemo(() => shown.slice(0, 12), [shown]);
+  const listed = useMemo(() => (group ? shown.filter((r) => group.has(r.operation_id)) : shown), [shown, group]);
+  const featured = useMemo(() => listed.slice(0, 12), [listed]);
+  const cardW = Math.min(300, width - 72);
 
   const snapPoints = useMemo(
     () => [sheet.peek + TAB_BAR_CLEARANCE - 24, sheet.half, height - insets.top - 64],
@@ -217,10 +230,9 @@ export function HomeMap({
   const pick = (r: DaycareRow) => {
     haptic.select();
     setSelected(r.operation_id);
-    const i = featured.findIndex((x) => x.operation_id === r.operation_id);
+    // A lone pin is never inside a stacked spot, so picking one shows the full list again.
+    setGroup(null);
     sheetRef.current?.snapToIndex(1);
-    // On the snap grid, so the picked card keeps the 16 pt gutter (scrollToIndex would put it flush to the edge).
-    if (i >= 0) carousel.current?.scrollToOffset({ offset: i * (cardW + 12), animated: true });
     if (r.lat != null && r.lng != null)
       map.current?.animateToRegion(
         { ...region, latitude: r.lat - ((height / 2 - (view.top + view.bottom) / 2) / height) * region.latitudeDelta, longitude: r.lng },
@@ -228,15 +240,31 @@ export function HomeMap({
       );
   };
 
+  // After the render that picked it, so the carousel already holds the full list when it scrolls. On the snap grid,
+  // so the picked card keeps the 16 pt gutter (scrollToIndex would put it flush to the edge).
+  useEffect(() => {
+    const i = featured.findIndex((x) => x.operation_id === selected);
+    if (i >= 0) carousel.current?.scrollToOffset({ offset: i * (cardW + 12), animated: true });
+  }, [selected]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const zoomInto = (k: Cluster) => {
     haptic.select();
-    map.current?.animateToRegion(
-      { latitude: k.lat, longitude: k.lng, latitudeDelta: region.latitudeDelta / 3, longitudeDelta: region.longitudeDelta / 3 },
-      350,
+    if (stacked(k)) {
+      setGroup(new Set(k.rows.map((r) => r.operation_id)));
+      sheetRef.current?.snapToIndex(1);
+      list.current?.scrollToOffset({ offset: 0, animated: true });
+      return;
+    }
+    // Fit the cluster's daycares into the strip above the sheet (centering on the screen put them under it),
+    // zooming in at least 3x so the bubble splits.
+    const next = regionFor(
+      k.rows.map((r) => ({ latitude: r.lat!, longitude: r.lng! })),
+      view,
+      region.latitudeDelta / 3,
     );
+    if (next) map.current?.animateToRegion(next, 350);
   };
 
-  const cardW = Math.min(300, width - 72);
 
   const header = (
     <View>
@@ -245,7 +273,18 @@ export function HomeMap({
           <Text variant="largeTitle" accessibilityRole="header" numberOfLines={2}>
             {loading && rows.length === 0 ? 'Finding daycares…' : `Daycares near ${areaName ?? 'you'}`}
           </Text>
-          {areaLabel || filters.size > 0 ? (
+          {group ? (
+            <View style={styles.groupRow}>
+              <Text variant="callout" tone="secondary">
+                {`${listed.length} daycares at this spot`}
+              </Text>
+              <Pressable accessibilityRole="button" hitSlop={12} onPress={() => setGroup(null)}>
+                <Text variant="callout" tone="accent">
+                  Show all
+                </Text>
+              </Pressable>
+            </View>
+          ) : areaLabel || filters.size > 0 ? (
             <Text variant="callout" tone="secondary">
               {areaLabel ?? `${shown.length} of ${rows.length} match`}
             </Text>
@@ -257,7 +296,7 @@ export function HomeMap({
         <Chip label="Homes" icon="home" selected={filters.has('homes')} onPress={() => toggle('homes')} />
         <Chip label="In TX-04" icon="district" selected={filters.has('district')} onPress={() => toggle('district')} />
       </ChipRow>
-      <SectionHeader title={areaLabel ? 'Closest first' : 'Closest to you'} onMore={() => sheetRef.current?.snapToIndex(2)} moreLabel="Show the full list" />
+      <SectionHeader title={group ? 'At this spot' : areaLabel ? 'Closest first' : 'Closest to you'} onMore={() => sheetRef.current?.snapToIndex(2)} moreLabel="Show the full list" />
       {loading && rows.length === 0 ? (
         <View style={styles.carouselLoading}>
           <CardSkeleton width={cardW} />
@@ -326,7 +365,12 @@ export function HomeMap({
           showsBuildings
           // Apple's Legal link stays visible above the half sheet.
           legalLabelInsets={{ top: 0, left: space.lg, bottom: legalBottom, right: 0 }}
-          onPress={() => setSelected(null)}
+          // A marker's press bubbles up here too (action 'marker-press'); only a tap on the open map clears the pick.
+          onPress={(e) => {
+            if (e.nativeEvent.action === 'marker-press') return;
+            setSelected(null);
+            setGroup(null);
+          }}
         >
           {clusters.map((k) =>
             k.rows.length === 1 ? (
@@ -362,7 +406,7 @@ export function HomeMap({
               </Marker>
             ) : (
               <Marker key={k.key} coordinate={{ latitude: k.lat, longitude: k.lng }} onPress={() => zoomInto(k)} tracksViewChanges={false} zIndex={3}>
-                <View accessible accessibilityRole="button" accessibilityLabel={`${k.rows.length} daycares here. Zooms in.`}>
+                <View accessible accessibilityRole="button" accessibilityLabel={`${k.rows.length} daycares here. ${stacked(k) ? 'Lists them below.' : 'Zooms in.'}`}>
                   <ClusterBubble count={k.rows.length} />
                 </View>
               </Marker>
@@ -395,7 +439,7 @@ export function HomeMap({
       >
         <BottomSheetFlatList
           ref={list}
-          data={loading && rows.length === 0 ? [] : shown}
+          data={loading && rows.length === 0 ? [] : listed}
           keyExtractor={(r: DaycareRow) => String(r.operation_id)}
           ListHeaderComponent={header}
           refreshing={refreshing}
@@ -459,5 +503,6 @@ const styles = StyleSheet.create({
   },
   carousel: { paddingHorizontal: space.lg, gap: 12 },
   carouselLoading: { flexDirection: 'row', gap: 12, paddingHorizontal: space.lg },
+  groupRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   sep: { height: StyleSheet.hairlineWidth, marginLeft: space.lg + 64 + space.md },
 });

@@ -43,4 +43,11 @@ describe('regionFor', () => {
     expect(r.latitudeDelta).toBeGreaterThan(0);
     expect(screenY(r, plano[0]!)).toBeCloseTo((view.top + view.bottom) / 2, 5);
   });
+
+  it('zooms in past the minimum span when capped (a cluster tap), still centered in the strip', () => {
+    const free = regionFor([plano[1]!], view)!;
+    const r = regionFor([plano[1]!], view, free.latitudeDelta / 3)!;
+    expect(r.latitudeDelta).toBeCloseTo(free.latitudeDelta / 3, 10);
+    expect(screenY(r, plano[1]!)).toBeCloseTo((view.top + view.bottom) / 2, 5);
+  });
 });

@@ -48,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
     photos.add_argument("--from-dir", metavar="DIR", help="use answers saved by --record-dir instead of the API")
     photos.add_argument("--dry-run", action="store_true", help="query and select, write nothing, print coverage")
     photos.add_argument("--load-verified", action="store_true",
-                        help="load data/verified_photos.csv (hand-checked photos) and print coverage; no API call")
+                        help="load the hand-checked lists in data/ (photos, street views); no API call")
     args = parser.parse_args(argv)
     _configure_logging()
     settings = Settings.from_env()
@@ -71,7 +71,7 @@ def main(argv: list[str] | None = None) -> int:
 
         with connect(settings.require_db()) as conn:
             if args.load_verified:
-                print(json.dumps(ph.load_verified(conn), indent=2))
+                print(json.dumps(ph.load_verified(conn) | ph.load_street_view_checks(conn), indent=2))
             elif not args.coverage:
                 token = ph.token_from_env()
                 if token is None and not args.from_dir:

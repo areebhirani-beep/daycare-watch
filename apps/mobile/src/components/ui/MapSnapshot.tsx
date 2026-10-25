@@ -124,6 +124,9 @@ export function MapSnapshot({
           key={t.key}
           source={{ uri: t.uri }}
           cachePolicy="memory-disk"
+          // Decorative: the map's meaning is in the label and the credit. On web expo-image writes this as alt="" on
+          // the <img> (its `alt` prop reaches only the placeholder), which passes Lighthouse's image-alt audit.
+          accessibilityLabel=""
           transition={120}
           onLoad={loaded ? undefined : () => setLoadedView(view)}
           style={{ position: 'absolute', left: t.left, top: t.top, width: TILE, height: TILE }}

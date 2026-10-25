@@ -169,12 +169,12 @@ def run(settings: Settings, opts: RunOptions, soda: SodaClient | None = None) ->
 
 
 def _photos(db_url: str) -> dict[str, Any]:
-    """Load the hand-verified photo list. Photos are a nice-to-have: a problem here never fails the run."""
+    """Load the hand-checked photo and street-view lists. A problem here never fails the run."""
     from pipeline import photos
 
     try:
         with connect(db_url) as pconn:
-            return photos.load_verified(pconn)
+            return photos.load_verified(pconn) | photos.load_street_view_checks(pconn)
     except Exception as exc:  # logged and reported in the run's counts
         log.warning("photos.failed", error=f"{type(exc).__name__}: {exc}")
         return {"photos_error": type(exc).__name__}

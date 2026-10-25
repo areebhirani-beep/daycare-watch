@@ -338,3 +338,37 @@ def test_recorded_shared_point_replays_every_image_seen_there(tmp_path: Path) ->
     replay = photos.Recorded(tmp_path).images_near(recs[0]["lat"], recs[0]["lng"])
     assert {str(i["id"]) for i in replay} == union
     assert len(replay) == len(union) > max(len(r["data"]) for r in recs)
+
+
+def test_committed_street_view_checks_are_well_formed() -> None:
+    rows = photos.read_street_view_checks()
+    assert rows and all(datetime.fromisoformat(r["checked_at"]) for r in rows)
+
+
+def test_street_view_checks_reject_a_bad_flag(tmp_path: Path) -> None:
+    bad = tmp_path / "s.csv"
+    bad.write_text("operation_id,shows_building,checked_at,note\n144589,yes,2026-10-25T13:04:22-05:00,x\n")
+    with pytest.raises(ValueError, match="line 2"):
+        photos.read_street_view_checks(bad)
+
+
+@pytest.mark.db
+@pytest.mark.skipif(not DB, reason="DATABASE_URL not set")
+def test_load_street_view_checks_makes_the_file_the_whole_table(tmp_path: Path) -> None:
+    assert DB
+    with psycopg.connect(DB) as conn:
+        tx = conn.transaction()
+        tx.__enter__()
+        try:
+            op = conn.execute(f"select operation_id from ({photos.TARGETS}) t limit 1").fetchone()
+            assert op
+            listed = tmp_path / "s.csv"
+            listed.write_text(f"operation_id,shows_building,checked_at,note\n{op[0]},true,"
+                              "2026-10-25T13:04:22-05:00,front of the building\n")
+            assert photos.load_street_view_checks(conn, listed) == {"street_view_checked": 1,
+                                                                    "street_view_shows_building": 1}
+            assert conn.execute("select operation_id, shows_building from core.street_view_checks").fetchall() == [
+                (op[0], True)]
+            assert photos.load_street_view_checks(conn, listed)["street_view_checked"] == 1  # idempotent
+        finally:
+            tx.__exit__(psycopg.Rollback, psycopg.Rollback(), None)

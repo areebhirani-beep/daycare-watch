@@ -340,6 +340,45 @@ def load_verified(conn: Conn, path: Path = VERIFIED_CSV) -> dict[str, Any]:
     return counts
 
 
+STREET_VIEW_CSV = VERIFIED_CSV.with_name("street_view_checks.csv")
+STREET_VIEW_COLUMNS = ("operation_id", "shows_building", "checked_at", "note")
+LOAD_STREET_VIEW = """
+insert into core.street_view_checks (operation_id, shows_building, checked_at, note) values (%s, %s, %s, %s)
+on conflict (operation_id) do update set shows_building = excluded.shows_building,
+  checked_at = excluded.checked_at, note = excluded.note
+"""
+
+
+def read_street_view_checks(path: Path = STREET_VIEW_CSV) -> list[dict[str, str]]:
+    """Hand checks of the app's street-level picture at a center's address: does it show the building?"""
+    import csv
+
+    with path.open(newline="") as f:
+        rows = list(csv.DictReader(f))
+    for i, r in enumerate(rows, start=2):
+        if (tuple(r) != STREET_VIEW_COLUMNS or r["shows_building"] not in ("true", "false")
+                or not r["operation_id"].strip() or not r["checked_at"].strip()):
+            raise ValueError(f"{path.name} line {i}: expected {STREET_VIEW_COLUMNS}, shows_building true or false")
+    if len({r["operation_id"] for r in rows}) != len(rows):
+        raise ValueError(f"{path.name}: an operation_id appears twice")
+    return rows
+
+
+def load_street_view_checks(conn: Conn, path: Path = STREET_VIEW_CSV) -> dict[str, Any]:
+    """Make the checked list the whole table: rows not in the file are removed. No API call."""
+    rows = read_street_view_checks(path)
+    with conn.transaction():
+        conn.cursor().executemany(LOAD_STREET_VIEW, [
+            (int(r["operation_id"]), r["shows_building"] == "true", r["checked_at"], r["note"] or None)
+            for r in rows])
+        conn.execute("delete from core.street_view_checks where not (operation_id = any(%s::bigint[]))",
+                     ([int(r["operation_id"]) for r in rows],))
+    counts = {"street_view_checked": len(rows),
+              "street_view_shows_building": sum(r["shows_building"] == "true" for r in rows)}
+    log.info("street_view.loaded", **counts)
+    return counts
+
+
 def token_from_env() -> str | None:
     return os.environ.get("MAPILLARY_TOKEN") or None
 

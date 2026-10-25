@@ -50,7 +50,7 @@ export function AlertBanner({
       accessibilityLabel={`${tag === 'now' ? 'Alert' : `${tag} alert`}. ${title}. ${body}`}
       style={[styles.banner, elevation.float, { backgroundColor: c.surface }, s, style]}
     >
-      <Image source={icon} style={styles.icon} />
+      <Image source={icon} style={styles.icon} accessibilityLabel="" />
       <View style={{ flex: 1, gap: 1 }}>
         <View style={styles.top}>
           <Text variant="subhead" numberOfLines={1} style={{ flex: 1 }} maxFontSizeMultiplier={maxScale}>

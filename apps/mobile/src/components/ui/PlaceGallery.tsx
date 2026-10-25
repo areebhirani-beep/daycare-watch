@@ -20,7 +20,7 @@ import { useAppWidth } from '@/lib/layout';
 import { photoMonth, photosEnabled, photoUrl } from '@/lib/mapillary';
 import type { Photo } from '@/lib/types';
 
-import { lookAroundAvailable, lookAroundSnapshot, presentLookAround } from '../../../modules/look-around';
+import { type Facing, lookAroundAvailable, lookAroundSnapshot, presentLookAround } from '../../../modules/look-around';
 import { fade, haptic, motion, radius, space, useColors, useIsDark } from '@/theme';
 
 import { FlyoverHero } from './FlyoverHero';
@@ -45,7 +45,7 @@ export function locationLabel(q: GeocodeQuality | null | undefined): string {
 }
 
 type Page =
-  | { key: 'lookaround'; kind: 'lookaround'; uri: string }
+  | { key: 'lookaround'; kind: 'lookaround'; uri: string; facing: Facing }
   | { key: string; kind: 'photo'; photo: Photo; url: string }
   | { key: 'flyover'; kind: 'flyover' }
   | { key: 'aerial'; kind: 'aerial' }
@@ -53,6 +53,7 @@ type Page =
   | { key: 'approx'; kind: 'approx' };
 
 const ESRI_CREDIT = 'Imagery © Esri, Maxar';
+const POINT_CAVEAT = 'Apple does not say when it was taken, and it may not show this daycare.';
 
 type Caption = {
   /** The chip on the hero: the source, and the month for a Mapillary photo. */
@@ -61,8 +62,8 @@ type Caption = {
   credit?: string;
   /** What VoiceOver and TalkBack read for the page. */
   label: string;
-  /** Under the picture in the full-screen viewer: the photographer and licence, then the month. */
-  viewer?: { credit: string; date: string };
+  /** Under the picture in the full-screen viewer: the photographer and licence, then the month; or a caveat. */
+  viewer?: string[];
 };
 
 function longMonth(p: Pick<Photo, 'captured_at'>): string {
@@ -72,6 +73,14 @@ function longMonth(p: Pick<Photo, 'captured_at'>): string {
 function caption(p: Page, name: string): Caption {
   switch (p.kind) {
     case 'lookaround':
+      // No same-name place: this is only the street at the state's address point, and may show a neighbour.
+      if (p.facing === 'point') {
+        return {
+          chip: 'Street at this address · Apple Look Around',
+          label: `The street at the state's address for ${name}, from Apple Look Around. ${POINT_CAVEAT}`,
+          viewer: [POINT_CAVEAT],
+        };
+      }
       // Apple's imagery can predate the daycare (one TX-04 center shows the previous tenant's sign), and Apple gives
       // no capture date, so the page says so instead of implying the picture is current.
       return {
@@ -82,7 +91,7 @@ function caption(p: Page, name: string): Caption {
       return {
         chip: `Photo · Mapillary · ${photoMonth(p.photo)}`,
         label: `Street photo of ${name}, Mapillary, ${longMonth(p.photo)}`,
-        viewer: { credit: `© ${p.photo.creator ?? 'Mapillary contributors'} · CC BY-SA 4.0 · Mapillary`, date: `Taken ${longMonth(p.photo)}` },
+        viewer: [`© ${p.photo.creator ?? 'Mapillary contributors'} · CC BY-SA 4.0 · Mapillary`, `Taken ${longMonth(p.photo)}`],
       };
     case 'flyover':
       return { chip: '3D view · Apple Maps', label: `3D view of ${name} from above, Apple Maps` };
@@ -113,6 +122,7 @@ export function PlaceGallery({
   imagery,
   flyover,
   photos = [],
+  streetChecked = false,
   kind = 'center',
   watched,
   height,
@@ -130,6 +140,8 @@ export function PlaceGallery({
   /** flyoverAllowed(daycare): a licensed center whose address geocoded exactly. Photos follow the same rule. */
   flyover: boolean;
   photos?: Photo[];
+  /** A person checked that Apple's street at the address point is worth showing (platform's list). Off by default. */
+  streetChecked?: boolean;
   kind?: PinKind;
   /** Turns our pin yellow on the 3D view and the aerial, as on the map. */
   watched?: boolean;
@@ -155,22 +167,23 @@ export function PlaceGallery({
   const x = useSharedValue(0);
   const has = typeof lat === 'number' && typeof lng === 'number';
 
-  // Apple's street-level picture, made once per daycare on the phone. Only a scene Apple matched to the daycare by
-  // name is shown: the street at the bare address point can face a different building.
+  // Apple's street-level picture, made once per daycare on the phone: the building where Apple matched the daycare by
+  // name, otherwise the street at the state's address point, labelled as only that (it can show a neighbour).
   const look = useQuery({
-    queryKey: ['lookaround', id],
+    queryKey: ['lookaround', id, streetChecked],
     queryFn: () =>
       lookAroundSnapshot(lat!, lng!, {
         name,
         cacheKey: String(id),
         width: Math.round(width * Math.min(PixelRatio.get(), 2)),
         height: Math.round(height * Math.min(PixelRatio.get(), 2)),
+        allowPoint: streetChecked,
       }),
     enabled: lookAroundAvailable && flyover && has && id != null,
     staleTime: Infinity,
     retry: 0,
   });
-  const lookPages: Page[] = look.data?.facing === 'place' ? [{ key: 'lookaround', kind: 'lookaround', uri: look.data.uri }] : [];
+  const lookPage: Page | null = look.data ? { key: 'lookaround', kind: 'lookaround', uri: look.data.uri, facing: look.data.facing } : null;
 
   // Only hand-checked photos reach the record. Their URLs are looked up now so swiping never waits, and a photo
   // joins the carousel only once its URL is in.
@@ -195,7 +208,10 @@ export function PlaceGallery({
             return url && !broken.has(p.image_id) ? [{ key: p.image_id, kind: 'photo', photo: p, url }] : [];
           });
           const above: Page = flyover && Platform.OS === 'ios' ? { key: 'flyover', kind: 'flyover' } : { key: 'aerial', kind: 'aerial' };
-          return [...lookPages, ...photoPages].slice(0, 2).concat(above);
+          // Order: pictures of the building (Apple's same-name place, hand-checked photos), then the street at the address.
+          const building = lookPage?.facing === 'place' ? [lookPage] : [];
+          const street = lookPage?.facing === 'point' ? [lookPage] : [];
+          return [...building, ...photoPages, ...street].slice(0, 2).concat(above);
         })();
   const keys = pages.map((p) => p.key).join('|');
 
@@ -228,10 +244,11 @@ export function PlaceGallery({
   const open = (i: number) => {
     const p = pages[i];
     if (!p) return;
-    if (p.kind === 'lookaround') {
+    if (p.kind === 'lookaround' && p.facing === 'place') {
       haptic.select();
       void presentLookAround(lat, lng, name);
-    } else if (p.kind === 'photo' || p.kind === 'aerial' || p.kind === 'flyover') {
+    } else if (p.kind === 'lookaround' || p.kind === 'photo' || p.kind === 'aerial' || p.kind === 'flyover') {
+      // The street at the address opens in our viewer, so its caveat stays under the picture.
       setViewer(i);
     }
   };
@@ -258,7 +275,7 @@ export function PlaceGallery({
       accessibilityRole={many ? 'adjustable' : opens ? 'imagebutton' : 'image'}
       accessibilityLabel={cap.label}
       accessibilityValue={many ? { text: `Picture ${current + 1} of ${pages.length}` } : undefined}
-      accessibilityHint={opens ? (at.kind === 'lookaround' ? 'Opens Look Around.' : 'Opens full screen.') : undefined}
+      accessibilityHint={opens ? (at.kind === 'lookaround' && at.facing === 'place' ? 'Opens Look Around.' : 'Opens full screen.') : undefined}
       accessibilityActions={[
         ...(many ? [{ name: 'increment' as const }, { name: 'decrement' as const }] : []),
         ...(opens ? [{ name: 'activate' as const }] : []),
@@ -324,7 +341,7 @@ export function PlaceGallery({
 
       {viewer !== null ? (
         <Viewer
-          pages={pages.filter((p) => p.kind === 'photo' || p.kind === 'aerial' || p.kind === 'flyover')}
+          pages={pages.filter((p) => (p.kind === 'lookaround' && p.facing === 'point') || p.kind === 'photo' || p.kind === 'aerial' || p.kind === 'flyover')}
           start={pages[viewer]!.key}
           name={name}
           lat={lat}
@@ -377,7 +394,7 @@ function PageBody({
         <Image
           source={{ uri: page.uri }}
           style={StyleSheet.absoluteFill}
-          contentFit="cover"
+          contentFit={full ? 'contain' : 'cover'}
           accessibilityIgnoresInvertColors
           transition={{ duration: fadeMs, effect: 'cross-dissolve', timing: 'ease-out' }}
         />
@@ -545,16 +562,11 @@ function Viewer({
             <Text variant="callout" style={styles.white}>
               {cap.chip}
             </Text>
-            {cap.viewer ? (
-              <>
-                <Text variant="caption" style={[styles.white, styles.credit]}>
-                  {cap.viewer.credit}
-                </Text>
-                <Text variant="caption" style={[styles.white, styles.credit]}>
-                  {cap.viewer.date}
-                </Text>
-              </>
-            ) : null}
+            {cap.viewer?.map((line) => (
+              <Text key={line} variant="caption" style={[styles.white, styles.credit]}>
+                {line}
+              </Text>
+            ))}
           </View>
         ) : null}
       </View>

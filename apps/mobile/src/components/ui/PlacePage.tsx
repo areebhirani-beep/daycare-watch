@@ -275,6 +275,7 @@ export function PlacePage({
           imagery={!privateHome}
           flyover={flyoverAllowed(daycare)}
           photos={record.photos}
+          streetChecked={daycare.street_view_checked}
           kind={pinKind(daycare.operation_type)}
           watched={watching}
           height={heroH + insets.top}

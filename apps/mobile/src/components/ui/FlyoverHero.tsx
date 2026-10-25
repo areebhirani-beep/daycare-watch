@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, StyleSheet, View, type ViewStyle } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
-import { imageryAllowed } from '@/lib/imagery';
-import type { DaycareHeader } from '@/lib/types';
 import { useColors } from '@/theme';
 
 import { MapPin } from './MapPin';
@@ -13,10 +11,7 @@ const DRIFT_DEG = 24;
 const DRIFT_MS = 9000;
 const START_HEADING = 20;
 
-/** A 3D view only for a licensed center whose address geocoded exactly. */
-export function flyoverAllowed(d: Pick<DaycareHeader, 'operation_type' | 'geocode_quality'> | null | undefined): boolean {
-  return Boolean(d && imageryAllowed(d.operation_type) && d.geocode_quality === 'exact');
-}
+export { flyoverAllowed } from './flyover';
 
 /**
  * Apple's 3D flyover of a real place, turning slowly like a drone shot. No touch and no labels; our pin

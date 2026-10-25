@@ -84,6 +84,10 @@ export function MapSnapshot({
   const lat = snap(rawLat);
   const lng = snap(rawLng);
   const has = typeof lat === 'number' && typeof lng === 'number';
+  // The credit appears with the first tile, never over an empty grey box.
+  const view = `${base}/${lat}/${lng}/${zoom}`;
+  const [loadedView, setLoadedView] = useState<string | null>(null);
+  const loaded = loadedView === view;
 
   const tiles: { key: string; uri: string; left: number; top: number }[] = [];
   if (has && size) {
@@ -114,6 +118,7 @@ export function MapSnapshot({
           source={{ uri: t.uri }}
           cachePolicy="memory-disk"
           transition={120}
+          onLoad={loaded ? undefined : () => setLoadedView(view)}
           style={{ position: 'absolute', left: t.left, top: t.top, width: TILE, height: TILE }}
         />
       ))}
@@ -136,7 +141,7 @@ export function MapSnapshot({
           <MapPin watched={watched} selected={!smallPin} />
         </View>
       ) : null}
-      {has && attribution ? (
+      {has && attribution && loaded ? (
         <View style={[attribution === 'short' ? styles.attrShort : styles.attr, { bottom: (attribution === 'short' ? 3 : 6) + attributionInset }]}>
           <Text
             variant="caption"

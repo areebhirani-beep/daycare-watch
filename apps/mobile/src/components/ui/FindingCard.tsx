@@ -38,7 +38,8 @@ export function FindingCard({
   const c = useColors();
   const standard = splitStandard(f.standard);
   const summary = f.plain ?? standard?.title ?? 'The state did not publish a description.';
-  const fixed = plainStatus(f);
+  // "on record yet" stays together so a wrap never leaves "yet" alone.
+  const fixed = plainStatus(f).replace(/ on record yet$/, ' on\u00A0record\u00A0yet');
   const status = f.date && f.date === visitDate ? fixed : `Found ${formatDateShort(f.date)} · ${fixed}`;
   const rule = standard?.number ? `Rule ${standard.number}` : null;
   const note =
@@ -67,7 +68,9 @@ export function FindingCard({
         </View>
         <Text variant="subhead">{summary}</Text>
         <View style={styles.status}>
-          <Glyph name={done ? 'check' : 'clock'} size={13} color={done ? c.text : c.textSecondary} weight="bold" />
+          <View style={styles.statusGlyph}>
+            <Glyph name={done ? 'check' : 'clock'} size={13} color={done ? c.text : c.textSecondary} weight="bold" />
+          </View>
           <Text variant="callout" tone="secondary" tabular style={{ flex: 1 }}>
             {status}
           </Text>
@@ -103,7 +106,9 @@ const styles = StyleSheet.create({
   cardHigh: { borderWidth: 1.5 },
   head: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   pill: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 1 },
-  status: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  // The glyph sits on the first line of the status, however many lines it wraps to.
+  status: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  statusGlyph: { marginTop: 4 },
   official: {
     flexDirection: 'row',
     alignItems: 'center',

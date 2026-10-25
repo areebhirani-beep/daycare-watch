@@ -49,6 +49,8 @@ export type DaycareHeader = Omit<DaycareRow, 'visits_24mo'> & {
   temporarily_closed: boolean | null;
   conditions_on_permit: boolean | null;
   issuance_date: string | null;
+  // A person checked the street view at the address and saw a building that could be the daycare (centers only).
+  street_view_checked: boolean;
 };
 
 export type Finding = {

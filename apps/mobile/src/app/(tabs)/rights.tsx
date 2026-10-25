@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { T } from '@/components/T';
 import { RowLink, Rule } from '@/components/ui';
-import { InspectorQuote, SectionHead } from '@/components/ui/Serif';
+import { InspectorQuote, SectionHead } from '@/components/ui/Prose';
 import { useDaycareRecord } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
 import { FEDERAL_NOTE, LAW_CITE, LAW_NAME, LAW_SCOPE, requestText, type RequestKind, RIGHTS } from '@/lib/rights';

@@ -52,7 +52,7 @@ appId: com.areebhirani.daycare-watch
 
 - openLink: daycarewatch://daycare/1459611
 - extendedWaitUntil:
-    visible: "The record, last.*"
+    visible: "State record"
     timeout: 20000
 - waitForAnimationToEnd:
     timeout: 1500

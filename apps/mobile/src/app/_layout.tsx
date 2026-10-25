@@ -1,16 +1,3 @@
-import {
-  Newsreader_400Regular,
-  Newsreader_400Regular_Italic,
-  Newsreader_500Medium,
-  Newsreader_600SemiBold,
-} from '@expo-google-fonts/newsreader';
-import {
-  PublicSans_400Regular,
-  PublicSans_500Medium,
-  PublicSans_600SemiBold,
-  PublicSans_700Bold,
-  useFonts,
-} from '@expo-google-fonts/public-sans';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -29,26 +16,13 @@ void SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const scheme = useColorScheme();
   const c = scheme === 'dark' ? dark : light;
-  const [fontsLoaded] = useFonts({
-    PublicSans_400Regular,
-    PublicSans_500Medium,
-    PublicSans_600SemiBold,
-    PublicSans_700Bold,
-    Newsreader_400Regular,
-    Newsreader_400Regular_Italic,
-    Newsreader_500Medium,
-    Newsreader_600SemiBold,
-  });
-
   useEffect(() => {
     void ensureSession().catch(() => undefined);
   }, []);
   useEffect(() => {
-    if (fontsLoaded) void SplashScreen.hideAsync();
-  }, [fontsLoaded]);
+    void SplashScreen.hideAsync();
+  }, []);
   useAlertTaps();
-
-  if (!fontsLoaded) return null;
 
   const navTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
   return (
@@ -80,6 +54,8 @@ export default function RootLayout() {
             <Stack.Screen name="daycare/[id]/tour" options={{ title: 'Tour questions' }} />
             <Stack.Screen name="alert/[eventId]" options={{ title: 'New state record' }} />
             <Stack.Screen name="report" options={{ title: 'Report a concern' }} />
+            <Stack.Screen name="search" options={{ headerShown: false, animation: 'fade' }} />
+            <Stack.Screen name="daycare/[id]/index" options={{ headerShown: false }} />
           </Stack>
         </ThemeProvider>
       </PersistQueryClientProvider>

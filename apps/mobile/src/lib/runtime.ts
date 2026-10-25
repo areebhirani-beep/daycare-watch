@@ -1,7 +1,7 @@
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 
 /**
- * True inside the Expo Go app. Expo Go ships without MapLibre and MMKV, so those native modules are
- * loaded only when this is false: Find shows the list without the map, and storage lives in memory.
+ * True inside the Expo Go app. Expo Go ships without MMKV, so storage uses its SQLite key-value store
+ * instead (see lib/storage.ts).
  */
 export const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;

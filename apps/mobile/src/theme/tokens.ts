@@ -1,6 +1,8 @@
-// Design tokens. See apps/mobile/DESIGN.md for the reasoning behind each choice.
-// One family (Public Sans, the U.S. Web Design System typeface), one accent,
-// warm paper neutrals, and a five-step risk ramp that is never the only signal.
+// Design tokens v2. See apps/mobile/DESIGN.md for the reasoning behind each value.
+// Native grotesk set heavy, white and neutral greys, true black dark mode, ink for every action,
+// school-bus yellow only for watching and alerts, and a single-hue ember ramp for the record.
+
+import { Platform, type TextStyle } from 'react-native';
 
 export type RiskLevel = 'High' | 'Medium High' | 'Medium' | 'Medium Low' | 'Low';
 
@@ -13,9 +15,21 @@ type Palette = {
   text: string;
   textSecondary: string;
   textTertiary: string;
+  /** Text, strokes and small marks that must clear contrast: ink in light, yellow in dark. */
   accent: string;
   onAccent: string;
+  accentEdge: string;
+  /** Highlighter wash behind a selected or watched row. */
   accentSoft: string;
+  /** School-bus yellow. Fills only (watched pins, the alerts button, the celebration), always with ink on top. */
+  signal: string;
+  onSignal: string;
+  signalEdge: string;
+  ink: string;
+  onInk: string;
+  inkEdge: string;
+  secondaryEdge: string;
+  scrim: string;
   skeleton: string;
   mapPin: string;
   mapPinWatched: string;
@@ -23,100 +37,123 @@ type Palette = {
 };
 
 export const light: Palette = {
-  bg: '#F7F6F2',
+  bg: '#FFFFFF',
   surface: '#FFFFFF',
-  sunken: '#EEECE6',
-  border: '#D9D5CB',
-  hairline: '#E6E3DB',
-  text: '#1B1A17',
-  textSecondary: '#55524A',
-  textTertiary: '#6E6A61',
-  accent: '#1D5A54',
+  sunken: '#F2F2F4',
+  border: '#DCDCE1',
+  hairline: '#E8E8EC',
+  text: '#0B0B0C',
+  textSecondary: '#5C5C66',
+  textTertiary: '#6E6E78',
+  accent: '#0B0B0C',
   onAccent: '#FFFFFF',
-  accentSoft: '#E1ECEA',
-  skeleton: '#E9E6DF',
-  mapPin: '#1B1A17',
-  mapPinWatched: '#1D5A54',
+  accentEdge: '#3A3A40',
+  accentSoft: '#FFF6C9',
+  signal: '#FFC800',
+  onSignal: '#0B0B0C',
+  signalEdge: '#D19E00',
+  ink: '#0B0B0C',
+  onInk: '#FFFFFF',
+  inkEdge: '#3A3A40',
+  secondaryEdge: '#D4D4DA',
+  scrim: 'rgba(0,0,0,0.32)',
+  skeleton: '#ECECEF',
+  mapPin: '#0B0B0C',
+  mapPinWatched: '#FFC800',
   risk: {
-    // Warm and dark = a higher-risk rule; cool and gray = lower. High is the darkest step so it
-    // separates under deuteranopia too. Every step clears 4.5:1 on paper, surface and sunken.
-    High: '#8A1F12',
-    'Medium High': '#A8460F',
-    Medium: '#8A6400',
-    'Medium Low': '#4D6472',
-    Low: '#6B675E',
+    // One hue, light to deep: an ordinal scale, not a traffic light. Every step clears 3:1 on white.
+    High: '#7E1A0D',
+    'Medium High': '#A2361A',
+    Medium: '#BF5A2A',
+    'Medium Low': '#AA7658',
+    Low: '#8C837D',
   },
 };
 
 export const dark: Palette = {
-  bg: '#121210',
-  surface: '#1C1B19',
-  sunken: '#0B0B0A',
-  border: '#3A3833',
-  hairline: '#2A2925',
-  text: '#EEECE6',
-  textSecondary: '#B3AFA5',
-  textTertiary: '#969288',
-  accent: '#86CABF',
-  onAccent: '#0C2421',
-  accentSoft: '#1E3330',
-  skeleton: '#26251F',
-  mapPin: '#EEECE6',
-  mapPinWatched: '#86CABF',
+  bg: '#000000',
+  surface: '#141416',
+  sunken: '#1F1F22',
+  border: '#38383E',
+  hairline: '#26262A',
+  text: '#F5F5F7',
+  textSecondary: '#A8A8B2',
+  textTertiary: '#8C8C96',
+  accent: '#FFD21F',
+  onAccent: '#000000',
+  accentEdge: '#B88F00',
+  accentSoft: '#2A2300',
+  signal: '#FFD21F',
+  onSignal: '#000000',
+  signalEdge: '#A88200',
+  ink: '#F5F5F7',
+  onInk: '#000000',
+  inkEdge: '#A8A8B2',
+  secondaryEdge: '#0A0A0B',
+  scrim: 'rgba(0,0,0,0.56)',
+  skeleton: '#1F1F22',
+  mapPin: '#F5F5F7',
+  mapPinWatched: '#FFD21F',
   risk: {
-    // On dark, High is the most saturated step and Low the dimmest. All clear 5:1 on bg and surface.
-    High: '#FF7B66',
-    'Medium High': '#E89A58',
-    Medium: '#CDB46A',
-    'Medium Low': '#93A9B5',
-    Low: '#928E86',
+    // On black the ramp runs dim to bright, so High is the most luminous step. All clear 3.7:1 on sunken.
+    High: '#FF9C80',
+    'Medium High': '#E8866A',
+    Medium: '#C97A5C',
+    'Medium Low': '#A3857A',
+    Low: '#7F7874',
   },
 };
 
 export type Colors = Palette;
 
+// The platform grotesk: SF Pro on iOS (Text/Display switch optically at 20 pt), Roboto on Android.
+const family = Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' });
+
+type Weight = NonNullable<TextStyle['fontWeight']>;
+const face = (fontWeight: Weight) => ({ fontFamily: family, fontWeight }) as const;
+
+/** For the few places that set a family directly (inputs, nav headers). Prefer `type.*`. */
 export const font = {
-  regular: 'PublicSans_400Regular',
-  medium: 'PublicSans_500Medium',
-  semibold: 'PublicSans_600SemiBold',
-  bold: 'PublicSans_700Bold',
+  regular: family,
+  medium: family,
+  semibold: family,
+  bold: family,
 } as const;
 
-// Newsreader (Production Type) is the record's second voice: daycare names, screen and section
-// titles, and the inspector's own words. Public Sans carries every number and every control.
-export const serifFont = {
-  regular: 'Newsreader_400Regular',
-  italic: 'Newsreader_400Regular_Italic',
-  medium: 'Newsreader_500Medium',
-  semibold: 'Newsreader_600SemiBold',
-} as const;
+export const weight = { regular: '400', medium: '500', semibold: '600', bold: '700', heavy: '800' } as const;
 
-export const serifType = {
-  display: { fontFamily: serifFont.semibold, fontSize: 34, lineHeight: 38, letterSpacing: -0.6 },
-  title: { fontFamily: serifFont.semibold, fontSize: 28, lineHeight: 32, letterSpacing: -0.4 },
-  heading: { fontFamily: serifFont.medium, fontSize: 22, lineHeight: 27, letterSpacing: -0.2 },
-  quote: { fontFamily: serifFont.italic, fontSize: 18, lineHeight: 25 },
-} as const;
-
-export type SerifStyle = keyof typeof serifType;
-
-// Big counts on the record page, always tabular so columns of numbers line up.
-export const figure = { fontFamily: font.semibold, fontSize: 28, lineHeight: 32, letterSpacing: -0.4 } as const;
-
-// Strict scale. Nothing outside these eight styles appears in the app.
+// Strict scale. Nothing outside these styles appears in the app.
 export const type = {
-  // Screen and section titles speak in the serif voice; everything below them stays in Public Sans.
-  largeTitle: { fontFamily: 'Newsreader_600SemiBold', fontSize: 33, lineHeight: 37, letterSpacing: -0.5 },
-  title: { fontFamily: 'Newsreader_600SemiBold', fontSize: 24, lineHeight: 29, letterSpacing: -0.3 },
-  headline: { fontFamily: font.semibold, fontSize: 17, lineHeight: 23 },
-  body: { fontFamily: font.regular, fontSize: 17, lineHeight: 25 },
-  callout: { fontFamily: font.regular, fontSize: 15, lineHeight: 21 },
-  subhead: { fontFamily: font.semibold, fontSize: 15, lineHeight: 20 },
-  footnote: { fontFamily: font.regular, fontSize: 13, lineHeight: 18 },
-  caption: { fontFamily: font.medium, fontSize: 12, lineHeight: 16, letterSpacing: 0.2 },
+  numeral: { ...face('800'), fontSize: 56, lineHeight: 60, letterSpacing: -1.5 },
+  display: { ...face('800'), fontSize: 34, lineHeight: 38, letterSpacing: -0.8 },
+  largeTitle: { ...face('800'), fontSize: 28, lineHeight: 32, letterSpacing: -0.6 },
+  title: { ...face('700'), fontSize: 22, lineHeight: 27, letterSpacing: -0.4 },
+  headline: { ...face('700'), fontSize: 17, lineHeight: 22, letterSpacing: -0.2 },
+  body: { ...face('400'), fontSize: 17, lineHeight: 24, letterSpacing: -0.2 },
+  callout: { ...face('500'), fontSize: 15, lineHeight: 20, letterSpacing: -0.1 },
+  subhead: { ...face('600'), fontSize: 15, lineHeight: 20, letterSpacing: -0.1 },
+  footnote: { ...face('500'), fontSize: 13, lineHeight: 18, letterSpacing: 0 },
+  caption: { ...face('600'), fontSize: 12, lineHeight: 16, letterSpacing: 0 },
 } as const;
 
 export type TypeStyle = keyof typeof type;
+
+/** How far each style may grow with Dynamic Type before it would break its layout. */
+export const maxScale: Record<TypeStyle, number> = {
+  numeral: 1.3,
+  display: 1.4,
+  largeTitle: 1.5,
+  title: 1.7,
+  headline: 2,
+  body: 2.2,
+  callout: 2,
+  subhead: 2,
+  footnote: 2,
+  caption: 1.8,
+};
+
+/** Mid-size counts (list rows, alert detail). The hero counts use `type.numeral`. */
+export const figure = { ...face('800'), fontSize: 28, lineHeight: 32, letterSpacing: -0.6 } as const;
 
 export const space = {
   xxs: 2,
@@ -130,17 +167,37 @@ export const space = {
   section: 40,
 } as const;
 
-export const radius = { sm: 6, md: 10, lg: 14, pill: 999 } as const;
+export const radius = { sm: 8, thumb: 12, md: 12, button: 16, lg: 16, card: 16, stat: 22, sheet: 28, pill: 999 } as const;
+
+// Only things that float over the map cast a shadow. Everything else is flat.
+export const elevation = {
+  card: { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  float: { shadowColor: '#000', shadowOpacity: 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  sheet: { shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
+} as const;
 
 // Durations in ms. Entrances ease out; nothing loops; Reduce Motion turns all of it off.
-export const motion = { fast: 150, base: 220, slow: 360, stagger: 18 } as const;
+export const motion = { fast: 150, base: 220, slow: 360, stagger: 30 } as const;
+
+// Reanimated spring configs (withSpring). Sheet detents, 3D presses, celebratory pops.
+export const spring = {
+  sheet: { damping: 24, stiffness: 260, mass: 1 },
+  press: { damping: 18, stiffness: 500, mass: 0.6 },
+  pop: { damping: 12, stiffness: 220, mass: 0.8 },
+} as const;
+
+// Bottom sheet detents for the map home (Apple Maps). Peek is in points above the bottom inset.
+export const sheet = { peek: 156, half: '60%', grabber: { width: 36, height: 5, top: 6 } } as const;
+
+// 3D button edge depth (Duolingo).
+export const buttonEdge = 4;
 
 export const minTap = 44;
 
 // Room for the floating native tab bar so the last row is never covered.
 export const TAB_BAR_CLEARANCE = 112;
 
-// Ordinal position of each state risk level, used by the five-mark glyph.
+// Ordinal position of each state risk level, used by the record strip.
 export const riskRank: Record<RiskLevel, 1 | 2 | 3 | 4 | 5> = {
   High: 5,
   'Medium High': 4,

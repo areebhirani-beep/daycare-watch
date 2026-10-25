@@ -1,13 +1,13 @@
-import * as Haptics from 'expo-haptics';
 import { useMemo, useState } from 'react';
 import { type LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 
-import { T } from '@/components/T';
 import { isFixed, parseDay } from '@/lib/format';
 import { groupByVisit } from '@/lib/record';
 import type { DaycareRecord } from '@/lib/types';
-import { type Colors, type RiskLevel, riskRank, useColors } from '@/theme';
+import { type Colors, haptic, type RiskLevel, riskRank, useColors } from '@/theme';
+
+import { Text as T } from './Text';
 
 /**
  * The record strip: every state visit in a window, drawn where it happened in time.
@@ -77,9 +77,9 @@ export function stripSentence(visits: StripVisit[], months: number): string {
 
 type Geometry = { col: number; mark: number; step: number; cap: number; dot: number; minRows: number };
 
-const FULL: Geometry = { col: 12, mark: 9, step: 11, cap: 9, dot: 6, minRows: 4 };
-const HERO: Geometry = { col: 18, mark: 13, step: 16, cap: 9, dot: 7, minRows: 5 };
-const COMPACT: Geometry = { col: 7, mark: 5, step: 7, cap: 5, dot: 4, minRows: 4 };
+const FULL: Geometry = { col: 14, mark: 10, step: 13, cap: 9, dot: 6, minRows: 4 };
+const HERO: Geometry = { col: 20, mark: 14, step: 18, cap: 8, dot: 8, minRows: 5 };
+const COMPACT: Geometry = { col: 8, mark: 6, step: 8, cap: 5, dot: 4, minRows: 4 };
 const COL_GAP = 2;
 // Axis labels sit under fixed-size marks, so they grow with Dynamic Type only this far.
 const AXIS_MAX_SCALE = 1.35;
@@ -112,8 +112,8 @@ function Mark({ mark, w, h, c }: { mark: StripMark; w: number; h: number; c: Col
   return (
     <View
       style={[
-        { width: w, height: h, borderRadius: w > 4 ? 1.5 : 0.5 },
-        mark.open ? { borderWidth: w > 4 ? 1.5 : 1, borderColor: tint } : { backgroundColor: tint },
+        { width: w, height: h, borderRadius: Math.min(w, h) / 3 },
+        mark.open ? { borderWidth: w > 6 ? 2 : 1.25, borderColor: tint } : { backgroundColor: tint },
       ]}
     />
   );
@@ -216,7 +216,7 @@ export function RecordStrip({
                 accessible={false}
                 hitSlop={{ top: 8, bottom: 16, left: 4, right: 4 }}
                 onPress={() => {
-                  void Haptics.selectionAsync();
+                  haptic.select();
                   onPressVisit(v.id);
                 }}
                 style={[styles.hit, { left: v.x - 4, width: col + 8, height: plotH }]}
@@ -226,7 +226,7 @@ export function RecordStrip({
               </Pressable>
             );
           })}
-        <View style={[styles.baseline, { backgroundColor: c.textTertiary, opacity: isFull ? 1 : 0.6 }]} />
+        <View style={[styles.baseline, { backgroundColor: c.border }]} />
       </View>
 
       {isFull ? (
@@ -271,7 +271,7 @@ export function StripKey() {
       <View style={styles.keyItem}>
         <View style={styles.keyRamp}>
           {ranks.map((r) => (
-            <View key={r} style={{ width: 7, height: 7, borderRadius: 1.5, backgroundColor: c.risk[LEVEL_BY_RANK[r]] }} />
+            <View key={r} style={{ width: 9, height: 9, borderRadius: 3, backgroundColor: c.risk[LEVEL_BY_RANK[r]] }} />
           ))}
         </View>
         <T variant="caption" tone="secondary" style={{ flexShrink: 1 }}>
@@ -279,7 +279,7 @@ export function StripKey() {
         </T>
       </View>
       <View style={styles.keyItem}>
-        <View style={{ width: 7, height: 7, borderRadius: 1.5, borderWidth: 1.5, borderColor: c.textSecondary }} />
+        <View style={{ width: 9, height: 9, borderRadius: 3, borderWidth: 2, borderColor: c.textSecondary }} />
         <T variant="caption" tone="secondary" style={{ flexShrink: 1 }}>
           Not yet verified by the state
         </T>
@@ -297,13 +297,13 @@ export function StripKey() {
 const styles = StyleSheet.create({
   column: { position: 'absolute', bottom: 2, flexDirection: 'column-reverse', alignItems: 'stretch' },
   hit: { position: 'absolute', bottom: 0 },
-  selected: { position: 'absolute', bottom: -5, height: 2, borderRadius: 1 },
+  selected: { position: 'absolute', bottom: -7, height: 3, borderRadius: 1.5 },
   more: { position: 'absolute', top: -16, left: -10, right: -10, textAlign: 'center' },
-  baseline: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 1 },
+  baseline: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 2, borderRadius: 1 },
   axis: { marginTop: 6, flexDirection: 'row', justifyContent: 'space-between', minHeight: 16 },
   yearTick: { position: 'absolute', top: -6, alignItems: 'center', transform: [{ translateX: -30 }], width: 60 },
-  key: { marginTop: 14, gap: 6 },
-  keyItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  key: { marginTop: 16, flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 8 },
+  keyItem: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1, maxWidth: '100%' },
   keyRamp: { flexDirection: 'row', gap: 2 },
 });
 
@@ -325,7 +325,7 @@ export function StripSkeleton({ variant = 'full' }: { variant?: 'full' | 'compac
             style={[
               styles.column,
               { left: `${x * 100}%`, width: g.col, height: heights[i]! * g.step - (g.step - g.mark) },
-              { backgroundColor: c.skeleton, borderRadius: 1.5 },
+              { backgroundColor: c.skeleton, borderRadius: 3 },
             ]}
           />
         ))}

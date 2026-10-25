@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 
 import { T } from '@/components/T';
-import { Button } from '@/components/ui';
+import { Button } from '@/components/ui/Button';
 import { useDaycareRecord, useIsWatching, useSetWatch } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
 import { type EnableResult, enableAlerts } from '@/lib/notifications';
-import { space, useColors } from '@/theme';
+import { haptic, space, useColors } from '@/theme';
 
 type Step = 'explain' | 'working' | 'done';
 
@@ -28,6 +28,7 @@ export default function WatchScreen() {
     setError(null);
     try {
       await setWatch.mutateAsync(true);
+      haptic.success();
       setResult(await enableAlerts().catch(() => ({ permission: 'undetermined' as const, registered: false })));
       setStep('done');
     } catch {
@@ -112,6 +113,7 @@ export default function WatchScreen() {
       <View style={styles.buttons}>
         <Button
           label={step === 'working' ? 'Turning on…' : 'Turn on alerts'}
+          kind="ink"
           icon="bell"
           disabled={step === 'working'}
           onPress={() => void turnOn()}

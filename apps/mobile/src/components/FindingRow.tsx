@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { InspectorQuote } from '@/components/ui/Serif';
+import { InspectorQuote } from '@/components/ui/Prose';
 import { categoryLabel, fixedLabel, formatDate, riskLabel, splitStandard } from '@/lib/format';
 import type { Finding } from '@/lib/types';
 import { space, useColors } from '@/theme';

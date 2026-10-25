@@ -8,10 +8,14 @@ appId: com.areebhirani.daycare-watch
       visible: "Open"
     commands:
       - tapOn: "Open"
+# Home is the map with a bottom sheet; the search pill opens the search screen.
 - extendedWaitUntil:
-    visible: "Name, city, or ZIP"
-    timeout: 20000
-- tapOn: "Name, city, or ZIP"
+    visible: "Search daycares, cities, ZIP"
+    timeout: 30000
+- tapOn: "Search daycares, cities, ZIP"
+- extendedWaitUntil:
+    visible: "Search daycares, cities, ZIP"
+    timeout: 10000
 - inputText: "Viva World School"
 # The result row's label is "<name>. <type> · <city>. <record>"; matching it skips the text field.
 - extendedWaitUntil:
@@ -21,15 +25,15 @@ appId: com.areebhirani.daycare-watch
 - takeScreenshot: ../../harness/state/screens/journey-0-search
 - tapOn: "Viva World School\\. .*"
 - extendedWaitUntil:
-    visible: "The record, last.*"
+    visible: "State record"
     timeout: 20000
 - takeScreenshot: ../../harness/state/screens/journey-1-record
 # A device that already watches this daycare shows "Watching"; otherwise walk the watch flow.
 - runFlow:
     when:
-      visible: "My kid goes here"
+      visible: "Watch this daycare"
     commands:
-      - tapOn: "My kid goes here"
+      - tapOn: "Watch this daycare"
       - extendedWaitUntil:
           visible: "Turn on alerts"
           timeout: 10000

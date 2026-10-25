@@ -3,7 +3,7 @@ import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 
 import { T } from '@/components/T';
 import { RowLink, Rule } from '@/components/ui';
-import { SectionHead } from '@/components/ui/Serif';
+import { SectionHead } from '@/components/ui/Prose';
 import { space, useColors } from '@/theme';
 
 // Every number and URL here is a verified row in docs/OFFICIAL_SOURCES.md section 1 (Oct 24 2026).

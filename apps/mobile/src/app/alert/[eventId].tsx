@@ -7,11 +7,11 @@ import { Icon } from '@/components/Icon';
 import { RecordSkeleton } from '@/components/Skeleton';
 import { T } from '@/components/T';
 import { Button, LastChecked, RowLink, Rule, Surface } from '@/components/ui';
-import { SectionHead, Serif } from '@/components/ui/Serif';
+import { Heading, SectionHead } from '@/components/ui/Prose';
 import { useAlertDetail } from '@/lib/api';
 import { formatCheckedAt, formatDate, RISK_EXPLAINER, tidyCase } from '@/lib/format';
 import type { AlertDetail } from '@/lib/types';
-import { minTap, space, useColors } from '@/theme';
+import { minTap, radius, space, useColors } from '@/theme';
 
 /** What the state posted → when → what it means → what you can do. */
 export default function AlertScreen() {
@@ -55,7 +55,7 @@ export default function AlertScreen() {
   return (
     <ScrollView style={{ backgroundColor: c.bg }} contentContainerStyle={styles.content}>
       {a.is_replay ? (
-        <View style={[styles.replay, { borderLeftColor: c.accent }]}>
+        <View style={[styles.replay, { backgroundColor: c.sunken }]}>
           <T variant="footnote" tone="secondary">
             Replay of a real state record{a.finding ? ` from ${formatDate(a.finding.date)}` : ''}, shown to demonstrate alerts.
           </T>
@@ -66,9 +66,9 @@ export default function AlertScreen() {
         <T variant="callout" tone="secondary">
           {name}
         </T>
-        <Serif variant="title" accessibilityRole="header">
+        <Heading variant="title" accessibilityRole="header">
           {headline(a)}
-        </Serif>
+        </Heading>
         <T variant="footnote" tone="secondary">
           Posted by Texas Health and Human Services · we saw it {formatCheckedAt(a.detected_at)}
         </T>
@@ -195,5 +195,5 @@ const styles = StyleSheet.create({
   content: { padding: space.xl, gap: space.lg, paddingBottom: space.section },
   section: { gap: space.md },
   disclose: { minHeight: minTap, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, alignSelf: 'flex-start' },
-  replay: { borderLeftWidth: 3, paddingLeft: space.md, paddingVertical: space.xxs },
+  replay: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs },
 });

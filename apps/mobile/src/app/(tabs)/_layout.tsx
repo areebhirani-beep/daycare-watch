@@ -2,17 +2,13 @@ import { Redirect } from 'expo-router';
 import { NativeTabs } from 'expo-router/native-tabs';
 
 import { hasOnboarded } from '@/components/ui/onboarding';
-import { font, useColors } from '@/theme';
+import { useColors } from '@/theme';
 
 export default function TabsLayout() {
   const c = useColors();
   if (!hasOnboarded()) return <Redirect href="/onboarding" />;
   return (
-    <NativeTabs
-      backgroundColor={c.bg}
-      tintColor={c.accent}
-      labelStyle={{ fontFamily: font.medium }}
-    >
+    <NativeTabs backgroundColor={c.bg} tintColor={c.ink}>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Find</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: 'map', selected: 'map.fill' }} md="map" />

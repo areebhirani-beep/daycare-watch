@@ -3,7 +3,7 @@ import { useColorScheme } from 'react-native';
 import { dark, light, type Colors } from './tokens';
 
 export * from './tokens';
-export { mapStyle, pinPaint } from './mapStyle';
+export { haptic } from './haptics';
 
 export function useColors(): Colors {
   return useColorScheme() === 'dark' ? dark : light;

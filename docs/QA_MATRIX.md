@@ -45,9 +45,9 @@ Rows are tested cold, by someone who did not write the UI.
 | U16c | Approximate geocode never shows photos | pgTAP 009 + Maestro | PASS (SQL) | `photos: []` for a non_exact center even when a row exists (pgTAP 009); on-screen check pending | platform / mobile |
 | U16d | Photo credit (Mapillary, CC BY-SA) and captured date visible | Maestro | PENDING | | mobile / design |
 | U17 | Fix-status strings key off the state’s own fields (fixed during the visit, or state-verified), never "Fixed <corrected_date>" | Maestro + text search | PASS | 1459611 shows "Fix due Oct 30", never "Fixed … Oct 30" ([u17-viva-0](qa/u17-viva-0.jpg)) | mobile / design |
-| U18 | Watch, unwatch, re-watch | Maestro | PASS | `u18-watch.yaml` on 97587: watch → sheet → "You’re watching" → place "Watching ·" → unwatch → re-watch; `app.watches` row present ([u18 screens](qa/)). One-tap unwatch has no confirm (D10) | mobile |
+| U18 | Watch, unwatch, re-watch | Maestro | PASS | `u18-watch.yaml` on 97587: watch → sheet → "You’re watching" → place "Watching ·" → sheet → "Stop watching" → re-watch; `app.watches` row present ([u18 screens](qa/), [stop sheet](qa/u18-2b-stop-sheet.jpg)). D10 fixed 02:05 | mobile |
 | U19 | Notifications allowed | Maestro | PENDING | iOS prompt appears on first "Turn on alerts" (handled in `u18-watch.yaml`); Expo Go permission now denied on the QA sim, so re-run needs a fresh Expo Go install | mobile |
-| U20 | Notifications denied | Maestro | FAIL | sheet copy honest ("Notifications are off for this app…" + Open Settings, [u18-1-watching](qa/u18-1-watching.jpg)), but place button still says "Watching · alerts on" (D9, [u20-0-place-denied](qa/u20-0-place-denied.jpg)) | mobile |
+| U20 | Notifications denied | Maestro | PASS | `u20-denied.yaml`: after "Don’t Allow" the place button no longer says "alerts on" ([u20-0-place-denied](qa/u20-0-place-denied.jpg)); sheet says notifications are off + Open Settings. D9 fixed 02:05 | mobile |
 | U21 | Push tap, app cold | simctl push + Maestro | PENDING | | mobile |
 | U22 | Push tap, app warm | simctl push + Maestro | PENDING | | mobile |
 | U23 | Push tap, app in background | simctl push + Maestro | PENDING | | mobile |
@@ -93,5 +93,7 @@ Rows are tested cold, by someone who did not write the UI.
 | D6 | M1 | mobile + design | 01:52 Oct 25 | `PlacePage.tsx:144` | Med · Apple-designer lens: Watch confirm pops to 1.05 · FIXED 01:57, verified in source |
 | D7 | M1, M2 | mobile + design | 01:52 Oct 25 | `RecordStrip.tsx:237` | Med · Apple-designer lens: ZoomIn over up to 20 dots (~960 ms) · FIXED 01:57, verified in source |
 | D8 | M2 | mobile + design | 01:52 Oct 25 | `NumberCard.tsx:78` | Low · Apple-designer lens: 700 ms ring fill · FIXED 01:57, verified in source |
-| D9 | U20 | mobile (+ design) | 01:56 Oct 25 | [u20-0-place-denied](qa/u20-0-place-denied.jpg) | High · CAC-judge + parent lens: "alerts on" with notifications denied · prop landed, wiring open |
-| D10 | U18 | mobile | 01:58 Oct 25 | [u18-2-place-watching](qa/u18-2-place-watching.jpg) → [u18-3-unwatched](qa/u18-3-unwatched.jpg) | Med · parent lens: one tap unwatches, no confirm or undo |
+| D9 | U20 | mobile (+ design) | 01:56 Oct 25 | [u20-0-place-denied](qa/u20-0-place-denied.jpg) | High · CAC-judge + parent lens: "alerts on" with notifications denied · FIXED 02:05, re-tested PASS (u20-denied.yaml) |
+| D10 | U18 | mobile | 01:58 Oct 25 | [u18-2-place-watching](qa/u18-2-place-watching.jpg) → [u18-3-unwatched](qa/u18-3-unwatched.jpg) | Med · parent lens: one tap unwatches, no confirm or undo · FIXED 02:05, re-tested PASS (u18-watch.yaml) |
+| D11 | U30 | mobile | 02:04 Oct 25 | `maestro hierarchy`: one "Bottom Sheet" element, no children | High · Apple-engineer lens: home list unreachable by VoiceOver (gorhom default `accessible=true`) · mobile fixing |
+| D12 | U30 | mobile | 02:04 Oct 25 | `maestro hierarchy`: 95 × "Map pin" | Low · Apple-engineer lens: map pins have no daycare name for VoiceOver · mobile fixing |

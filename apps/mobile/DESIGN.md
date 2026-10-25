@@ -1,8 +1,8 @@
-# Daycare Watch — design system v2
+# Daycare Watch — design system v4 (frozen)
 
-**One line:** a map app, not a document. The map gives the color, the type is the native grotesk set heavy and big, every number is huge and tabular, and the record answers in one plain sentence before anything else.
+**One line:** a map app, not a document. Grouped grey surfaces carry white cards, the map and the photos supply the color, the type is the native grotesk set heavy and big, and every daycare page answers one question in one sentence before anything else: *what did the state find last time?*
 
-The v1 direction (Newsreader serif, paper beige, text stacks) is retired. Nothing from it survives.
+v4 is frozen for the Oct 26 2026 submission. Changes after the freeze go into §12 with a date and a reason.
 
 ---
 
@@ -10,200 +10,279 @@ The v1 direction (Newsreader serif, paper beige, text stacks) is retired. Nothin
 
 | App | Pattern we take | Measurements we use |
 |---|---|---|
-| **Google Maps** | Full-bleed map; floating search pill over it; filter chip row under the pill; place sheet: hero image, huge name, info chips, action-button row, tabs | Search pill 52 high, full radius, 16 side inset, shadow y2 blur 12 @ 12%. Chips 36 high, full radius, 14 horizontal padding, 8 gap, horizontal scroll with no indicator. Action row: equal pills, 40 high, icon + label |
-| **Uber** | Black/white confidence; one accent; bold headers; sticky bottom action bar; map with a sheet that springs | Headline 28–34 / 800, tracking −0.6. Bottom bar: 56 button + 16 padding + safe area, hairline top border, surface bg. Sheet spring damping 24, stiffness 260 |
-| **DoorDash** | Store card: big image on top, bold name, one meta row; horizontal carousels; dense clean list | Carousel card 280 wide, image 2:1 (280×140), radius 16 image + card, name 17/700, meta 14/500 grey, 12 gap between cards, 16 peek of the next card. List row 76 high, 56 thumbnail radius 12 |
-| **Apple Maps** | Sheet physics and detents; blur only over the map; place card layout | Detents: peek 156 + bottom inset, half 60%, full = screen − top inset − 8. Grabber 36×5, 6 from top, radius 3. Sheet top radius 28. Blur (`systemChromeMaterial`) only on chrome that floats over the map |
-| **Duolingo** | Onboarding: progress bar on top, one decision per screen, chunky 3D buttons, haptics, a celebration | Progress bar 14 high, radius 7, fills with a spring. Button 56 high, radius 16, 4 pt bottom edge in a darker shade; press = face drops 4, edge goes to 0, light impact haptic. Celebration: burst + success haptic + big headline |
-| **Cal AI** | Huge confident numerals; progress rings; card stacks for stats | Numeral 56/800 tabular, tracking −1.5, label above in 13/600 grey. Stat cards radius 22, 16 padding, grouped-grey fill, 2-up grid with 10 gap. Ring 64 diameter, 7 stroke, round caps |
-| **Brilliant / Headspace / Calm** | Crisp geometric visuals; soft color fields; purposeful motion | Soft fields = accent at 8–12% under hero numbers. Entrances 220 ms ease-out, 30 ms stagger. Nothing loops |
+| **Google Maps** | Full-bleed map, floating search pill, filter chip row, place sheet: hero, huge name, info chips, action row, tabs | Search pill 52 high, full radius, 16 side inset. Chips 36 high, 14 horizontal padding, 8 gap, scroll with no indicator. Action tiles equal width, icon + label |
+| **Uber** | Black/white confidence, one signal color, bold headers, sticky bottom action bar, a map with a sheet | Headline 28 / 800, tracking −0.6. Bottom bar: 56 button + 16 padding + safe area, hairline top |
+| **DoorDash** | Store card: big picture on top, bold name, one meta row; horizontal carousels; dense clean list | Carousel card 0.76 × screen width, picture 2:1 (1.2:1 in onboarding), radius 16, name 17/700 two lines max, 12 gap, next card peeks. List row: 64 thumb radius 12 |
+| **Apple Maps** | Sheet detents, blur only over the map, place card layout, the 3D flyover | Detents: peek 156 + bottom inset, half 60%, full = screen − top inset − 8. Grabber 36×5. Sheet top radius 28. Flyover pitch 56, altitude 340 m |
+| **Duolingo** | Onboarding: progress bar on top, one decision per screen, chunky 3D buttons, a finish moment | Progress bar 14 high, radius 7. Button 56 high, radius 16, 4 pt bottom edge one shade darker |
+| **Cal AI** | Huge confident numerals | Numeral 56/800 tabular, tracking −1.5 |
+| **Brilliant / Headspace / Calm** | Crisp geometric marks, soft color fields, motion with a purpose | Soft field = a category tint behind its glyph. Nothing loops except the flyover drift |
+| **Apple Settings / Health** | Grouped grey background with white rounded cards | bg #F2F2F5, card radius 20, 16 padding, 12 between cards |
 
-### 1b. Real reference screenshots (App Store listings, `harness/state/refs/`)
+**Copy rule from the refs:** a card is a name, one meta line and one picture. No explainer paragraphs, no badges, no filler. Details sit one tap deeper.
 
-| Ref file | What is on it | What we copy, exactly | Where it lands |
-|---|---|---|---|
-| `uber-3.png` | Map with route, white floating back button, bottom sheet "Confirm details", full-width **black** "Confirm UberX" + grey square side button | Sheet with centered bold title; black full-width CTA (56, radius 12) with a grey square secondary beside it; white circular floating button top-left over the map | Home sheet; place page sticky bar ("Watch this daycare" black + share square) |
-| `uber-4.png` | Uber Eats home: grey-selected chips, "National favorites" + round grey arrow, carousel of cards (image, name, one meta line), floating pill tab bar | Chip row (selected = filled); section header = bold 20 title + 36 round grey arrow; carousel card image ≈1.8:1, radius 12, name 17/600, one meta line | Home half detent: "Near you →" carousel of `DaycareCard` |
-| `doordash-3.png` | Search results: full-width store card, big photo, bold name + heart, "4.5★ (200+) · 3.3 km · 30 min" | Full-width card: image on top radius 12, bold name with a right-aligned toggle icon, one dotted meta row. **We swap the heart for a bell (watch) and the star rating for the record strip** | Home full detent list; search results |
-| `doordash-4.png` | Browse: big bold "Browse" title, grey search field, 2-col grey tiles | Large left-aligned title over a grey search field | Onboarding "Find your daycare"; Rights tab title. (Its 2-col tile grid is **not** used: identical tiles read as generated, see §8) |
-| `googlemaps-4.png` | Map top, sheet with grabber and title row (icon + "Ask Maps" + round grey icon buttons), floating white locate button bottom-right | Grabber 36×5; sheet title row with round grey 36 icon buttons on the right; locate button white circle riding above the sheet edge | Home sheet header; place sheet close/share |
-| `googlemaps-5.png` | Stack of white circular floating buttons on the right, white sticky bottom panel | 48 white circles with shadow stacked 12 apart on the right edge | Home locate + list/map toggle |
-| `ubereats-2.png` | Chip row with emoji glyphs, bell top-right | Bell in the top-right of a home header = alerts entry | Home header bell → Watching |
-
-**Copy rule from the refs:** a card is a name, one meta line and one picture. No explainer paragraphs, no sparkle/"AI" badges, no filler. Details sit one tap deeper.
-
-## 2. Proposal (locked)
+## 2. Decisions (locked)
 
 | Axis | Decision | Why |
 |---|---|---|
-| Aesthetic | **Map-native utility**: Uber contrast, Google Maps structure, Cal AI numbers | The data is serious; the app should feel as sure-footed as the apps parents already trust daily |
-| Type | **SF Pro (iOS) / Roboto (Android)** via `Platform.select`. Titles 700–800, tight tracking. Every number tabular | Owner decision. The native face reads "real app" instantly; weight and size carry the character, not a novelty font |
-| Color | White + neutral greys, true black dark mode. **Every action is ink** (Uber). **One signal color: school-bus yellow `#FFC800`** (dark `#FFD21F`), used only for watching and alerts | Cobalt was v2's first pick and was dropped on Oct 24: blue is the default "internet blue" of generated UI. Yellow is the color every parent already reads as "kids are on the move", it can't be mistaken for a rating (not green, not red), and the ember record keeps all the warm reds to itself. It is a fill only, always with ink on top (yellow on white is 1.55:1) |
-| Record color | A **single-hue ember ramp**, light to deep, ordinal by rule risk | One hue = an ordinal scale, not a traffic light. No green anywhere, so nothing reads as a pass |
-| Layout | Map first. Sheets, cards, carousels. Content never sits on a bare page | Fixes "looks like a document" at the root |
-| Depth | Three levels: flat, card, floating. Shadows only on things that float over the map | Map apps use depth to say "this floats"; everything else stays flat |
-| Motion | Springs on sheets and presses, short fades for content, Reduce Motion respected | Motion explains where things came from; it never decorates |
-| Haptics | `select` on chips/tabs, `press` on 3D buttons, `success` when watching starts | Duolingo-grade tactility on the moments that matter |
-
-**Safe choices:** native grotesk, Google Maps layout, white/grey surfaces. Parents know how to use this on first sight.
-**Risks we take:** (1) the record strip is the hero image of every daycare, not a chart buried in a tab; (2) huge 56-pt numerals for plain counts, never a score; (3) Duolingo 3D buttons in a civic app, which makes a government dataset feel touchable.
+| Aesthetic | **Map-native utility**: Uber contrast, Google Maps structure, Settings-style grouped surfaces | The data is serious; the app should feel as sure-footed as the apps parents already use every day |
+| Type | **SF Pro (iOS) / Roboto (Android)** via `Platform.select`. Titles 700–800, tight tracking. Every number tabular. No serif, no display font | The native face reads "real app" instantly; weight and size carry the character |
+| Surfaces | Light: grouped grey `#F2F2F5` with white cards. Dark: true black with graphite `#1C1C1E` cards | Flat white pages read as a document; grouped cards give every block an edge |
+| Action color | **Every action is ink** (black in light, near-white in dark) | Uber confidence; one strong action per screen |
+| Signal color | **School-bus yellow `#FFC800`** (dark `#FFD21F`), used only for *watching* and *alerts* | Every parent already reads it as "kids on the move", it can't be mistaken for a rating, and it is never on a daycare's record. A fill only, always with ink on top |
+| Category hues | Nine categorical tints, one per kind of rule (§4) | They answer "what kind of problem", never "how bad". Hue order carries no meaning |
+| Record | Words and counts, no colored rating. A single ink "Serious" tag for findings under a rule the state rates High risk | One tag, earned by the state's own label |
+| Imagery | Real places only: street photos, Apple 3D flyover, aerial tiles. No stock art, no illustration | We have no photos of our own; the location *is* the picture |
+| Depth | Three levels: card (soft), float (map chrome, pins), sheet | Shadows say "this floats"; 3D buttons use a solid edge, not a blur |
+| Motion | 150–250 ms, ease-out, no bounce, no overshoot (§6) | Motion explains where things came from; it never decorates |
 
 ## 3. Tokens (`src/theme/tokens.ts`)
 
-### Type (all `fontFamily` = system; iOS switches Text/Display optically at 20 pt)
-| Token | Size / line | Weight | Tracking | Use |
-|---|---|---|---|---|
-| `numeral` | 56 / 60 | 800 | −1.5 | Cal AI numbers on the place page |
-| `display` | 34 / 38 | 800 | −0.8 | Daycare name on the place page, onboarding headlines |
-| `largeTitle` | 28 / 32 | 800 | −0.6 | Screen titles, sheet title at full detent |
-| `title` | 22 / 27 | 700 | −0.4 | Section heads, card stacks |
-| `headline` | 17 / 22 | 700 | −0.2 | Card names, list names, buttons |
-| `body` | 17 / 24 | 400 | −0.2 | Plain-English summaries |
-| `callout` | 15 / 20 | 500 | −0.1 | Meta rows, chip labels |
-| `subhead` | 15 / 20 | 600 | −0.1 | Small labels with weight |
-| `footnote` | 13 / 18 | 500 | 0 | Dates, sources, "Last checked" |
-| `caption` | 12 / 16 | 600 | 0 | Axis labels, map attribution |
-Android: same sizes on `sans-serif` (Roboto) with numeric weights. Roboto Flex as a loaded variable font maps weights unreliably in React Native, so the shipped Android face is system Roboto.
+### Type (system face; iOS switches Text/Display optically at 20 pt)
+| Token | Size / line | Weight | Tracking | Max Dynamic Type | Use |
+|---|---|---|---|---|---|
+| `numeral` | 56 / 60 | 800 | −1.5 | 1.3× | Hero counts |
+| `display` | 34 / 38 | 800 | −0.8 | 1.4× | Onboarding headlines |
+| `largeTitle` | 28 / 32 | 800 | −0.6 | 1.5× | The answer on Place, screen titles |
+| `title` | 22 / 27 | 700 | −0.4 | 1.7× | Daycare name, section heads |
+| `headline` | 17 / 22 | 700 | −0.2 | 2× | Card names, buttons |
+| `body` | 17 / 24 | 400 | −0.2 | 2.2× | Plain-English summaries |
+| `subhead` | 15 / 20 | 600 | −0.1 | 2× | A finding in plain words, small weighted labels |
+| `callout` | 15 / 20 | 500 | −0.1 | 2× | Meta rows, chip labels, fix status |
+| `footnote` | 13 / 18 | 500 | 0 | 2× | Dates, sources, "Last checked" |
+| `caption` | 12 / 16 | 600 | 0 | 1.8× | Map credit, pin labels |
+
+Android uses the same sizes on system Roboto with numeric weights (a loaded Roboto Flex maps weights unreliably in React Native). **Rule:** at most 3 type sizes in any first view.
 
 ### Color
-| Token | Light | Dark | Contrast note |
+| Token | Light | Dark | Notes |
 |---|---|---|---|
-| `bg` | `#FFFFFF` | `#000000` | |
-| `surface` (cards, sheet) | `#FFFFFF` | `#141416` | |
-| `sunken` (grouped fill, stat cards, chips) | `#F2F2F4` | `#1F1F22` | |
-| `text` | `#0B0B0C` | `#F5F5F7` | 17.6+ |
-| `textSecondary` | `#5C5C66` | `#A8A8B2` | 5.9+ on sunken |
-| `textTertiary` | `#6E6E78` | `#8C8C96` | 4.5 on sunken (AA floor) |
-| `accent` (links, strokes, rings, selected marks) | `#0B0B0C` (ink) | `#FFD21F` | 19.7 on white / 11.3 on sunken |
-| `onAccent` | `#FFFFFF` | `#000000` | |
-| `accentSoft` (highlighter wash: selected row, check discs) | `#FFF6C9` | `#2A2300` | text 18.1 / 14.4 |
-| `signal` (fills only: watched pin, bell toggle, alerts button, celebration) | `#FFC800` | `#FFD21F` | ink on it 12.7 / 14.5 |
-| `onSignal` | `#0B0B0C` | `#000000` | |
-| `signalEdge` (3D bottom edge) | `#D19E00` | `#A88200` | |
-| `ink` (black button, selected chip, pins) | `#0B0B0C` | `#F5F5F7` | |
-| `risk.High → Low` | `#7E1A0D #A2361A #BF5A2A #AA7658 #8C837D` | `#FF9C80 #E8866A #C97A5C #A3857A #7F7874` | every step ≥ 3:1 on its surfaces (graphics) |
+| `bg` (grouped background) | `#F2F2F5` | `#000000` | |
+| `surface` (cards, sheet) | `#FFFFFF` | `#1C1C1E` | |
+| `sunken` (inside a card: chips, bars, fields) | `#E8E8ED` | `#2C2C2E` | |
+| `hairline` | `#E8E8EC` | `#26262A` | |
+| `skeleton` | `#E4E4E9` | `#1F1F22` | |
+| `text` | `#0B0B0C` | `#F5F5F7` | 17.6:1+ |
+| `textSecondary` | `#5C5C66` | `#A8A8B2` | 5.9:1+ on sunken |
+| `textTertiary` | `#6E6E78` | `#8C8C96` | 4.5:1 floor (AA) |
+| `accent` (links, rings, selected marks) | `#0B0B0C` | `#FFD21F` | |
+| `accentSoft` (selected wash, halo) | `#FFF6C9` | `#2A2300` | |
+| `signal` (watched pin, alerts button, check badge) | `#FFC800` | `#FFD21F` | ink on it 12.7 / 14.5 |
+| `signalEdge` (3D edge) | `#D19E00` | `#A88200` | |
+| `ink` (black button, selected chip, cluster) | `#0B0B0C` | `#F5F5F7` | |
 
-### Space, radius, elevation, motion
+### Space, radius, elevation
 | | Values |
 |---|---|
 | Space (4-pt) | 2 · 4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 |
-| Radius | chip/pill 999 · thumb 12 · button 16 · card 16 · stat card 22 · sheet 28 |
-| Elevation | `card`: y1 blur 3 @ 6% + hairline · `float`: y4 blur 16 @ 14% (search pill, locate, pins) · `sheet`: y−4 blur 24 @ 10% |
-| Springs | `sheet` damping 24 / stiffness 260 · `press` damping 18 / stiffness 500 · `pop` damping 12 / stiffness 220 (celebration, selected pin) |
-| Durations | fast 150 · base 220 · slow 360 · stagger 30 |
-| Haptics | `select` = selectionAsync · `press` = impact Light · `heavy` = impact Medium (watch toggle) · `success` = notification Success |
+| Radius | sm 8 · thumb 12 · button 16 · card 16 · place card 20 · stat 22 · banner 24 · sheet 28 · pill 999 |
+| Elevation | `card` y4 blur 12 @ 7% · `float` y4 blur 16 @ 14% (search pill, locate, banner) · `sheet` y−4 blur 24 @ 10% · pins y2 blur 5 @ 28% |
+| Haptics | `select` chips, tabs, picking a card · `press` 3D buttons, banner arrival · `heavy` watch toggle · `success` watching confirmed |
 
-## 4. Primitives (`src/components/ui/`)
+## 4. Category icons (`CategoryIcon.tsx`, `Glyph.tsx`)
+
+Every finding belongs to one of nine kinds of rule. Each kind gets one SF Symbol (Material Symbol on Android) in a tinted disc. The tint says *which kind*, never *how bad*: a supervision finding and a paperwork finding at the same risk level look equally calm.
+
+| Key | Label | Glyph (iOS) | Light fg / bg | Dark fg / bg | Meaning shown in "What the categories mean" |
+|---|---|---|---|---|---|
+| `supervision` | Supervision | `eye.fill` | `#0B62E0` / `#E4EEFF` | `#6EA8FF` / `#132845` | Watching the children: who was where, and whether an adult could see them. |
+| `staff_ratio` | Staff ratio | `person.3.fill` | `#007C8A` / `#DCF3F5` | `#4FD1DC` / `#0C3034` | How many adults there were for the number of children in a room. |
+| `background_checks` | Background checks | `person.text.rectangle.fill` | `#4744C4` / `#E9E9FB` | `#A3A1FF` / `#222147` | Whether staff had the state's required background checks on file. |
+| `safety_hazards` | Safety hazards | `exclamationmark.triangle.fill` | `#B85600` / `#FFEEDB` | `#FFAA5C` / `#402810` | Things in the building or yard that could hurt a child. |
+| `health_medication` | Health & medication | `cross.case.fill` | `#BF1F63` / `#FCE5EE` | `#FF7EAE` / `#401627` | Medicine, allergies, sickness, cleaning and food handling. |
+| `discipline` | Discipline | `hand.raised.fill` | `#8439BF` / `#F2E7FB` | `#CE8FFF` / `#311B47` | How staff corrected children's behavior. |
+| `parent_communication` | Telling parents | `bubble.left.and.bubble.right.fill` | `#0A76A6` / `#DFF1FA` | `#5CC4F2` / `#0F2E3D` | What the daycare must tell parents, and when. |
+| `paperwork_admin` | Paperwork | `doc.text.fill` | `#765737` / `#F1E9E0` | `#D6B892` / `#33281B` | Forms and records the state requires. |
+| `other` | Other | `ellipsis` | `#5C5C66` / `#EBEBEF` | `#AEAEB8` / `#333338` | Rules that don't fit the groups above. |
+
+| Primitive | Spec |
+|---|---|
+| `CategoryIcon` | Disc `size` (default 36), glyph 0.5 × size in `fg` on `bg`. 32 on FindingCard, 36 in Place top problems, 40 in onboarding |
+| `CategoryRow` | Up to 4 overlapping 24 discs (18% overlap, 2 pt surface ring) + "+N" in `footnote`. On cards and rows: what kinds of problems the last visit found |
+
+No green and no red in the set; the safety-hazards orange and health pink sit at the same lightness as the blues, so neither reads as an alarm.
+
+## 5. Primitives (`src/components/ui/`)
 
 | Component | What it is |
 |---|---|
-| `Text` | The one text primitive; variants above; `tabular` on by default for `numeral`, auto max scale per variant |
-| `Button` | Duolingo 3D: face + 4-pt edge. Kinds `ink` (Uber black, **the main CTA everywhere**: Watch, Continue), `primary` (school-bus yellow: "Turn on alerts" and the "Watching · alerts on" state only), `secondary` (white + grey edge), `plain`. 56 high, radius 16 |
-| `Chip` | Filter chip (toggle, selected = ink fill) and `InfoChip` (icon + label on sunken) |
-| `SearchPill` / `FloatButton` | Floating chrome over the map, `float` elevation |
-| `DaycareCard` | DoorDash card: map hero 2:1, bold name, meta row, then one `RecordLine` in plain words ("3 problems found Oct 5 · 1 serious") |
-| `PlaceRow` | Dense list row: 64 aerial thumb (credit "© Esri"), name, meta, `RecordLine` |
-| `MapSnapshot` | The hero image: a real **aerial photo** of the daycare's location with our pin (Esri World Imagery tiles, no key). **The Esri credit shows on every image**: full line on cards and heroes (lifted above the place page's head card), "© Esri" on thumbnails. Tiles load on view only, never prefetched. Tile mosaic in `expo-image`, fetched one zoom deeper for retina. No native module, works in Expo Go and in carousels. (CARTO was tried first: it now returns an "API key required" placeholder.) |
-| `MapPin` / `ClusterBubble` | Uniform ink pin (white core), watched = yellow disc with ink bell and ink ring; cluster = ink circle + tabular count |
-| `RingCard` / `Ring` | Kept in the kit, off the place page. **No stat band**, no ring on Place: the owner cut both (Oct 25) as dashboard clichés |
-| `AppMark` | The mark: one visit on the rail (ink ring, solid centre, on a time line, an earlier visit to its left). Reads as a visit and as an eye. Same drawing as the icon (`harness/state/design/mark.py`). Never a letter in a square |
-| `FindingCard` | A High-risk finding gets an ink header bar ("Serious · category") and a 1.5-pt ink border; every other level is a hairline card with the category in grey. Then the plain summary, the fix status (`status.ts`), and the state's own label ("High risk rule, per the state") |
-| `SeriousTag` | The only tag on the place page: a small ink pill, on High-risk findings only |
-| `status.ts` | The fix-status copy, pure and tested: `plainStatus`, `shortStatus`, `visitStatus`, `latestOpen` (CONTRACT §3 wording) |
-| `RightCard` | One right, one tap: icon disc, bold title, one-line detail, opens the generated request |
-| `Tabs` | Google Maps place-sheet tabs, underline indicator springs between tabs |
-| `SheetHandle`, `SheetHeader` | Grabber + title row for `@gorhom/bottom-sheet` |
-| `RecordStrip` | Retired from Place and cards (owner, Oct 25 00:05: "too much to decode"). `stripFromRecord` / `stripFromRow` stay as the data helpers |
-| `Skeleton` | Card-, row- and strip-shaped placeholders with a slow opacity pulse |
-| `OnboardingFrame`, `ProgressBar`, `Celebration` | Duolingo flow chrome |
+| `Text` | The one text primitive; variants in §3; per-variant max scale; `tabular` default on numerals |
+| `Button` | Duolingo 3D: face + 4 pt edge, 56 high, radius 16. Kinds: `ink` (the main action everywhere), `primary` (yellow: "Turn on alerts" and "Watching · alerts on" only), `secondary` (white + grey edge), `onImage` (white face, `#BDBDC4` edge, ink text, over photos and the flyover), `plain` |
+| `Chip` / `InfoChip` | Filter chip (selected = ink fill) · info chip (glyph + label on `surface`) |
+| `SearchPill` / `FloatButton` | Map chrome, `float` elevation |
+| `ActionTile` | Equal-width tile, glyph over label, `surface` + `card` elevation |
+| `DaycareCard` | DoorDash card: picture on top (`heroRatio`, default 2:1), name 17/700 two lines (min height 44 so a carousel row stays even), one meta line, `CategoryRow`, one record line in words |
+| `PlaceRow` | Dense row: 64 thumb, name two lines, meta, record line |
+| `MapSnapshot` | Aerial tile mosaic (Esri World Imagery) with our pin; credit on every image; tiles load on view only. Homes get a street canvas with an area circle (§8) |
+| `FlyoverHero` | Apple Maps `satelliteFlyover` camera: pitch 56, altitude 340 m, start heading 20°, drifts 24° every 9 s. iOS + exact address only; a still `MapSnapshot` elsewhere and under Reduce Motion. `legalTop` moves the Apple legal mark clear of text |
+| `PlaceGallery` | The Place hero carousel (§9) |
+| `MapPin` / `AreaPin` / `ClusterBubble` | §7 |
+| `FindingCard` | White card, `card` elevation. Header: `CategoryIcon` 32 + category in grey. Then the finding in plain words (`subhead`), the fix status with a check or clock glyph, and one line with the state's own label: High = "Serious · High risk rule, per the state" in `subhead` plus a 1.5 pt ink border; every other level = "<level> risk rule, per the state" in tertiary. Then the inspector's own words and "View on the state's site" |
+| `SeriousTag` | The only tag on Place: a small ink pill, on High-risk findings only |
+| `status.ts` | Fix-status copy, pure and tested (§10) |
+| `AlertBanner` | An iOS notification banner with our real push copy; the tag sits where iOS shows "now" ("Example", "Replay") |
+| `RightCard` | One right, one tap: glyph disc, bold title, one-line detail, opens the generated request |
+| `Tabs` | Place tabs, underline slides between tabs (200 ms) |
+| `Skeleton` | Card-, row- and hero-shaped placeholders (`heroRatio`), slow opacity pulse, cross-fade to content |
+| `OnboardingFrame` / `ProgressBar` / `OnboardingTop` / `Celebration` | Onboarding chrome (§11) |
+| `AppMark` | The mark: one visit on a time rail (ink ring, solid centre, an earlier visit to its left). Reads as a visit and as an eye. Never a letter in a square |
+| `RecordStrip` | Kept as the data helpers `stripFromRecord` / `stripFromRow`; the drawn strip is off Place and cards (it needed a legend) |
 
-## 5. The record, in words (owner, Oct 25 00:05)
+## 6. Motion (tokens: `motion`, `spring`, `theme/motion.ts`)
 
-The rail was rejected: anything that needs a legend is out. (Diagram: Viva World School 1459611's top rows; the `<…>` parts are schematic.) The record is now **one answer and a list of rows**, like Apple Weather's 10-day forecast.
+**Rule:** minimal and calm. 150–250 ms, ease-out in, ease-in out, **no bounce, no overshoot, no confetti, no bursts, nothing that pulses for attention.** Every animation respects Reduce Motion (`ReduceMotion.System`).
+
+| Token | Value | Use |
+|---|---|---|
+| `motion.fast` | 150 ms | Press feedback, pin name pill, chip toggle |
+| `motion.base` | 200 ms | Content enter, cross-fades, tab underline, Watch confirm |
+| `motion.slow` | 250 ms | Progress bar, alert banner arrival, onboarding layers |
+| `motion.stagger` / `maxStagger` | 30 ms / 3 items | List stagger, **first load only** |
+| `motion.rise` | 8 pt | Enter = fade + 8 pt rise |
+| `motion.pressScale` / `pressOpacity` | 0.98 / 0.9 | Every pressable card, tile and button face |
+| `easeOut` / `easeIn` | cubic | All timings |
+| `spring.sheet` | damping 30, stiffness 260, overshoot clamped | Sheet detents |
+| `spring.press` / `spring.pop` | damping 28–30, overshoot clamped | 3D button edge, selected pin |
+
+| Moment | Motion |
+|---|---|
+| Sheet / map | Sheet springs between detents with no overshoot; camera flies to the user's area (animateCamera, 600 ms system curve) |
+| Carousel | Native paging; page dots follow the scroll position |
+| Onboarding steps | Progress bar slides 250 ms; each step's content enters with `enter(i)`; how-it-works layers rise 16 pt over 250 ms |
+| Alert banner | Slides 32 pt from above over 250 ms with opacity, light haptic at 200 ms |
+| Watch confirm | Button label cross-fades (opacity 0.5 → 1, 200 ms), heavy haptic; no scale |
+| Watching confirmed | Yellow badge fades in 200 ms, then the check draws once left to right (350 ms) with a success haptic. Static soft halo |
+| Skeleton → content | 200 ms cross-fade |
+| Flyover | Camera drifts 24° every 9 s while the screen is visible; stops under Reduce Motion |
+
+## 7. Pins (`MapPin.tsx`)
+
+| Pin | When | Look |
+|---|---|---|
+| `MapPin` | A Licensed Center whose address geocoded exactly | White 30 disc, ink type glyph 14 (`center` building, `schoolAge` backpack), pin shadow. Selected: 44 disc, 3 pt ink ring, glyph 20, name in an ink pill below (fades in 150 ms). Watched: yellow disc with an ink bell |
+| `AreaPin` | Any approximate location, and **every home daycare, always** | Translucent ink area (52, selected 72) with a 1.5 pt edge and a small white core carrying the type glyph. Watched = yellow area. Never a point on a family's house |
+| `ClusterBubble` | Nearby daycares grouped | Ink circle 38 / 44 / 52 with a 3 pt white ring and a heavy tabular count ("1.2k" past 999) |
+
+Every daycare gets the same white pin, so the map never ranks anyone. Pin color never encodes the record.
+
+## 8. Location imagery
+
+| Daycare | Hero | Cards / thumbs | Caption |
+|---|---|---|---|
+| Licensed Center, exact address | `PlaceGallery` carousel (§9) | Street photo if one exists, else aerial with pin | "Location from the state record" / "Placed from the street address" |
+| Licensed Center, approximate address | Plain muted map with an area, no aerial, no flyover | Aerial | "Approximate location (address matched with corrections)" |
+| Any home type, or unknown type | Grey street canvas, zoom ≤ 14, ~400 m area circle on a 0.005° grid point, **no pin, no photo, no flyover**. City + ZIP only | Same canvas | "Neighborhood only · private home" |
+
+`lib/imagery.ts` (`imageryAllowed`) is the single test, and `FlyoverHero.flyoverAllowed` adds the exact-address check. Credit shows on every image ("Imagery © Esri, Maxar", "Map © Esri, HERE, Garmin, OSM", "© Esri" on thumbs, "Mapillary contributors" on street photos). An aerial never claims to show the building.
+
+## 9. Place hero carousel (`PlaceGallery`)
+
+```
+┌────────────────────────────────────────┐
+│ [‹]                            [share] │  floating round buttons, float elevation
+│                                        │
+│          street photo / 3D view        │  hero 0.62 × width, full bleed
+│                                        │
+│ ┌ Mar 2024 ┐                           │  capture-date chip (photos only)
+│ Street view near the address  ● ○ ○ ○  │  caption left · page dots right
+│ Mapillary contributors                 │  credit, caption 12
+└────────────────────────────────────────┘
+```
+
+| Rule | Spec |
+|---|---|
+| Order | Street photo(s), nearest first (≤ 3) → 3D flyover → aerial (z17) → street-level map tile |
+| Dots | 6 pt dots, 6 gap, white on a 30% black pill; the current dot is a 16 × 6 capsule |
+| Date chip | Photos only: capture month and year ("Mar 2024") in `caption` on a 50% black pill, top-left of the caption row |
+| Caption | Photo: "Street view near the address". Flyover: "3D view · Apple Maps". Aerial: the §8 caption |
+| Credit | Photo: "Mapillary contributors". Aerial: "Imagery © Esri, Maxar". Always visible, never under the head card |
+| Scrim | Bottom 35% stepped black scrim (0 → 45%) so white text clears 4.5:1 on any photo |
+| Tap | Opens a full-screen black viewer: pinch-zoom, swipe between the same pages, the caption, date and credit in the bottom bar, close top-left |
+| No photo | **The default case** (most centers have no street photo): the flyover is page 1 and must look finished on its own: no dots when there is one page, caption + credit only |
+| Homes | Never a carousel: the §8 canvas, no dots, no photos |
+| Card thumbnail | A street photo if one exists; otherwise the aerial with our pin |
+
+## 10. The record, in words
+
+The record is **one answer and a list of rows**, like Apple Weather's 10-day forecast. Nothing on Place needs a legend.
 
 ```
 3 problems found at the Oct 5 visit        largeTitle 28, the answer
 Fixes due by Oct 30 · no state check yet   callout 15, grey
-┌ Serious ┐ <the problem, plain words>     top 2 problems, Serious tag on High only
+(◉) <the problem, in plain words>  Serious  top 2 problems: CategoryIcon 36, tag on High only
  See all 9                              >
 Past 2 years
- Oct 5          3  ███████████   Fix due Oct 30
- Dec 5, 2025    4  ██████████████        Fixed
- <date>         0                No problems cited
-Typical for <county> centers: N problems in 2 years.
+ Oct 5                    Fix due Oct 30   two-line rows
+ 3  ███████████
+ Dec 5, 2025      Fixed · state checked
+ 4  ██████████████
 ```
 
 | Rule | Why |
 |---|---|
 | One question per screen. Place answers "what did the state find last time?" | A parent decides in 5 seconds |
-| Max 3 type sizes per screen (28 / 17 / 15) | Hierarchy by size, not by decoration |
-| Zero legends on Place | If it needs a key, it's the wrong picture |
-| 6th-grade words: "problems", "Fixed", "Fix due Oct 30" | No "findings", "verified", "deficiency" in headlines |
-| Row "Fixed" only when every problem at that visit is fixed | Jest case on nc 1022378716 (`status.test.ts`) |
-| Empty rows: "No problems cited" (a visit) · "No problems posted in 2 years" / "No state visits posted in 2 years" (a record) | Never "nothing found", which reads as "safe" |
+| First view = one answer, at most 3 key facts, one primary action | Density on demand, one tap deeper |
+| 6th-grade words: "problems", "Fix due Oct 30" | No "violation", "deficiency", "warning", "danger" |
+| Empty: "No problems cited" (a visit) · "No problems posted in 2 years" (a record) | Never "nothing found", which reads as "safe" |
 | Bar length = count at that visit, ink on sunken | Counts only. No color for good or bad |
-| Past 1.3× text, a row stacks: date + status, then count + bar | AX-XXXL without truncation |
+| Every data screen carries "Last checked with the state <time>" | Freshness is part of honesty |
 
-## 6. Screens
+**Fix-status short forms** (`status.ts`, tested; never a bare "Fixed"):
+
+| State record says | Row / chip | Detail line |
+|---|---|---|
+| Corrected at the inspection | Fixed during the visit | Fixed during the visit |
+| Corrected, state verified | Fixed · state checked | Fixed · the state checked <date> |
+| Fix date in the future | Fix due <date> | Fix due <date> · no state check on record yet |
+| Fix date passed, no verification | Fix date was <date> | Fix date was <date> · no state check on record yet |
+| No date | No fix date | No fix date on record |
+
+## 11. Screens
 
 | # | Screen | Structure |
 |---|---|---|
-| 1 | Home | Map full-bleed. Search pill top (safe area + 8). Locate `FloatButton` rides above the sheet. Sheet detents peek / half / full. Peek: "**N daycares** near you" `largeTitle` + chip row (Centers · Homes · In TX-04 · Accepts subsidies). Half (60%): carousel of `DaycareCard`. Full: `PlaceRow` list. |
-| 2 | Place page | `PlaceGallery` hero 236 under the status bar; head with 28 top radius overlapping it. Head, in order: name `title` → address (centers: state line; homes: city + ZIP only) · TX-04 → **the answer** (`visitAnswer`: "3 problems found at the Oct 5 visit" + grey fix line) → top 2 problems → "See all 9" → 3 fact chips → action tiles (Apple Maps · Google Maps · State record; homes: State record only). Then `Tabs` Overview / Problems N / Your rights. Overview: **Past 2 years** rows (tap → that visit in Problems) + county typical line → **"Ask about these on your tour"** → "More details" (capacity, subsidies, permit). Problems: visits newest first, highest risk first; 2+ Low / Medium Low fold into "N less serious problems". Scrolled: a slim dimmed slice of the hero map stays behind the name in the top bar, so the page never loses its picture. Sticky `Button ink` "Watch this daycare" + share. |
-| 3 | Onboarding | `ProgressBar` + close. Step 1 why (real TX-04 numbers as numerals). Step 2 find your daycare (search). Step 3 alerts (explain, then OS prompt). Celebration on watch. |
-| 4 | Alert | Same answer as Place (`visitAnswer`) for the new visit, the FindingCard in plain words, what changed since the last visit, what you can do (rights cards). |
-| 5 | Findings + Rights | Findings: timeline cards grouped by visit. Rights: action cards that open the generated request. |
+| 1 | **Home** | Map full-bleed with `MapPin` / `AreaPin` / clusters. Search pill top (safe area + 8). Locate rides above the sheet. Sheet peek: "50 closest daycares" + chip row. Half: "Closest first" carousel of `DaycareCard` and the "This week near you" feed. Full: `PlaceRow` list. "What the categories mean" opens a sheet listing §4 |
+| 2 | **Place** | `PlaceGallery` hero → head on `bg`: name `title`, address · TX‑04 → white card: the answer + top 2 problems + "See all" → info chips → action tiles (State record · Directions; homes: State record only) → tabs Overview / Problems N / Your rights. Overview: white card "Past 2 years" rows → "Ask about these on your tour" → "More details". Sticky ink "Watch this daycare" + share; when alerts are off it reads "Watching · alerts off" (secondary, outline bell) |
+| 3 | **Onboarding** | Five steps, progress bar + Skip on each (below) |
+| 4 | **Alert** | The push opens the visit: same answer as Place for the new visit, the findings posted so far as `FindingCard`s, what changed since the last visit, what you can do (rights cards) |
+| 5 | **Problems + Rights** | Problems: visits newest first, highest state risk first; 2+ Low / Medium Low fold into "N less serious problems". Rights: one `RightCard` per right, each opens the generated request |
 
-## 7. Rules
+**"This week near you" feed:** heading "In TX-04 last week" with the date range; each item = date, `CategoryRow`, count "N findings posted so far". Centers are named; **home daycares are never named** ("A licensed home in <city>").
 
-- Never a grade, score, star, rank, or traffic-light color. No green anywhere in the record.
-- Copy is calm and plain. Use "problems", "Fixed during the visit", "Fixed · the state checked <date>", "Fix due <date> · no state check on record yet". Never "violation alert", "warning", "danger", "nothing found". Never "Fixed <corrected_date>".
-- Every data screen carries "Last checked with the state <time>".
-- AA contrast in light and dark; tap targets ≥ 44; Dynamic Type to AX-XXXL without clipping (numerals cap at 1.3×, axis labels at 1.35×).
-- Blur only over the map. No gradients. No illustrations. No stock imagery. The only imagery is real maps of real locations.
+**Onboarding** (`src/app/onboarding/`):
 
-## 8. Not us (the generated-UI tells, and what we do instead)
-
-Sources: Fountain Institute, "7 Signs a UI Has Been Vibe Coded"; Tessl `de-llm-ui` review skill; robotsonpayroll, "How to avoid that vibe-coded look"; Draftbit `mobile-taste-skill` (React Native tells); NN/g, "GenUI vs vibe". `harness/bin/slopcheck.py` fails the build on the mechanical ones.
-
-| Tell | Why it reads as generated | Us |
+| Step | File | What the parent sees |
 |---|---|---|
-| Indigo / purple / "internet blue" accent, purple-blue gradients | Tailwind's default `indigo-500` is in every training example | Ink for every action, school-bus yellow for one meaning (watching). No gradients anywhere |
-| Neon-on-dark, aurora glows | Over-represented "modern SaaS" look | True black dark mode, one yellow, no glow |
-| Inter everywhere | The default web font of every template | The platform grotesk (SF Pro / Roboto), heavy and tightly tracked like the system apps |
-| Soft grey shadow on every floating card | Default `shadow-md` | Flat surfaces. Only map chrome (search pill, locate, pins) floats. 3D pieces use a solid bottom edge, not a blur |
-| Every section in a rounded rectangle; stacks of white cards | Layout by container, not by hierarchy | Open sections separated by space and hairlines; cards only where a card is a thing you tap |
-| Grid of identical stat cards | The "dashboard" stock pattern | One sentence that answers the question, then Weather-style rows. No stat cards on Place |
-| Colored left-border cards | Default "callout" component | Pills and plain labels (slopcheck blocks `borderLeftWidth`) |
-| Emoji or stock icon sets (Lucide, Feather, Ionicons, MaterialIcons) | Zero-effort iconography | SF Symbols on iOS, Material Symbols on Android via `expo-symbols`; pins and record marks drawn by us |
-| Pastel overload, clip-art illustration | Filler color and filler art | Color comes from the map photo and the ember record. No illustration |
-| Generic copy ("Welcome back!", "Unlock insights"), explainer paragraphs | Text pasted from the prompt | DoorDash-length labels; numbers carry the message |
-| Generic empty / error states | Only the happy path was designed | Skeletons shaped like the real card; empty states say what's true ("No problems posted in 2 years") and give one action |
-| Five-tab bar with a floating + button | The template app shell | Three tabs (Find · Watching · Your rights), map first |
+| 1 | `index.tsx` | Full-bleed 3D flyover of a real licensed center, stepped scrims, the white mark and "Know what Texas inspectors found before you pick a daycare." Caption names the place and "3D view, Apple Maps". `onImage` "Get started" |
+| 2 | `how.tsx` | Three beats on one stage, advanced by Next or a tap: the raw state record → the same finding in plain words (CategoryIcon, Serious tag, fix status) → the alert banner tagged "Example" with our real push copy. Earlier layers sit under a 55% wash |
+| 3 | `find.tsx` | Search pill, "Centers near Frisco" + "Use my location", a carousel of real licensed centers (cards 1.2:1). Picking lifts the card 2 pt with a yellow check and a select haptic |
+| 4 | `alerts.tsx` | "Turn on alerts." + "Only for daycares you watch, and only when the state posts something new." A lock-screen panel (flyover wallpaper, live time) with the banner arriving. Then the OS prompt on "Turn on alerts"; "Not now" always works |
+| 5 | `done.tsx` | The check draws once: "You're watching <name>." and one line on what happens next |
 
-What "built" looks like here: a 4/8-pt rhythm, optically centred glyphs, card shapes that vary with content, hierarchy through size and weight before color, haptics on every commit, springs on the sheet and presses, skeletons on every load, and corner radii that grow with elevation (chip 999 · thumb 12 · card 16 · stat 22 · sheet 28).
+## 12. Rules and anti-patterns
 
-## 9. Content density (owner, Oct 24)
+- Never a grade, score, star, rank, or traffic-light color. No green anywhere on a record.
+- Calm copy: "problems", "Serious" only for the state's High risk label, "a finding under a rule the state rates High risk". Never "violation alert", "warning", "danger", "nothing found".
+- AA contrast in light and dark; tap targets ≥ 44; Dynamic Type to AX-XXXL without clipping (illustrations inside mock screens cap at 1.3×).
+- Blur only over the map. No gradients. No illustration. No stock imagery. Only real places.
+- A lint script fails the build on `borderLeftWidth` callout cards and banned icon sets.
 
-**First view of any screen = one answer, at most 3 key facts, one primary action.** Everything else is one tap deeper. No repeated labels, no footnotes, no secondary stats in first view.
-
-| Primitive | Enforces |
+| Tell of template UI | Us |
 |---|---|
-| `FactChips` | Renders at most `MAX_FACTS` (3) facts, whatever it is given. Place page: type · ages · hours |
-| `Disclosure` | "More details" row (capacity / subsidies / permit date) and the "N less serious problems" fold |
-| `StickyBar` | Exactly one primary action |
+| Indigo / purple / "internet blue" accent, gradients | Ink for every action, yellow for one meaning. No gradients |
+| Neon on dark, glows | True black, graphite cards, one yellow |
+| Inter everywhere | The platform grotesk, heavy and tightly tracked |
+| Grid of identical stat cards | One sentence that answers, then rows |
+| Colored left-border callouts | Pills, plain labels, category discs |
+| Stock icon sets, emoji | SF Symbols / Material Symbols via `expo-symbols`; pins and the mark drawn by us |
+| Clip-art illustration | Real places: street photos, flyover, aerial |
+| Generic copy ("Welcome back!", "Unlock insights") | DoorDash-length labels; numbers carry the message |
+| Generic empty / error states | Skeletons shaped like the real card; empty states say what's true and give one action |
+| Confetti, bouncing, pulsing | §6: 150–250 ms, no overshoot |
 
-Place page, first view (6.3" iPhone): gallery · name · address · **the answer · top 2 problems** · "Watch this daycare". Chips, tiles and tabs start one scroll down.
+**5-second test (on every screen):** Viva World School → "3 problems at the Oct 5 visit, fixes due Oct 30, one serious (pool gate)."
 
-**5-second test (gate note on every screen):** Viva World School → "3 problems at the Oct 5 visit, fixes due Oct 30, one serious (pool gate)." Pass.
-
-## 10. Location imagery (integrator rules, Oct 24 11:15 pm)
-
-| Daycare | Hero | Thumbs / cards | Caption |
-|---|---|---|---|
-| Licensed Center, geocode `state` / `exact` / unknown | `PlaceGallery`: Esri aerial z17 → z15 → Apple 3D flyover (pitch 60), dots, swipe | Esri aerial, pin | "Location from the state record" / "Placed from the street address" / "Area around the address" |
-| Licensed Center, geocode `non_exact` | Plain muted map with pin, no aerial | Esri aerial | "Approximate location (address matched with corrections)" |
-| Any home type (Licensed / Registered Child-Care Home, Listed Family Home), or unknown type | Grey Esri street canvas, zoom ≤ 14, ~400 m area circle centred on a 0.005° grid point, **no pin, no photo, no flyover**. Address shows city + ZIP only; no Apple / Google Maps tiles (integrator, Oct 24 11:49 pm) | Same grey canvas, circle, no pin | "Neighborhood only · private home" |
-
-`lib/imagery.ts` (`imageryAllowed`) is the single test; `DaycareCard` / `PlaceRow` require `operationType` so no caller can skip it. Credit shows on every image: "Imagery © Esri, Maxar", "Map © Esri, HERE, Garmin, OSM", or "© Esri" on thumbnails. An aerial never claims to show the building.
-
+### Change log after the freeze
+| Date | Change | Why |
+|---|---|---|
+| | | |

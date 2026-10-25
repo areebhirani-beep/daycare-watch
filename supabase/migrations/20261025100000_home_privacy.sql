@@ -1,4 +1,4 @@
--- Home daycares are private residences. Enforce the CONTRACT privacy rule on the server, so the
+-- Home daycares are private residences. Enforce the home privacy rule (docs/PRIVACY.md) on the server, so the
 -- public API (and the public web link) never hands out a house: for every operation type other
 -- than 'Licensed Center', DaycareRow/DaycareHeader return
 --   address  = null                         (city and ZIP stay)

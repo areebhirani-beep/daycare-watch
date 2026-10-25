@@ -169,16 +169,12 @@ def run(settings: Settings, opts: RunOptions, soda: SodaClient | None = None) ->
 
 
 def _photos(db_url: str) -> dict[str, Any]:
-    """Street photos are a nice-to-have: no token or a Mapillary outage never fails the run."""
+    """Load the hand-verified photo list. Photos are a nice-to-have: a problem here never fails the run."""
     from pipeline import photos
 
-    token = photos.token_from_env()
-    if token is None:
-        log.info("photos.skipped", reason="MAPILLARY_TOKEN not set")
-        return {"photos_skipped": "no token"}
     try:
         with connect(db_url) as pconn:
-            return photos.fill(pconn, photos.Mapillary(token))
+            return photos.load_verified(pconn)
     except Exception as exc:  # logged and reported in the run's counts
         log.warning("photos.failed", error=f"{type(exc).__name__}: {exc}")
         return {"photos_error": type(exc).__name__}

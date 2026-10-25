@@ -243,11 +243,68 @@ def test_failed_request_leaves_stored_photos_alone() -> None:
             tx.__exit__(psycopg.Rollback, psycopg.Rollback(), None)
 
 
-def test_runner_skips_photos_without_token(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_runner_reports_a_photo_problem_without_failing(monkeypatch: pytest.MonkeyPatch) -> None:
     from pipeline import runner
 
-    monkeypatch.delenv("MAPILLARY_TOKEN", raising=False)
-    assert runner._photos("postgresql://unused") == {"photos_skipped": "no token"}
+    def broken(conn: Any, path: Path = photos.VERIFIED_CSV) -> dict[str, Any]:
+        raise ValueError("bad row")
+
+    monkeypatch.setattr(photos, "load_verified", broken)
+    monkeypatch.setattr(runner, "connect", lambda url: _NullConn())
+    assert runner._photos("postgresql://unused") == {"photos_error": "ValueError"}
+
+
+class _NullConn:
+    def __enter__(self) -> _NullConn:
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        return None
+
+
+def test_committed_verified_list_is_well_formed() -> None:
+    rows = photos.read_verified()
+    assert len({(r["operation_id"], r["image_id"]) for r in rows}) == len(rows)
+    per_center: dict[str, list[dict[str, str]]] = {}
+    for r in rows:
+        per_center.setdefault(r["operation_id"], []).append(r)
+        datetime.fromisoformat(r["captured_at"]) and datetime.fromisoformat(r["reviewed_at"])
+        assert 0 <= float(r["distance_m"]) <= 2 * photos.RADIUS_M
+    for kept in per_center.values():  # two photos of one center come from different drives
+        assert len(kept) <= 2 and len({r["sequence_id"] for r in kept}) == len(kept)
+
+
+def test_verified_list_rejects_a_row_missing_a_field(tmp_path: Path) -> None:
+    bad = tmp_path / "v.csv"
+    bad.write_text(",".join(photos.VERIFIED_COLUMNS) + "\n1459611,123,2024-06-01T00:00:00+00:00,someone,,10,90,"
+                   "2026-10-25T13:00:00-05:00,front of the building\n")
+    with pytest.raises(ValueError, match="line 2"):
+        photos.read_verified(bad)
+
+
+@pytest.mark.db
+@pytest.mark.skipif(not DB, reason="DATABASE_URL not set")
+def test_load_verified_makes_the_list_the_only_verified_photos(tmp_path: Path) -> None:
+    assert DB
+    with psycopg.connect(DB) as conn:
+        tx = conn.transaction()
+        tx.__enter__()
+        try:
+            op = conn.execute(f"select operation_id from ({photos.TARGETS}) t limit 1").fetchone()
+            assert op
+            conn.execute("""insert into core.daycare_photos (operation_id, image_id, captured_at, distance_m,
+                            verified, verified_at) values (%s, 'stale', now(), 1, true, now())""", op)
+            listed = tmp_path / "v.csv"
+            listed.write_text(",".join(photos.VERIFIED_COLUMNS) + f"\n{op[0]},listed,2025-06-01T00:00:00+00:00,"
+                              ",seq,12.5,90,2026-10-25T13:00:00-05:00,front of the building\n")
+            counts = photos.load_verified(conn, listed)
+            assert counts == {"photos_verified": 1, "photos_verified_centers": 1, "photos_two_centers": 0}
+            sql = "select image_id, verified from core.daycare_photos where operation_id = %s"
+            got: dict[str, bool] = dict(conn.execute(sql, op).fetchall())
+            assert got["listed"] is True and got["stale"] is False
+            assert photos.load_verified(conn, listed) == counts  # idempotent
+        finally:
+            tx.__exit__(psycopg.Rollback, psycopg.Rollback(), None)
 
 
 @pytest.mark.db

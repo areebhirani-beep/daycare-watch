@@ -47,6 +47,8 @@ def main(argv: list[str] | None = None) -> int:
     photos.add_argument("--coverage", action="store_true", help="only print coverage from stored photos")
     photos.add_argument("--from-dir", metavar="DIR", help="use answers saved by --record-dir instead of the API")
     photos.add_argument("--dry-run", action="store_true", help="query and select, write nothing, print coverage")
+    photos.add_argument("--load-verified", action="store_true",
+                        help="load data/verified_photos.csv (hand-checked photos) and print coverage; no API call")
     args = parser.parse_args(argv)
     _configure_logging()
     settings = Settings.from_env()
@@ -68,7 +70,9 @@ def main(argv: list[str] | None = None) -> int:
         from pipeline.config import connect
 
         with connect(settings.require_db()) as conn:
-            if not args.coverage:
+            if args.load_verified:
+                print(json.dumps(ph.load_verified(conn), indent=2))
+            elif not args.coverage:
                 token = ph.token_from_env()
                 if token is None and not args.from_dir:
                     print("MAPILLARY_TOKEN is not set; nothing queried", file=sys.stderr)

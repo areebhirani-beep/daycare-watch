@@ -1,5 +1,9 @@
 """Stage 5c: street-level photos from Mapillary for licensed centers in TX-04.
 
+Only hand-verified photos are ever shown. A person looks at each candidate and records it in
+data/verified_photos.csv only when it shows that daycare's building; the daily sync loads that file
+(load_verified) and calls no API. Everything below finds candidates for that review.
+
 Only active Licensed Centers whose point is an exact Census match and inside the district get a
 query; home daycares and approximate points never do (daycare_record also refuses to show photos
 for them). For each center one Graph API call lists the images in a box of +-RADIUS_M around the
@@ -39,8 +43,10 @@ from pipeline.load import Conn
 log = structlog.get_logger()
 
 GRAPH_IMAGES = "https://graph.mapillary.com/images"
-FIELDS = "id,captured_at,computed_geometry,geometry,compass_angle,computed_compass_angle,is_pano"
+FIELDS = ("id,captured_at,computed_geometry,geometry,compass_angle,computed_compass_angle,is_pano,"
+          "creator,sequence,thumb_1024_url")
 RADIUS_M = 50.0
+SEARCH_M = 100.0  # the box asked for: wide enough for a building set back from its street address point
 MAX_PHOTOS = 3
 FACING_MAX = 60.0
 FACING_PREFERRED = 45.0
@@ -197,7 +203,7 @@ class Mapillary:
         self._headers = {"Authorization": f"OAuth {token}"}
 
     def images_near(self, lat: float, lng: float) -> list[dict[str, Any]]:
-        params: dict[str, str | int] = {"bbox": bbox(lat, lng), "fields": FIELDS, "limit": LIMIT}
+        params: dict[str, str | int] = {"bbox": bbox(lat, lng, SEARCH_M), "fields": FIELDS, "limit": LIMIT}
         for attempt in range(1, MAX_ATTEMPTS + 1):
             resp = self._http.get(GRAPH_IMAGES, params=params, headers=self._headers)
             if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_ATTEMPTS:
@@ -232,7 +238,8 @@ class Recorded:
 
 
 REPLACE = """
-delete from core.daycare_photos where operation_id = %(op)s and not (image_id = any(%(keep)s::text[]))
+delete from core.daycare_photos where operation_id = %(op)s and not verified
+  and not (image_id = any(%(keep)s::text[]))
 """
 UPSERT = """
 insert into core.daycare_photos (operation_id, image_id, captured_at, distance_m, compass_angle)
@@ -270,7 +277,8 @@ def fill(
         if record_dir is not None:
             record_dir.mkdir(parents=True, exist_ok=True)
             (record_dir / f"{op}.json").write_text(json.dumps(
-                {"operation_id": op, "lat": lat, "lng": lng, "bbox": bbox(lat, lng), "data": images}, indent=1))
+                {"operation_id": op, "lat": lat, "lng": lng, "bbox": bbox(lat, lng, SEARCH_M), "data": images},
+                indent=1))
         kept = choose(candidates(images, lat, lng, not_before(issued, now)))
         counts["photos_kept"] += len(kept)
         counts["photos_centers_with_photo"] += bool(kept)
@@ -284,6 +292,51 @@ def fill(
     queried = counts["photos_queried"]
     counts["photos_coverage_pct"] = round(100 * counts["photos_centers_with_photo"] / queried, 1) if queried else None
     log.info("photos.done", dry_run=dry_run, **counts)
+    return counts
+
+
+VERIFIED_CSV = Path(__file__).resolve().parents[2] / "data" / "verified_photos.csv"
+VERIFIED_COLUMNS = ("operation_id", "image_id", "captured_at", "creator", "sequence_id", "distance_m",
+                    "compass_angle", "reviewed_at", "shows")
+
+LOAD_VERIFIED = """
+insert into core.daycare_photos (operation_id, image_id, captured_at, distance_m, compass_angle, creator,
+                                 verified, verified_at)
+values (%s, %s, %s, %s, %s, %s, true, %s)
+on conflict (operation_id, image_id) do update set captured_at = excluded.captured_at,
+  distance_m = excluded.distance_m, compass_angle = excluded.compass_angle, creator = excluded.creator,
+  verified = true, verified_at = excluded.verified_at
+"""
+UNVERIFY = """
+update core.daycare_photos set verified = false, verified_at = null
+where verified and not ((operation_id, image_id) in (select * from unnest(%s::bigint[], %s::text[])))
+"""
+
+
+def read_verified(path: Path = VERIFIED_CSV) -> list[dict[str, str]]:
+    """The reviewed list: every row is one photo a person checked shows that daycare's building."""
+    import csv
+
+    with path.open(newline="") as f:
+        rows = list(csv.DictReader(f))
+    for i, r in enumerate(rows, start=2):
+        if tuple(r) != VERIFIED_COLUMNS or not all(r[c].strip() for c in VERIFIED_COLUMNS if c != "creator"):
+            raise ValueError(f"{path.name} line {i}: expected every column of {VERIFIED_COLUMNS} filled")
+    return rows
+
+
+def load_verified(conn: Conn, path: Path = VERIFIED_CSV) -> dict[str, Any]:
+    """Make the reviewed list the only photos marked verified. No API call; safe to run every day."""
+    rows = read_verified(path)
+    with conn.transaction():
+        conn.cursor().executemany(LOAD_VERIFIED, [
+            (int(r["operation_id"]), r["image_id"], r["captured_at"], float(r["distance_m"]),
+             float(r["compass_angle"]) % 360, r["creator"] or None, r["reviewed_at"]) for r in rows])
+        conn.execute(UNVERIFY, ([int(r["operation_id"]) for r in rows], [r["image_id"] for r in rows]))
+    centers = {r["operation_id"] for r in rows}
+    two = sum(1 for c in centers if sum(r["operation_id"] == c for r in rows) >= 2)
+    counts = {"photos_verified": len(rows), "photos_verified_centers": len(centers), "photos_two_centers": two}
+    log.info("photos.loaded", **counts)
     return counts
 
 

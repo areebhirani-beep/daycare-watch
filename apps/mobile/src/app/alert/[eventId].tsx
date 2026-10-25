@@ -126,13 +126,17 @@ function meaning(a: AlertDetail): string {
     case 'new_violation':
       return `An inspector found the daycare did not meet a state rule. ${RISK_EXPLAINER} The state posts a finding only after the daycare has had due process.`;
     case 'corrective_action':
-      return 'The state lists a corrective action on this daycare\u2019s record. Ask the director what the state required, and read the official record for details.';
+      return a.after?.corrective_action
+        ? 'Corrective action in Texas is probation. The state has put this daycare on probation to fix problems it found. The daycare can stay open, has to meet extra conditions, and gets inspected more often, for up to 12 months.'
+        : 'State data no longer lists corrective action (probation) at this daycare.';
     case 'adverse_action':
-      return 'The state lists an adverse action on this daycare\u2019s record. Ask the director what the state decided, and read the official record for details.';
+      return a.after?.adverse_action
+        ? 'Adverse action is the state\u2019s most serious kind of action against a daycare\u2019s permit. It can mean the permit is denied, cancelled, suspended, not renewed, or reissued with permanent limits.'
+        : 'State data no longer lists adverse action at this daycare.';
     case 'permit_conditions':
-      return 'The state lists conditions on this daycare\u2019s permit. Ask the director what they are, and read the official record for details.';
+      return 'A condition is a special requirement on a daycare\u2019s permit that allows or forbids something specific. It is not automatically a penalty. Ask the director what the condition is.';
     case 'closure':
-      return 'The state lists this daycare as temporarily closed. Ask the director when and why it closed.';
+      return 'State data marks this daycare as temporarily closed. Ask the director when and why it closed.';
     case 'status_change':
       return 'The state changed the permit status on this daycare\u2019s record. Read the official record for details.';
     case 'capacity_change':

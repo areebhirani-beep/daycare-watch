@@ -12,7 +12,7 @@ import { LastChecked, Rule } from '@/components/ui';
 import { useDaycareSearch, useDaycaresNear, useMyWatches } from '@/lib/api';
 import { plural } from '@/lib/format';
 import type { DaycareRow } from '@/lib/types';
-import { font, minTap, radius, space, type as typeScale, useColors, useIsDark } from '@/theme';
+import { font, minTap, radius, space, TAB_BAR_CLEARANCE, type as typeScale, useColors, useIsDark } from '@/theme';
 
 // Default view when location is off: Rockwall, inside TX-04. Camera only, not data.
 const DEFAULT_CENTER = { lat: 32.9312, lng: -96.4597 };
@@ -105,6 +105,7 @@ export default function FindScreen() {
         keyExtractor={(d) => String(d.operation_id)}
         renderItem={({ item }) => <DaycareListRow d={item} />}
         ItemSeparatorComponent={() => <Rule inset={space.xl} />}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_CLEARANCE }}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={

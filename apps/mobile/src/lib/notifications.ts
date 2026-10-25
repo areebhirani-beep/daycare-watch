@@ -26,9 +26,11 @@ export async function getPermission(): Promise<PermissionState> {
 
 /**
  * Asks the OS for permission (only after our own explainer), then registers the Expo push token.
- * Returns the resulting permission state; registration errors surface to the caller.
+ * Registration failures are reported, not thrown, so watching still succeeds.
  */
-export async function enableAlerts(): Promise<PermissionState> {
+export type EnableResult = { permission: PermissionState; registered: boolean };
+
+export async function enableAlerts(): Promise<EnableResult> {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('state-records', {
       name: 'New state records',
@@ -40,14 +42,17 @@ export async function enableAlerts(): Promise<PermissionState> {
   if (status === 'undetermined') {
     ({ status } = await Notifications.requestPermissionsAsync());
   }
-  if (status !== 'granted') return status;
-  if (!Device.isDevice && Platform.OS === 'android') return status;
-
-  const projectId =
-    Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId ?? undefined;
-  const { data: token } = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
-  await registerDevice(token, Platform.OS === 'ios' ? 'ios' : 'android');
-  return status;
+  if (status !== 'granted') return { permission: status, registered: false };
+  try {
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId ?? undefined;
+    if (!projectId || !Device.isDevice) return { permission: status, registered: false };
+    const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
+    await registerDevice(token, Platform.OS === 'ios' ? 'ios' : 'android');
+    return { permission: status, registered: true };
+  } catch {
+    return { permission: status, registered: false };
+  }
 }
 
 type AlertData = { event_id?: number | string; operation_id?: number | string };

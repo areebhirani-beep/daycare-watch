@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
+    "@daycare-watch/db": "0.1.0",
     "@expo-google-fonts/public-sans": "^0.4.2",
     "@expo/ui": "~58.0.23",
     "@maplibre/maplibre-react-native": "^11.5.0",

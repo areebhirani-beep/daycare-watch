@@ -30,7 +30,8 @@ const findings: Finding[] = violations
     activity_id: Number(v.activity_id),
     date: (dateOf.get(v.activity_id) ?? '').slice(0, 10),
     risk_level: v.standard_risk_level as RiskLevel,
-    category: null,
+    // category and plain are added by the pipeline's classifier; not under test here.
+    category: 'other',
     plain: null,
     narrative: v.narrative ?? null,
     standard: v.standard_number_description,
@@ -44,8 +45,8 @@ const findings: Finding[] = violations
 const inspections: Inspection[] = activities.map((a) => ({
   activity_id: Number(a.activity_id),
   date: a.activity_date.slice(0, 10),
-  type: a.activity_type,
-  violation_found: a.violation_found,
+  type: a.activity_type as Inspection['type'],
+  violation_found: a.violation_found as Inspection['violation_found'],
 }));
 
 describe('format', () => {
@@ -54,19 +55,23 @@ describe('format', () => {
     expect(formatDate('2026-03-04')).toBe('Mar 4, 2026');
   });
 
-  it('labels fix status in plain words', () => {
-    expect(fixedLabel({ corrected_at_inspection: true, corrected_date: null, date: '2026-03-04' })).toBe(
-      'Fixed during the visit',
+  it('never treats the state corrected_date as fixed', () => {
+    const now = new Date('2026-10-24T12:00:00');
+    const base = { corrected_at_inspection: false, verified_date: null, date: '2026-10-05' };
+    expect(fixedLabel({ ...base, corrected_at_inspection: true, corrected_date: '2026-10-05' }, now)).toBe(
+      'Corrected during the inspection',
     );
-    expect(fixedLabel({ corrected_at_inspection: false, corrected_date: '2026-03-12', date: '2026-03-04' })).toBe(
-      'Fixed Mar 12',
+    expect(fixedLabel({ ...base, corrected_date: '2026-10-10', verified_date: '2026-10-20' }, now)).toBe(
+      'State verified the fix Oct 20',
     );
-    expect(fixedLabel({ corrected_at_inspection: false, corrected_date: '2027-01-02', date: '2026-12-20' })).toBe(
-      'Fixed Jan 2, 2027',
+    // Real case: nc 1022378716, cited Oct 5 2026, corrected_date Oct 30 2026 (future).
+    expect(fixedLabel({ ...base, corrected_date: '2026-10-30' }, now)).toBe(
+      'Fix due Oct 30 · not yet verified by the state',
     );
-    expect(fixedLabel({ corrected_at_inspection: false, corrected_date: null, date: '2026-03-04' })).toBe(
-      'No fix date on record',
+    expect(fixedLabel({ ...base, corrected_date: '2026-10-12' }, now)).toBe(
+      'Fix date listed Oct 12 · not yet verified by the state',
     );
+    expect(fixedLabel({ ...base, corrected_date: null }, now)).toBe('No fix date on record');
   });
 
   it('tidies only ALL CAPS source text', () => {

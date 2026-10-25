@@ -1,0 +1,19 @@
+appId: com.areebhirani.daycare-watch
+---
+- runFlow:
+    when:
+      visible: "Allow While Using App"
+    commands:
+      - tapOn: "Allow While Using App"
+- extendedWaitUntil:
+    visible: "WHAT INSPECTORS FOUND"
+    timeout: 20000
+- takeScreenshot: ../../harness/state/screens/record-1
+- scroll
+- takeScreenshot: ../../harness/state/screens/record-2
+- scroll
+- takeScreenshot: ../../harness/state/screens/record-3
+- scrollUntilVisible:
+    element: "Last checked with the state.*"
+    direction: DOWN
+- takeScreenshot: ../../harness/state/screens/record-4

@@ -39,7 +39,7 @@ export function groupByVisit(record: Pick<DaycareRecord, 'findings' | 'inspectio
     if (!first) continue;
     visits.push({
       activity_id,
-      date: first.date,
+      date: first.date ?? '',
       type: first.via_investigation ? 'REPORT' : 'INSPECTION',
       status: 'findings',
       findings,
@@ -75,7 +75,7 @@ export type Summary = {
 
 export function summarize(record: Pick<DaycareRecord, 'findings' | 'inspections'>, months = 24, now = new Date()): Summary {
   const recentVisits = record.inspections.filter((i) => monthsAgo(i.date, months, now));
-  const recent = record.findings.filter((f) => monthsAgo(f.date, months, now));
+  const recent = record.findings.filter((f) => f.date !== null && monthsAgo(f.date, months, now));
   const ruleCounts = new Map<string, number>();
   for (const f of recent) {
     if (f.standard) ruleCounts.set(f.standard, (ruleCounts.get(f.standard) ?? 0) + 1);
@@ -105,4 +105,21 @@ export function visibleVisits(visits: Visit[], months = 24, now = new Date()): {
     else hiddenQuiet += 1;
   }
   return { shown, hiddenQuiet };
+}
+
+export type Segment = { kind: 'visit'; visit: Visit } | { kind: 'quiet'; visits: Visit[] };
+
+/** Collapses consecutive visits with no findings into one block, so findings stay easy to scan. */
+export function segments(visits: Visit[]): Segment[] {
+  const out: Segment[] = [];
+  for (const v of visits) {
+    const last = out[out.length - 1];
+    if (v.status === 'none') {
+      if (last?.kind === 'quiet') last.visits.push(v);
+      else out.push({ kind: 'quiet', visits: [v] });
+    } else {
+      out.push({ kind: 'visit', visit: v });
+    }
+  }
+  return out;
 }

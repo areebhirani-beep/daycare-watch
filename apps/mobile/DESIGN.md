@@ -18,14 +18,14 @@
 
 ## 2. Principles
 
-1. **Every fact is dated and sourced.** "The state posted…", "Cited Mar 4, 2026", "Last checked with the state today at 9:14 AM". If we didn't get it from Texas HHS, it isn't on screen.
+1. **Every fact is dated and sourced.** "The state posted…", "Cited Mar 4, 2026 · Fix due Mar 12 · not yet verified by the state", "Last checked with the state today at 9:14 AM". If we didn't get it from Texas HHS, it isn't on screen.
 2. **Words first, color second.** Seriousness uses the state's own words ("High risk") plus a five-mark glyph that shows rank by how many marks are filled. Color backs up both, and nothing is ever conveyed by color alone.
 3. **Counts, not verdicts.** The summary shows numbers and dates. We never say safe, unsafe, good, bad, a score, or a rank. There is no green, so the app never implies "all clear".
 4. **Plain words first, the inspector's words one tap away.** Each finding gives a one-sentence plain summary, and the state's narrative opens in place, word for word. No popups.
 5. **Say what's missing.** "No findings posted from this visit." "Findings from this visit aren't posted yet." "The state gives no fix date." Absence is information.
 6. **Answer the questions HHS tells parents to ask.** Was it fixed, when, and did the state verify it? Did the same rule come up again? How does this compare with similar daycares in the county?
 7. **Calm alerts.** One fact per alert, in sentence case, with the default sound. The title is the daycare and the body is what the state posted.
-8. **Built for 7 am.** The answer is in the top third of the screen. 44 pt targets, Dynamic Type up to the largest accessibility size, and screen readers hear full sentences ("High risk rule. Supervision. Cited March 4, 2026. Fixed March 12.").
+8. **Built for 7 am.** The answer is in the top third of the screen. 44 pt targets, Dynamic Type up to the largest accessibility size, and screen readers hear full sentences ("High risk rule. Supervision. Cited March 4, 2026. State verified the fix March 12.").
 
 ## 3. Daycare record page, top to bottom
 
@@ -49,7 +49,7 @@
 │ Feb 1, 2022 · Investigation · 2 findings │
 │   ▮▮▮▮▮ High risk · Discipline           │
 │   A caregiver pulled a child's arm…      │  plain summary
-│   Cited Feb 1, 2022 · Fixed Feb 15       │
+│   Cited Feb 1, 2022 · State verified fix │
 │   ▸ Inspector's words                    │  expands in place
 ├──────────────────────────────────────────┤
 │ Facts: ages · capacity · hours · subsidy │

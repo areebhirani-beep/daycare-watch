@@ -9,7 +9,7 @@ import { RowLink, Rule, SectionLabel, Surface } from '@/components/ui';
 import { useDaycareRecord } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
 import { FEDERAL_NOTE, LAW_CITE, LAW_NAME, LAW_SCOPE, requestText, type RequestKind, RIGHTS } from '@/lib/rights';
-import { minTap, space, useColors } from '@/theme';
+import { minTap, space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
 
 const REQUESTS: { kind: RequestKind; title: string; detail: string }[] = [
   { kind: 'records', title: 'Request records', detail: 'Your child’s records, inspection reports, policies, training' },
@@ -39,7 +39,7 @@ export default function RightsScreen() {
           Your rights
         </T>
         <T variant="callout" tone="secondary">
-          {LAW_NAME} gives parents these rights at Texas daycares. {LAW_SCOPE}
+          Texas law gives you these rights at your child&rsquo;s daycare.
         </T>
       </View>
 
@@ -75,6 +75,13 @@ export default function RightsScreen() {
         <Surface>
           <RowLink title="Report a concern to the state" detail="Official Texas channels" onPress={() => router.push('/report')} />
         </Surface>
+      </View>
+
+      <View style={styles.section}>
+        <SectionLabel>About the law</SectionLabel>
+        <T variant="footnote" tone="secondary">
+          {LAW_NAME}, {LAW_CITE}. {LAW_SCOPE}
+        </T>
       </View>
 
       <View style={styles.section}>
@@ -126,7 +133,7 @@ function RightRow({ title, plain, quote, clause }: { title: string; plain: strin
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: space.xl, paddingBottom: space.section },
+  content: { paddingHorizontal: space.xl, paddingBottom: TAB_BAR_CLEARANCE },
   section: { paddingTop: space.xxl, gap: space.sm },
   right: { paddingVertical: space.sm, gap: space.xxs },
   toggle: { minHeight: minTap, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, alignSelf: 'flex-start' },

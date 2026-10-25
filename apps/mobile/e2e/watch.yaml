@@ -1,0 +1,27 @@
+appId: com.areebhirani.daycare-watch
+---
+- openLink: daycarewatch://daycare/1459611
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- extendedWaitUntil:
+    visible: "WHAT INSPECTORS FOUND"
+    timeout: 20000
+- takeScreenshot: ../../harness/state/screens/watch-0-record
+- tapOn: "My kid goes here"
+- extendedWaitUntil:
+    visible: "Turn on alerts"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/screens/watch-1-explain
+- tapOn: "Turn on alerts"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+- extendedWaitUntil:
+    visible: "You’re watching.*"
+    timeout: 15000
+- takeScreenshot: ../../harness/state/screens/watch-2-confirmed

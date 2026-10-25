@@ -6,7 +6,7 @@ import { T } from '@/components/T';
 import { Button } from '@/components/ui';
 import { useDaycareRecord, useIsWatching, useSetWatch } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
-import { enableAlerts, type PermissionState } from '@/lib/notifications';
+import { type EnableResult, enableAlerts } from '@/lib/notifications';
 import { space, useColors } from '@/theme';
 
 type Step = 'explain' | 'working' | 'done';
@@ -19,7 +19,7 @@ export default function WatchScreen() {
   const watching = useIsWatching(operationId);
   const setWatch = useSetWatch(operationId);
   const [step, setStep] = useState<Step>('explain');
-  const [permission, setPermission] = useState<PermissionState | null>(null);
+  const [result, setResult] = useState<EnableResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const name = tidyCase(record.data?.daycare.name) || 'this daycare';
 
@@ -28,12 +28,7 @@ export default function WatchScreen() {
     setError(null);
     try {
       await setWatch.mutateAsync(true);
-      try {
-        setPermission(await enableAlerts());
-      } catch {
-        // Watching still works without a push token; the Watching tab shows new records.
-        setPermission('denied');
-      }
+      setResult(await enableAlerts().catch(() => ({ permission: 'undetermined' as const, registered: false })));
       setStep('done');
     } catch {
       setError('We couldn’t save this right now. Check your connection and try again.');
@@ -65,7 +60,8 @@ export default function WatchScreen() {
   }
 
   if (step === 'done') {
-    const on = permission === 'granted';
+    const on = result?.permission === 'granted' && result.registered;
+    const blocked = result?.permission === 'denied';
     return (
       <ScrollView style={{ backgroundColor: c.bg }} contentContainerStyle={styles.content}>
         <T variant="title" accessibilityRole="header" accessibilityLiveRegion="polite">
@@ -78,7 +74,7 @@ export default function WatchScreen() {
         </T>
         <View style={styles.buttons}>
           <Button label="Done" onPress={() => router.back()} />
-          {!on ? <Button label="Open Settings" kind="plain" onPress={() => void Linking.openSettings()} /> : null}
+          {blocked ? <Button label="Open Settings" kind="plain" onPress={() => void Linking.openSettings()} /> : null}
         </View>
       </ScrollView>
     );

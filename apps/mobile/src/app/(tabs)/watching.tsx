@@ -9,7 +9,7 @@ import { T } from '@/components/T';
 import { Button, LastChecked, Rule } from '@/components/ui';
 import { useMyWatches } from '@/lib/api';
 import { getPermission, type PermissionState } from '@/lib/notifications';
-import { space, useColors } from '@/theme';
+import { space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
 
 export default function WatchingScreen() {
   const c = useColors();
@@ -27,7 +27,7 @@ export default function WatchingScreen() {
   return (
     <FlatList
       style={{ backgroundColor: c.bg }}
-      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: space.section }}
+      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: TAB_BAR_CLEARANCE }}
       data={list}
       keyExtractor={(d) => String(d.operation_id)}
       renderItem={({ item }) => <DaycareListRow d={item} />}
@@ -39,8 +39,7 @@ export default function WatchingScreen() {
             Watching
           </T>
           <T variant="callout" tone="secondary">
-            You&rsquo;ll get an alert when the state posts a new finding, a permit change, or corrective action at these
-            daycares. Saved on this phone, so you can read them offline.
+            Alerts when the state posts something new. Readable offline.
           </T>
           {permission === 'denied' && list.length > 0 ? (
             <View style={[styles.notice, { borderColor: c.border, backgroundColor: c.surface }]}>

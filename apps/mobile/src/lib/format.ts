@@ -76,15 +76,31 @@ export function riskLabel(level: RiskLevel): string {
 export const RISK_EXPLAINER =
   'Texas rates every rule it inspects from Low to High by how much risk breaking that rule poses to children. The level belongs to the rule, not to the daycare.';
 
-/** "Fixed during the visit", "Fixed Mar 12", or "No fix date on record". */
-export function fixedLabel(f: Pick<Finding, 'corrected_at_inspection' | 'corrected_date' | 'date'>): string {
-  if (f.corrected_at_inspection) return 'Fixed during the visit';
-  if (f.corrected_date) return `Fixed ${formatDateShort(f.corrected_date, f.date)}`;
+function todayIso(now: Date): string {
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+/**
+ * The state's corrected_date behaves like a due date (it can be in the future), so it never reads as "Fixed".
+ * Only a correction at the inspection or a state verification counts as fixed (CONTRACT 3).
+ */
+export function fixedLabel(
+  f: Pick<Finding, 'corrected_at_inspection' | 'corrected_date' | 'verified_date' | 'date'>,
+  now: Date = new Date(),
+): string {
+  if (f.corrected_at_inspection) return 'Corrected during the inspection';
+  if (f.verified_date) return `State verified the fix ${formatDateShort(f.verified_date, f.date)}`;
+  if (f.corrected_date) {
+    const when = formatDateShort(f.corrected_date, f.date);
+    return f.corrected_date.slice(0, 10) >= todayIso(now)
+      ? `Fix due ${when} · not yet verified by the state`
+      : `Fix date listed ${when} · not yet verified by the state`;
+  }
   return 'No fix date on record';
 }
 
-export function isFixed(f: Pick<Finding, 'corrected_at_inspection' | 'corrected_date'>): boolean {
-  return Boolean(f.corrected_at_inspection || f.corrected_date);
+export function isFixed(f: Pick<Finding, 'corrected_at_inspection' | 'verified_date'>): boolean {
+  return Boolean(f.corrected_at_inspection || f.verified_date);
 }
 
 const OPERATION_TYPE: Record<string, string> = {

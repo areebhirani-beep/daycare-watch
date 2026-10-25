@@ -111,6 +111,9 @@ export const motion = { fast: 150, base: 220 } as const;
 
 export const minTap = 44;
 
+// Room for the floating native tab bar so the last row is never covered.
+export const TAB_BAR_CLEARANCE = 112;
+
 // Ordinal position of each state risk level, used by the five-mark glyph.
 export const riskRank: Record<RiskLevel, 1 | 2 | 3 | 4 | 5> = {
   High: 5,

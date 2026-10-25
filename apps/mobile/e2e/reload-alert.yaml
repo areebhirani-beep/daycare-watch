@@ -1,0 +1,24 @@
+appId: com.areebhirani.daycare-watch
+---
+- stopApp
+- openLink: exp+daycare-watch://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081&__expo_disable_onboarding=1
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- extendedWaitUntil:
+    visible: "Find a daycare"
+    timeout: 90000
+- openLink: daycarewatch://alert/45
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- extendedWaitUntil:
+    visible: "WHAT THE STATE POSTED"
+    timeout: 20000
+- takeScreenshot: ../../harness/state/screens/alert-1-detail
+- scroll
+- takeScreenshot: ../../harness/state/screens/alert-2-actions

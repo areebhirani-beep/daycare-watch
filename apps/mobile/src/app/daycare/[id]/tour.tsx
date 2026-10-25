@@ -35,13 +35,18 @@ export default function TourScreen() {
       {questions.map((q, i) => (
         <View key={i}>
           {i > 0 ? <Rule /> : null}
-          <View style={styles.q} accessible accessibilityLabel={`${q.fact ? `${q.fact} ` : ''}Ask: ${q.question}`}>
+          <View style={styles.q} accessible accessibilityLabel={`${q.fact ? `${q.fact} ` : ''}Ask: ${q.question} ${q.followUp ?? ''}`}>
             {q.fact ? (
               <T variant="footnote" tone="secondary">
                 {q.fact}
               </T>
             ) : null}
             <T variant="headline">{q.question}</T>
+            {q.followUp ? (
+              <T variant="callout" tone="secondary">
+                {q.followUp}
+              </T>
+            ) : null}
           </View>
         </View>
       ))}
@@ -52,7 +57,7 @@ export default function TourScreen() {
         icon="share"
         onPress={() =>
           void Share.share({
-            message: [`Questions for ${name}`, '', ...questions.map((q, i) => `${i + 1}. ${q.question}`)].join('\n'),
+            message: [`Questions for ${name}`, '', ...questions.map((q, i) => `${i + 1}. ${q.question}${q.followUp ? ` ${q.followUp}` : ''}`)].join('\n'),
           })
         }
       />

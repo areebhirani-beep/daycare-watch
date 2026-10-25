@@ -1,0 +1,13 @@
+appId: com.areebhirani.daycare-watch
+---
+- extendedWaitUntil:
+    visible: "Viva World School"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/screens/alert-0-push
+- tapOn: "Viva World School"
+- extendedWaitUntil:
+    visible: "WHAT THE STATE POSTED"
+    timeout: 20000
+- takeScreenshot: ../../harness/state/screens/alert-1-detail
+- scroll
+- takeScreenshot: ../../harness/state/screens/alert-2-actions

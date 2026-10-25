@@ -7,7 +7,7 @@ import { LastChecked, Rule, SectionLabel } from '@/components/ui';
 import { useDistrictPulse } from '@/lib/api';
 import { categoryLabel, formatDate, formatDateShort, plural } from '@/lib/format';
 import type { DistrictPulse } from '@/lib/types';
-import { radius, space, useColors } from '@/theme';
+import { radius, space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
 
 export default function PulseScreen() {
   const c = useColors();
@@ -112,7 +112,7 @@ function Stat({ n, label }: { n: number; label: string }) {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: space.xl, paddingBottom: space.section, gap: space.md },
+  content: { paddingHorizontal: space.xl, paddingBottom: TAB_BAR_CLEARANCE, gap: space.md },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, paddingTop: space.md },
   stat: {
     flexBasis: '48%',

@@ -5,7 +5,6 @@ import {
   categoryLabel,
   fixedLabel,
   formatDate,
-  formatDateShort,
   riskLabel,
   splitStandard,
 } from '@/lib/format';
@@ -23,13 +22,7 @@ export function FindingRow({ finding: f, defaultOpen = false }: { finding: Findi
   const standard = splitStandard(f.standard);
   const summary = f.plain ?? standard?.title ?? 'The state did not publish a description.';
   const fixed = fixedLabel(f);
-  const status = [
-    `Cited ${formatDate(f.date)}`,
-    fixed,
-    f.verified_date ? `State verified ${formatDateShort(f.verified_date, f.date)}` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const status = `Cited ${formatDate(f.date)} · ${fixed}`;
 
   const spoken = `${riskLabel(f.risk_level)} rule. ${categoryLabel(f.category)}. ${summary} ${status}.`;
 

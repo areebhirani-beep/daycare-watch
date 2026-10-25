@@ -17,7 +17,7 @@ import {
   plural,
   tidyCase,
 } from '@/lib/format';
-import { groupByVisit, summarize, visibleVisits, visitTypeLabel } from '@/lib/record';
+import { groupByVisit, segments, summarize, type Visit, visibleVisits, visitTypeLabel } from '@/lib/record';
 import type { AreaCompare, DaycareHeader } from '@/lib/types';
 import { space, useColors } from '@/theme';
 
@@ -100,16 +100,27 @@ export default function DaycareRecordScreen() {
             ? 'No findings posted'
             : `${plural(summary.findings, 'finding')} from ${plural(summary.visitsWithFindings, 'visit')}`}
         </T>
-        <T variant="callout" tone="secondary" tabular>
-          {[
-            `${plural(summary.visits, 'state visit')} in total`,
-            summary.high > 0 ? `${summary.high} on High risk rules` : null,
-            summary.notFixed > 0 ? `${summary.notFixed} with no fix date on record` : null,
-            summary.repeatedRules > 0 ? `${plural(summary.repeatedRules, 'rule')} cited more than once` : null,
-          ]
-            .filter(Boolean)
-            .join(' · ')}
-        </T>
+        <View style={styles.counts}>
+          {(
+            [
+              [summary.visits, summary.visits === 1 ? 'state visit in total' : 'state visits in total'],
+              [summary.high, summary.high === 1 ? 'finding on a High risk rule' : 'findings on High risk rules'],
+              [summary.notFixed, 'not yet verified fixed by the state'],
+              [summary.repeatedRules, summary.repeatedRules === 1 ? 'rule cited more than once' : 'rules cited more than once'],
+            ] as const
+          )
+            .filter(([n], i) => i === 0 || n > 0)
+            .map(([n, label]) => (
+              <View key={label} style={styles.countRow} accessible accessibilityLabel={`${n} ${label}`}>
+                <T variant="headline" tabular style={styles.countN}>
+                  {n}
+                </T>
+                <T variant="callout" tone="secondary" style={{ flex: 1 }}>
+                  {label}
+                </T>
+              </View>
+            ))}
+        </View>
         {summary.lastVisit ? (
           <T variant="callout" tone="secondary">
             Last state visit {formatDate(summary.lastVisit)}
@@ -127,34 +138,34 @@ export default function DaycareRecordScreen() {
             The state has not posted any visits for this daycare in the last five years.
           </T>
         ) : (
-          shown.map((v, i) => (
-            <Fragment key={v.activity_id}>
+          segments(shown).map((seg, i) => (
+            <Fragment key={seg.kind === 'quiet' ? `q${seg.visits[0]?.activity_id}` : seg.visit.activity_id}>
               {i > 0 ? <Rule /> : null}
+              {seg.kind === 'quiet' ? (
+                <QuietVisits visits={seg.visits} />
+              ) : (
               <View style={styles.visit}>
                 <T variant="subhead" tabular accessibilityRole="header">
-                  {formatDate(v.date)}
+                  {formatDate(seg.visit.date) || 'Date not listed by the state'}
                   <T variant="footnote" tone="secondary">
                     {'  '}
-                    {visitTypeLabel(v.type)}
-                    {v.status === 'findings' ? ` · ${plural(v.findings.length, 'finding')}` : ''}
+                    {visitTypeLabel(seg.visit.type)}
+                    {seg.visit.status === 'findings' ? ` · ${plural(seg.visit.findings.length, 'finding')}` : ''}
                   </T>
                 </T>
-                {v.status === 'none' ? (
-                  <T variant="callout" tone="secondary">
-                    No findings posted from this visit.
-                  </T>
-                ) : v.status === 'pending' ? (
+                {seg.visit.status === 'pending' ? (
                   <T variant="callout" tone="secondary">
                     Findings from this visit aren&rsquo;t posted yet. The state usually posts them within a few weeks.
                   </T>
                 ) : (
                   <View style={{ gap: space.xl }}>
-                    {v.findings.map((f) => (
+                    {seg.visit.findings.map((f) => (
                       <FindingRow key={f.non_compliance_id} finding={f} />
                     ))}
                   </View>
                 )}
               </View>
+              )}
             </Fragment>
           ))
         )}
@@ -201,14 +212,39 @@ export default function DaycareRecordScreen() {
   );
 }
 
+/** A run of visits where the state posted no findings, as one compact block. */
+function QuietVisits({ visits }: { visits: Visit[] }) {
+  const label = `${plural(visits.length, 'visit')} with no findings posted`;
+  return (
+    <View style={styles.quiet} accessible accessibilityLabel={`${label}: ${visits.map((v) => `${formatDate(v.date)}, ${visitTypeLabel(v.type)}`).join('; ')}`}>
+      <T variant="footnote" tone="secondary">
+        {label.charAt(0).toUpperCase() + label.slice(1)}
+      </T>
+      {visits.map((v) => (
+        <View key={v.activity_id} style={styles.quietRow}>
+          <T variant="callout" tabular style={styles.quietDate}>
+            {formatDate(v.date)}
+          </T>
+          <T variant="callout" tone="secondary" style={{ flex: 1 }}>
+            {visitTypeLabel(v.type)}
+          </T>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 function StatusNotes({ daycare }: { daycare: DaycareHeader }) {
   const c = useColors();
   const notes = [
     daycare.status === 'inactive' ? 'The state lists this daycare’s permit as inactive.' : null,
-    daycare.temporarily_closed ? 'The state lists this daycare as temporarily closed.' : null,
-    daycare.adverse_action ? 'The state lists this daycare under adverse action.' : null,
-    daycare.corrective_action ? 'The state lists this daycare under corrective action.' : null,
-    daycare.conditions_on_permit ? 'The state has placed conditions on this daycare’s permit.' : null,
+    daycare.temporarily_closed ? 'State data marks this daycare as temporarily closed.' : null,
+    daycare.adverse_action
+      ? 'The state lists an adverse action against this daycare\u2019s permit, its most serious kind of action.'
+      : null,
+    daycare.corrective_action
+      ? 'The state lists this daycare on corrective action (probation): it stays open under extra conditions and more inspections.'
+      : null,
   ].filter((n): n is string => n !== null);
   if (notes.length === 0) return null;
   return (
@@ -284,6 +320,7 @@ function Facts({ daycare }: { daycare: DaycareHeader }) {
     ],
     ['Address', [tidyCase(daycare.address), daycare.zip].filter(Boolean).join(' ')],
     ['Permit issued', formatDate(daycare.issuance_date)],
+    ['Permit conditions', daycare.conditions_on_permit ? 'The state lists a special requirement on this permit' : ''],
   ];
   const shown = facts.filter(([, v]) => v);
   return (
@@ -315,6 +352,12 @@ const styles = StyleSheet.create({
   notes: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 10, padding: space.md, gap: space.xs, marginTop: space.sm },
   section: { paddingTop: space.xxl, gap: space.sm },
   visit: { paddingVertical: space.lg, gap: space.md },
+  counts: { gap: space.xxs, paddingVertical: space.xs },
+  countRow: { flexDirection: 'row', alignItems: 'baseline', gap: space.md },
+  countN: { minWidth: 28, textAlign: 'right' },
+  quiet: { paddingVertical: space.lg, gap: space.xs },
+  quietRow: { flexDirection: 'row', gap: space.md },
+  quietDate: { width: 118 },
   table: { borderTopWidth: StyleSheet.hairlineWidth, marginTop: space.xs },
   tr: { flexDirection: 'row', alignItems: 'center', minHeight: 40, paddingVertical: space.xs },
   tdLabel: { flex: 1.4 },

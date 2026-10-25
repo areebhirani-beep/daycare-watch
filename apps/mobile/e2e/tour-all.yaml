@@ -1,0 +1,58 @@
+appId: com.areebhirani.daycare-watch
+---
+- stopApp
+- openLink: exp+daycare-watch://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081&__expo_disable_onboarding=1&__expo_disable_fab=1
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- extendedWaitUntil:
+    visible: "Find a daycare"
+    timeout: 90000
+- extendedWaitUntil:
+    visible: "NEAREST FIRST"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/screens/${MODE}-find
+- tapOn: "Name, city, or ZIP"
+- inputText: "Rockwall"
+- extendedWaitUntil:
+    visible: ".*MATCH.*"
+    timeout: 10000
+- hideKeyboard
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/screens/${MODE}-search
+- tapOn: "Watching"
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/screens/${MODE}-watching
+- tapOn: "Your rights"
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/screens/${MODE}-rights
+- openLink: daycarewatch://daycare/1459611
+- extendedWaitUntil:
+    visible: "WHAT INSPECTORS FOUND"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/screens/${MODE}-record-1
+- scroll
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/screens/${MODE}-record-2
+- openLink: daycarewatch://daycare/1459611/tour
+- extendedWaitUntil:
+    visible: "Questions for.*"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/screens/${MODE}-tour
+- openLink: daycarewatch://report
+- extendedWaitUntil:
+    visible: "Texas Abuse Hotline.*"
+    timeout: 10000
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/screens/${MODE}-report
+- openLink: daycarewatch://alert/45
+- extendedWaitUntil:
+    visible: "WHAT THE STATE POSTED"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/screens/${MODE}-alert

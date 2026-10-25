@@ -15,11 +15,11 @@ const QUESTIONS: Record<Category, string> = {
   other: 'What changed after your most recent state inspection?',
 };
 
-export type TourQuestion = { category: Category | null; fact: string | null; question: string };
+export type TourQuestion = { category: Category | null; fact: string | null; question: string; followUp?: string };
 
 export function buildTourQuestions(findings: Finding[], now = new Date()): TourQuestion[] {
   const cutoff = new Date(now.getFullYear() - 2, now.getMonth(), now.getDate()).toISOString().slice(0, 10);
-  const recent = findings.filter((f) => f.date >= cutoff);
+  const recent = findings.filter((f) => f.date !== null && f.date >= cutoff);
   const byCat = new Map<Category, Finding[]>();
   for (const f of recent) {
     const cat = f.category ?? 'other';
@@ -28,18 +28,19 @@ export function buildTourQuestions(findings: Finding[], now = new Date()): TourQ
   const ranked = [...byCat.entries()].sort((a, b) => b[1].length - a[1].length);
 
   const specific: TourQuestion[] = ranked.map(([cat, list]) => {
-    const latest = list.reduce((a, b) => (b.date > a.date ? b : a));
+    const latest = list.reduce((a, b) => ((b.date ?? '') > (a.date ?? '') ? b : a));
     const open = list.filter((f) => !isFixed(f)).length;
     const fact = [
       `Inspectors cited ${plural(list.length, `${categoryLabel(cat).toLowerCase()} finding`)} in the last 2 years, most recently ${formatDate(latest.date)}.`,
-      open > 0 ? `${open} ${open === 1 ? 'has' : 'have'} no fix date on record.` : null,
+      open > 0 ? `Of those, ${open} ${open === 1 ? 'is' : 'are'} not yet verified fixed by the state.` : null,
     ]
       .filter(Boolean)
       .join(' ');
     return {
       category: cat,
       fact,
-      question: `${QUESTIONS[cat]} What changed after the state’s finding?`,
+      question: `What changed after the state\u2019s ${categoryLabel(cat).toLowerCase()} finding on ${formatDate(latest.date)}?`,
+      followUp: QUESTIONS[cat],
     };
   });
 

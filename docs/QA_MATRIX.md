@@ -24,10 +24,10 @@ Rows are tested cold, by someone who did not write the UI.
 
 | # | Case | Method | Status | Evidence | Owner if it fails |
 |---|---|---|---|---|---|
-| U1 | First launch: onboarding, then home | Maestro | PASS | `u01-first-launch.yaml`: welcome → Step 2 of 3 → Use my location → pick → Watch → alerts → "You’re watching." → home ([u01 screens](qa/)) | mobile / design |
-| U2 | Location allowed | Maestro + simctl location | FAIL | map centered on Prosper while the list is Plano (D1); "location off" after 5 s (D2) ([D1-map-not-centered](qa/D1-map-not-centered.jpg), [D2-location-off-label](qa/D2-location-off-label.jpg)) | mobile |
-| U3 | Location denied | Maestro + simctl privacy revoke | PENDING | | mobile |
-| U4 | Location outside Texas | Maestro + simctl location | PENDING | | mobile |
+| U1 | First launch: onboarding, then home | Maestro | PASS | `u01-first-launch.yaml` on the rebuilt onboarding: Get started → how it works (3 beats) → Find your daycare → Use my location → pick → Watch → Not now → "You’re watching …" → home ([welcome](qa/u01-0-welcome.jpg), [how](qa/u01-0b-how.jpg), [done](qa/u01-3-done.jpg), [home](qa/u01-4-home.jpg)), 02:16 | mobile / design |
+| U2 | Location allowed | Maestro + simctl location | PASS | map centered on the parent’s blue dot in Plano, "Closest to you" list from the same point, no "Location is off" ([home](qa/u01-4-home.jpg)). D1 + D2 fixed | mobile |
+| U3 | Location denied | Maestro + simctl privacy revoke | PASS | `u03-location-denied.yaml` (simctl revoke): "Daycares near you · Near your last location", map and list agree ([u03](qa/u03-denied-0.jpg)) | mobile |
+| U4 | Location outside Texas | Maestro + simctl location | PASS | `u04-outside-texas.yaml` (Oklahoma City): "Daycares near Frisco · No Texas daycares near you" ([u04](qa/u04-outside-0.jpg)) | mobile |
 | U5 | Offline | manual sim (network off) | PENDING | | mobile |
 | U6 | Slow network | manual sim | PENDING | | mobile |
 | U7 | Search: name hit | Maestro | PASS | "Viva World" → Viva World School ([u07-name](qa/u07-name.jpg)) | mobile |
@@ -55,9 +55,9 @@ Rows are tested cold, by someone who did not write the UI.
 | U25 | Rights request generation | Maestro | PENDING | | mobile |
 | U26 | Tour questions | Maestro | PENDING | | mobile |
 | U27 | "View on the state's site" from a finding and from the place page | Maestro | PASS (place) | place page "State record" visible (`u14-place.yaml`); from a finding: pending | mobile |
-| U28 | Dark mode | Maestro + simctl appearance | PENDING | | design |
-| U29 | Dynamic Type XXXL | Maestro + simctl content_size | PENDING | | design |
-| U30 | VoiceOver label on every control | accessibility tree audit | PENDING | | mobile |
+| U28 | Dark mode | Maestro + simctl appearance | PASS | `u28-dark.yaml`: place, home daycare, search in dark ([place](qa/u28-dark-0-place.jpg), [home](qa/u28-dark-2-home.jpg), [search](qa/u28-dark-3-search.jpg)) | design |
+| U29 | Dynamic Type XXXL | Maestro + simctl content_size | PASS | `u29-xxxl.yaml` (accessibility XXXL): wraps, no clipping ([place](qa/u29-xxxl-0-place.jpg), [home](qa/u29-xxxl-2-home.jpg)); Serious tag moved to the meta line so text keeps full width | design |
+| U30 | VoiceOver label on every control | accessibility tree audit | PARTIAL | home: sheet contents, chips, cards, list reachable (D11 fixed); pins read "<name>, Center" / "N daycares here. Zooms in." (D12 fixed). Place, watch, rights screens not yet audited | mobile |
 | U31 | Wording: never safe / unsafe / score / grade / rank | text search of screens and source | PASS (source) | grep of `apps/mobile/src` for safe/unsafe/score/grade/rank/rating: only code identifiers, "never a score" comments, and the state’s own standard title "Report Unsafe Facility Occurrence" (verbatim); on-screen pass pending | mobile / design |
 
 ## Motion (team motion rules, Oct 25: 150–250 ms, no overshoot, press 0.98, first-load stagger only, Reduce Motion respected)
@@ -85,8 +85,8 @@ Rows are tested cold, by someone who did not write the UI.
 
 | # | Row | Filed to | When | Screenshot | Severity · lens · status |
 |---|---|---|---|---|---|
-| D1 | U2 | mobile | 01:34 Oct 25 | [D1-map-not-centered](qa/D1-map-not-centered.jpg) | High · parent lens · mobile fixing |
-| D2 | U2 | mobile | 01:34 Oct 25 | [D2-location-off-label](qa/D2-location-off-label.jpg) | Med · bad-day lens · mobile fixing |
+| D1 | U2 | mobile | 01:34 Oct 25 | [D1-map-not-centered](qa/D1-map-not-centered.jpg) | High · parent lens · FIXED, re-tested PASS 02:16 (u01) |
+| D2 | U2 | mobile | 01:34 Oct 25 | [D2-location-off-label](qa/D2-location-off-label.jpg) | Med · bad-day lens · FIXED, re-tested PASS 02:16 (u01, u03) |
 | D3 | U13 | design | 01:46 Oct 25 | [D3-home-circle-centered](qa/D3-home-circle-centered.jpg) | WITHDRAWN: circle snaps to a 0.005° grid, 282 m off the house; DB now also rounds home points |
 | D4 | U16 | design | 01:46 Oct 25 | [D4-approx-caption](qa/D4-approx-caption.jpg) | Med · Apple-designer lens · design fixing |
 | D5 | U12 | design | 01:46 Oct 25 | | Low · Apple-engineer lens: Esri credit shows over a blank hero before tiles load |
@@ -95,5 +95,6 @@ Rows are tested cold, by someone who did not write the UI.
 | D8 | M2 | mobile + design | 01:52 Oct 25 | `NumberCard.tsx:78` | Low · Apple-designer lens: 700 ms ring fill · FIXED 01:57, verified in source |
 | D9 | U20 | mobile (+ design) | 01:56 Oct 25 | [u20-0-place-denied](qa/u20-0-place-denied.jpg) | High · CAC-judge + parent lens: "alerts on" with notifications denied · FIXED 02:05, re-tested PASS (u20-denied.yaml) |
 | D10 | U18 | mobile | 01:58 Oct 25 | [u18-2-place-watching](qa/u18-2-place-watching.jpg) → [u18-3-unwatched](qa/u18-3-unwatched.jpg) | Med · parent lens: one tap unwatches, no confirm or undo · FIXED 02:05, re-tested PASS (u18-watch.yaml) |
-| D11 | U30 | mobile | 02:04 Oct 25 | `maestro hierarchy`: one "Bottom Sheet" element, no children | High · Apple-engineer lens: home list unreachable by VoiceOver (gorhom default `accessible=true`) · mobile fixing |
-| D12 | U30 | mobile | 02:04 Oct 25 | `maestro hierarchy`: 95 × "Map pin" | Low · Apple-engineer lens: map pins have no daycare name for VoiceOver · mobile fixing |
+| D11 | U30 | mobile | 02:04 Oct 25 | `maestro hierarchy`: one "Bottom Sheet" element, no children | High · Apple-engineer lens: home list unreachable by VoiceOver (gorhom default `accessible=true`) · FIXED 02:09, re-tested PASS (hierarchy + u03/u04) |
+| D12 | U30 | mobile | 02:04 Oct 25 | `maestro hierarchy`: 95 × "Map pin" | Low · Apple-engineer lens: map pins have no daycare name for VoiceOver · FIXED 02:09, re-tested PASS (hierarchy) |
+| D13 | U15 | mobile + design | 02:10 Oct 25 | [u28-dark-0-place](qa/u28-dark-0-place.jpg) | Low · parent lens: "3 problems at the Oct 5 visit" then "See all 9" · FIXED 02:11 by design ("See all 9 from the past 2 years"), on-screen re-test pending |

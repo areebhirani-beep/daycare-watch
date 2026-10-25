@@ -1,0 +1,21 @@
+# QA u28: place page, a home, and search under dark mode (run.sh sets it with simctl).
+appId: host.exp.Exponent
+---
+- stopApp
+- runFlow: _open.yaml
+- openLink: ${METRO}/--/daycare/1459611
+- extendedWaitUntil:
+    visible: "Viva World School.*"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/qa/u28-dark-0-place
+- scroll
+- takeScreenshot: ../../harness/state/qa/u28-dark-1-place-scrolled
+- openLink: ${METRO}/--/daycare/1490119
+- extendedWaitUntil:
+    visible: ".*Baker.*"
+    timeout: 20000
+- takeScreenshot: ../../harness/state/qa/u28-dark-2-home
+- openLink: ${METRO}/--/search
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/qa/u28-dark-3-search

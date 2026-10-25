@@ -24,6 +24,8 @@ pass=0; fail=0; failed=()
 for f in "${flows[@]}"; do
   [[ "$f" == u01-* ]] && xcrun simctl privacy "$DEVICE" reset location host.exp.Exponent
   [[ "$f" == u03-* ]] && xcrun simctl privacy "$DEVICE" revoke location host.exp.Exponent
+  [[ "$f" == u28-* ]] && xcrun simctl ui "$DEVICE" appearance dark
+  [[ "$f" == u29-* ]] && xcrun simctl ui "$DEVICE" content_size accessibility-extra-extra-extra-large
   if [[ "$f" == u04-* ]]; then
     xcrun simctl privacy "$DEVICE" grant location host.exp.Exponent
     xcrun simctl location "$DEVICE" set 35.4676,-97.5164
@@ -33,6 +35,8 @@ for f in "${flows[@]}"; do
   else
     fail=$((fail + 1)); failed+=("$f")
   fi
+  [[ "$f" == u28-* ]] && xcrun simctl ui "$DEVICE" appearance light
+  [[ "$f" == u29-* ]] && xcrun simctl ui "$DEVICE" content_size large
   if [[ "$f" == u03-* || "$f" == u04-* ]]; then
     xcrun simctl privacy "$DEVICE" grant location host.exp.Exponent
     xcrun simctl location "$DEVICE" set 33.0198,-96.6989

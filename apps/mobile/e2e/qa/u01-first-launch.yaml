@@ -1,4 +1,4 @@
-# QA U1 + U2: clean first launch in Expo Go -> onboarding (3 steps) with location allowed -> home.
+# QA U1 + U2: clean first launch in Expo Go -> onboarding (welcome, how it works, find, alerts, done) with location allowed -> home.
 # Run with e2e/qa/run.sh (resets Expo Go state + location permission first).
 appId: host.exp.Exponent
 ---
@@ -6,12 +6,28 @@ appId: host.exp.Exponent
     file: _open.yaml
     env:
       CLEAR: "true"
+# Step 1: welcome on a real TX-04 center.
 - extendedWaitUntil:
-    visible: "Find your daycare"
+    visible: "Get started"
     timeout: 60000
 - takeScreenshot: ../../harness/state/qa/u01-0-welcome
+- tapOn: "Get started"
+# Step 2: how it works, three beats on a real record.
+- extendedWaitUntil:
+    visible: "Inspectors write down what they find.*"
+    timeout: 15000
+- takeScreenshot: ../../harness/state/qa/u01-0b-how
+- tapOn: "Next"
+- extendedWaitUntil:
+    visible: "We put it in plain words.*"
+    timeout: 5000
+- tapOn: "Next"
+- extendedWaitUntil:
+    visible: "Find your daycare"
+    timeout: 5000
+- takeScreenshot: ../../harness/state/qa/u01-0c-how-last
 - tapOn: "Find your daycare"
-- assertVisible: "Step 2 of 3"
+# Step 3: find yours.
 - tapOn: "Use my location"
 - runFlow:
     when:
@@ -28,16 +44,16 @@ appId: host.exp.Exponent
     visible: "Turn on alerts"
     timeout: 10000
 - takeScreenshot: ../../harness/state/qa/u01-2-alerts
-# Step 3 must wait for the parent's choice.
+# Step 4 (alerts) must wait for the parent’s choice.
 - assertVisible: "Not now"
 - tapOn: "Not now"
 - extendedWaitUntil:
-    visible: "You’re watching."
+    visible: "You’re watching.*"
     timeout: 10000
 - takeScreenshot: ../../harness/state/qa/u01-3-done
 - tapOn: "Explore the map"
 - extendedWaitUntil:
     visible: "Search daycares, cities, ZIP"
     timeout: 20000
-- assertNotVisible: ".*location off.*"
+- assertNotVisible: "Location is off"
 - takeScreenshot: ../../harness/state/qa/u01-4-home

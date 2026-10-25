@@ -96,7 +96,7 @@ flowchart TB
   end
   CEN["U.S. Census Geocoder"]
   TIG["Census TIGER CD119<br/>TX-04 boundary"]
-  MLY["Mapillary<br/>street photos, measured, not shown"]
+  MLY["Mapillary<br/>street photos, hand-checked"]
 
   subgraph PIPE["Pipeline · Python 3.12 · daily GitHub Action"]
     P["extract → validate → stage → transform → diff →<br/>geocode → district → classify → aggregate → notify → photos → log"]
@@ -138,7 +138,7 @@ flowchart TB
 | Diff | Re-running a sync creates 0 new events | Idempotency test |
 | Classify | Every finding gets a category from fixed rules on the state's rule number. The plain summary only shortens the inspector's words | `test_classify.py`, 100% coverage, checked against all 133,739 findings in the state file |
 | Notify | One push per parent per event. A replay of a real past finding is labelled "Replay of a real state record from <date>" | `test_notify.py` round trip with receipts |
-| Photos (collected, not shown) | Only Licensed Centers with an exact address match; no panoramas; camera facing the building and sideways to the road, never a dashcam view down it; taken after the permit and within 6 years | `test_photos.py` on recorded real API answers |
+| Photos (hand-checked) | Only Licensed Centers with an exact address match. A photo ships only after a person looked at it and saw that daycare (its name on the building); at most 2 per center, from different drives, within 6 years | `test_photos.py` on recorded real API answers and the reviewed list `data/verified_photos.csv` |
 
 More in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -159,7 +159,7 @@ More in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 | Daycares with a map point | 13,024 (577 from state coordinates, 12,447 from the Census Geocoder) |
 | Census match quality | 10,991 exact · 1,456 non-exact (address matched with corrections) |
 | Active daycares inside TX-04 by map point | at least 379 (330 exact, 28 non-exact, 21 state coordinates). 23 more fall back to county only and are never labelled TX-04 |
-| TX-04 centers with a street photo that passes every rule | 14 of 209 Licensed Centers with an exact address match (6.7%). Collected, not shown in the app |
+| TX-04 centers with a street-level picture | Apple Look Around (iPhone app) showed the building for 3 of 10 TX-04 centers sampled, and the wrong building for none: no street picture is shown unless Apple's place has the daycare's name and sits within 60 m of the state's address; otherwise the place page shows the view from above. Mapillary: a hand-checked photo for 1 of 209 Licensed Centers with an exact address match. 80 had any Mapillary image within 60 m of the building; all 107 images facing a building were checked by eye, and 2 (one center) showed the daycare |
 | RPC latency, p95 on the full dataset | nearest daycares 7.5 ms · search 30 ms · daycare record 1 ms |
 
 **Inside TX-04 only** (the 379 active daycares placed in the district by map point; 13 complete weeks, Jul 20 to Oct 18 2026):
@@ -184,7 +184,7 @@ These rules are enforced in code and tests, not just in copy review.
 | No scores, grades, rankings, or safe/unsafe labels. Color marks the state's risk level of one finding, never a daycare | A count of findings is not a verdict, and the state does not publish one |
 | "Fixed" appears only as "Fixed during the visit" or "Fixed · state checked", never on its own. The state's `corrected_date` is shown as "Fix due <date>" | 124 findings carry a `corrected_date` in the future, so it behaves like a deadline |
 | A daycare is labelled "in TX-04" only when its map point is inside the district | The state's county field can be wrong, and most of Collin and Denton counties are outside TX-04 |
-| Street photos are collected and measured (14 of 209 TX-04 centers, 6.7%), but not shown | A hand check found 2 of 5 showed the right building, because a Census address point sits on the street, not the building. A wrong photo on a daycare's page would be worse than none |
+| A street photo is shown only after a person checked it shows that daycare: 1 of 209 TX-04 centers today | Rules alone picked the wrong building 3 times in 5, because a Census address point sits on the street, not the building. Most street imagery here is dashcam footage of the road. A wrong photo on a daycare's page would be worse than none |
 | Home daycares (4,705 statewide) get no imagery, no map of the house, and no street address: city and 5-digit ZIP only | They are private residences, often listed under a person's name |
 | Map links send the state's address line, not our estimated point | The geocode is an estimate |
 | Kids' Law request cards are hidden for listed family homes | HRC §42.04271(a) does not cover them |
@@ -199,14 +199,14 @@ Run on Oct 25 2026. Details: [`docs/TESTING.md`](docs/TESTING.md) · every user 
 
 | Suite | Result | Command |
 |---|---|---|
-| Database (pgTAP): schema, row-level security, every RPC, views, photos rule, search, home privacy | **180 tests in 11 files, all pass** | `supabase test db` |
-| Pipeline (pytest + hypothesis) | **271 tests, all pass (26 need the local database) · 92% coverage** | `cd services/pipeline && uv run pytest` |
+| Database (pgTAP): schema, row-level security, every RPC, views, photos rule, search, home privacy | **185 tests in 11 files, all pass** | `supabase test db` |
+| Pipeline (pytest + hypothesis) | **274 tests, all pass (27 need the local database) · 93% coverage** | `cd services/pipeline && uv run pytest` |
 | Pipeline static checks | ruff + `mypy --strict` clean | `uv run ruff check . && uv run mypy --strict src` |
 | App unit (Jest) | **37 tests, all pass** | `cd apps/mobile && npx jest` |
 | App end-to-end (Maestro) | 11 flows, including find-to-alert and the largest text size | `maestro test apps/mobile/e2e/journey-find-watch.yaml` |
 | App static checks | `tsc --noEmit`, ESLint | `npm run typecheck --prefix apps/mobile` |
 
-GitHub Actions runs the pipeline checks on every push and the daily sync at 10:15 UTC, about an hour after the state usually reloads its files, with a second run at 11:47 UTC in case GitHub starts the first one late or skips it (a re-run creates no new events).
+GitHub Actions runs the pipeline checks on every push and the daily sync at 10:15 UTC, about an hour after the state usually reloads its files, with a second run at 11:47 UTC in case GitHub starts the first one late or skips it (a re-run creates no new events). GitHub does start scheduled runs late: on Oct 25 2026 the two runs began at 14:23 and 15:02 UTC, 3 to 4 hours after their set times.
 
 ## Getting started
 
@@ -245,7 +245,7 @@ On a real phone, use the computer's LAN address in `EXPO_PUBLIC_SUPABASE_URL` in
 | `python -m pipeline sync` | The daily run: extract, validate, load, diff, classify, alert |
 | `python -m pipeline backfill` | Load full history without sending alerts |
 | `python -m pipeline sync --replay-latest <operation_id>` | Re-send the findings from the newest visit at a daycare as one push, labelled as a replay (add `--dry-run` to preview) |
-| `python -m pipeline photos` | Collect and measure street photos for TX-04 centers; not shown in the app (needs `MAPILLARY_TOKEN`) |
+| `python -m pipeline photos` | Find street-photo candidates for TX-04 centers to review by eye (needs `MAPILLARY_TOKEN`); `--load-verified` loads the reviewed list, which the daily sync also does |
 | `python -m pipeline report` · `receipts` | Recent runs · push delivery receipts |
 
 ## Project structure
@@ -274,7 +274,7 @@ daycare-watch/
 | Next | Why |
 |---|---|
 | Android push from a standalone build | Expo Go on Android cannot receive remote pushes |
-| Street photos that show the right building | Collected for 14 of 209 TX-04 centers but not shown: a Census address point sits on the street, not the building. Needs a rooftop or parcel point first |
+| More street photos of the right building | Mapillary has a checked photo for 1 of 209 TX-04 centers. More need new street imagery or a rooftop point per daycare, and every photo still gets checked by eye |
 | Spanish | So a parent who reads Spanish first gets the same plain-English summaries and rights, in Spanish |
 | Any Texas district, not only TX-04 | The pipeline already loads the whole state; only the district boundary is TX-04 |
 | Federal rights, if a federal law passes | Add its rights next to the Texas ones |

@@ -74,7 +74,7 @@ Every number below is inside TX-04 by map point (PostGIS point-in-polygon agains
 | Time between inspections at one daycare | Median 66 days, 90th percentile 330 days | Alerts are rare for any one family, like a smoke alarm. That is correct, not a weakness |
 | Statewide table sizes | activities about 205,000 rows · violations about 134,000 rows | Small for Postgres. A full nightly download and diff is cheap |
 | How the state publishes | operations: row-level `:updated_at` changes (about 300 to 450 rows a day) · activities and violations: full reload nightly, about 09:00 UTC | Operations sync incrementally by watermark. Activities and violations sync by full download and ID + row-hash diff |
-| TX-04 Licensed Centers with a street photo that passes every rule | 14 of 209 (6.7%) with an exact address match; most street imagery here is dashcam looking down the road | Collected but **not shown**: a hand check found 2 of 5 showed the right building, because a Census address point sits on the street, not the building. Every place page stands on the map, the 3D view, and the record |
+| TX-04 Licensed Centers with a hand-checked street photo | 1 of 209 with an exact address match. 80 have any Mapillary image within 60 m of the building; all 107 facing it were checked by eye | Rules alone picked the wrong building 3 times in 5, because a Census address point sits on the street, not the building. Only checked photos are shown; every place page stands on the map, the 3D view, and the record |
 
 **More signal from the same official source (no scraping):** beyond new violations, the operations table changes daily, so we also alert on license status changes, corrective or adverse action, temporary closure, conditions on the permit, and capacity changes. Every daycare's page also gets an area comparison, and the district gets a weekly "what inspectors found this week" pulse.
 
@@ -91,7 +91,7 @@ Every number below is inside TX-04 by map point (PostGIS point-in-polygon agains
 | 7 | **Geocode + district** | Census Geocoder for daycares without state coordinates (exact or non-exact match kept). `in_district` set by PostGIS `ST_Covers` against the TX-04 polygon; county is a fallback only and never labelled TX-04 | Real Frisco, Sherman, and Paris daycares inside, real Dallas ones outside |
 | 8 | **Aggregate** | `REFRESH MATERIALIZED VIEW` for area medians, district totals, and the weekly pulse | Totals reconcile with core |
 | 9 | **Notify** | Events × watchers → Expo Push API (batched, with receipts checked; dead tokens pruned). Dedupe key per (user, event). Replay mode labelled "Replay of a real state record from <date>". | A real push on an iPhone (verified Oct 24 2026: replay event 43, receipt delivered_to_provider). Android push needs a standalone build |
-| 10 | **Photos** (collected, not shown) | Mapillary street photos for TX-04 active Licensed Centers with an exact address match only: within 50 m, no panoramas, camera facing the building and sideways to its direction of travel (no dashcam views down the road), no repeat frames, taken after the permit date and within 6 years, at most 3. No token or a Mapillary outage never fails the run | Recorded real Mapillary answers in `fixtures/mapillary/` |
+| 10 | **Photos** (hand-checked) | Loads `data/verified_photos.csv`, the photos a person checked show that daycare (at most 2 per center, different drives, within 6 years). No API call; a bad row is reported in the run's counts and never fails the run. Finding candidates to check is a separate command (`photos`, needs `MAPILLARY_TOKEN`) | Recorded real Mapillary answers in `fixtures/mapillary/` |
 | 11 | **Log** | `ops.sync_runs`: counts per stage, newest source date, join rate, duration, error | The app shows "Last checked with the state" |
 
 ## 6. Database (core tables)
@@ -101,7 +101,7 @@ Every number below is inside TX-04 by map point (PostGIS point-in-polygon agains
 | `core.daycares` | operation_id | name, type, address, city, county, zip, `geom geography(Point)` (state coords, else Census geocode), `geocode_source`, `geocode_quality` (exact/non_exact), capacity, ages[], hours, subsidies, status, corrective/adverse/closed flags, `in_district`, `district_basis` (point/county) |
 | `core.inspections` | activity_id | operation_id, date, type, violation_found, self_report |
 | `core.violations` | non_compliance_id | activity_id, operation_id, date, standard, risk_level, category, plain, narrative, corrected_at_inspection, corrected_date, verified_date, via_investigation |
-| `core.daycare_photos` | (operation_id, image_id) | captured_at, distance_m, compass_angle. Licensed Centers with an exact match only. Not shown in the app |
+| `core.daycare_photos` | (operation_id, image_id) | captured_at, distance_m, compass_angle, creator, verified, verified_at. Only verified rows are ever returned (`daycare_record`); Licensed Centers with an exact match only |
 | `core.change_events` | id | operation_id, kind (`new_violation`/`status_change`/`corrective_action`/`adverse_action`/`closure`/`capacity_change`/`permit_conditions`), ref_id, before/after jsonb, `is_replay`, detected_at |
 | `app.watches` | (user_id, operation_id) | created_at. RLS: owner only. |
 | `app.devices` | push_token | user_id, platform (ios/android), expo_push_token, last_seen. RLS: owner only. |

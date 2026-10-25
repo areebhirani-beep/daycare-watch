@@ -30,7 +30,8 @@ Row-level security limits every `app.*` row to its owner. The app never reads ta
 | Expo Push, then Apple (APNs) or Google (FCM) | The push token and the alert text | Only after the parent turns on alerts |
 | Esri | Map tile requests around a daycare | When a place page shows its map |
 | Apple Maps (iPhone) or Google Maps (Android) | Map and 3D-view tile requests around a daycare | When a place page shows its map or 3D view |
-| Mapillary | Nothing. Street photos are collected by the pipeline but not shown in the app | Never |
+| Apple Maps Look Around (iPhone) | A licensed center's name and map point, to find Apple's street-level view of it. The picture is kept on the phone for up to 7 days; nothing reaches our servers | When a licensed center's place page opens without a saved picture, or the parent taps it (never for home daycares) |
+| Mapillary | Nothing about the viewer. The pipeline stores only an image ID, date, and photographer name for hand-checked photos | Never |
 | Apple Maps or Google Maps | The daycare's address line from the state record | Only when the parent taps a map button |
 
 Location permission is optional. Without it the app starts from Frisco, inside TX-04. The web link never asks for location.
@@ -41,7 +42,7 @@ Location permission is optional. Without it the app starts from Frisco, inside T
 |---|---|
 | Home daycares (licensed, registered, and listed homes) show city and 5-digit ZIP only (never the ZIP+4): no street address, no aerial or street imagery, no directions link | Place page and list rows; `core.daycare_rows` returns `left(zip, 5)` for homes (migration `20261025110000_home_zip5.sql`; pgTAP `011_home_privacy`); `daycare_record` returns no photos for anything but a Licensed Center |
 | Public test fixtures replace a home's street with "withheld for privacy" and round its point to 2 decimals | `services/pipeline/fixtures/` (Census geocoder recordings, district test points) and the database seed |
-| Street photos (collected by the pipeline, not shown in the app) are fetched only for Licensed Centers with an exact address match, never for homes or approximate points. A photo older than the daycare's permit or more than 6 years old is dropped, so it can't show a different business | `services/pipeline/src/pipeline/photos.py` (`TARGETS`), and the `daycare_record` filter (pgTAP test 009) |
+| Street photos are looked for only at Licensed Centers with an exact address match, never at homes or approximate points, and are shown only after a person checked the photo shows that daycare. Photos older than 6 years are never shown | `services/pipeline/src/pipeline/photos.py` (`TARGETS`), and the `daycare_record` filter (pgTAP test 009) |
 | Map links send the state's address line, not our estimated point | The geocode sits along the street's address range, not on the rooftop |
 | The app never labels a daycare safe, unsafe, scored, graded, or ranked | Copy review plus tests on alert text (`services/pipeline/tests/test_notify.py`) |
 | Findings are shown in the inspector's own words, with a plain summary that only shortens them | `services/pipeline/src/pipeline/classify.py`; a property test checks the summary adds no numbers, and a full-dataset test checks it adds no words |

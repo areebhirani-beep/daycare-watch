@@ -73,17 +73,19 @@ flowchart LR
 
 ## Screenshots
 
-Every screen is the running app on real state records. Dark-mode versions are in [`docs/screenshots/dark/`](docs/screenshots/dark/).
+Every screen is the running app on real state records, shown in light or dark to match your GitHub theme. Plain screenshots without the frame are in [`docs/screenshots/`](docs/screenshots/).
 
 | Find | Search | A daycare's record |
 |:-:|:-:|:-:|
-| <img src="docs/screenshots/01-home.jpg" width="250" alt="Home with the closest daycares"> | <img src="docs/screenshots/02-search.jpg" width="250" alt="Search by name, city, or ZIP"> | <img src="docs/screenshots/03-place-overview.jpg" width="250" alt="Place page: what the state found at the latest visit"> |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/framed/dark/01-home.png"><img src="docs/screenshots/framed/light/01-home.png" width="240" alt="Home with the closest daycares"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/framed/dark/02-search.png"><img src="docs/screenshots/framed/light/02-search.png" width="240" alt="Search by name, city, or ZIP"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/framed/dark/03-place-overview.png"><img src="docs/screenshots/framed/light/03-place-overview.png" width="240" alt="Place page: what the state found at the latest visit"></picture> |
 | **Past two years** | **Every finding** | **Your rights** |
-| <img src="docs/screenshots/03b-place-history.jpg" width="250" alt="State visits over the past two years"> | <img src="docs/screenshots/04-findings.jpg" width="250" alt="Each finding with the inspector's words and fix status"> | <img src="docs/screenshots/05-rights.jpg" width="250" alt="Kids' Law requests ready to send"> |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/framed/dark/03b-place-history.png"><img src="docs/screenshots/framed/light/03b-place-history.png" width="240" alt="State visits over the past two years"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/framed/dark/04-findings.png"><img src="docs/screenshots/framed/light/04-findings.png" width="240" alt="Each finding with the inspector's words and fix status"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/framed/dark/05-rights.png"><img src="docs/screenshots/framed/light/05-rights.png" width="240" alt="Kids' Law requests ready to send"></picture> |
 | **Watch** | **Alert** | **Tour questions** |
-| <img src="docs/screenshots/06-watch.jpg" width="250" alt="Turning on alerts for a daycare"> | <img src="docs/screenshots/07-alert.jpg" width="250" alt="A push alert opened: what the state posted"> | <img src="docs/screenshots/08-tour.jpg" width="250" alt="Tour questions built from this daycare's own findings"> |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/framed/dark/06-watch.png"><img src="docs/screenshots/framed/light/06-watch.png" width="240" alt="Turning on alerts for a daycare"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/framed/dark/07-alert.png"><img src="docs/screenshots/framed/light/07-alert.png" width="240" alt="A push alert opened: what the state posted"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/framed/dark/08-tour.png"><img src="docs/screenshots/framed/light/08-tour.png" width="240" alt="Tour questions built from this daycare's own findings"></picture> |
 
-A home daycare's page shows only the city and 5-digit ZIP, with no map of the house ([screenshot](docs/screenshots/09-home-daycare-privacy.jpg)).
+A home daycare's page shows only the city and 5-digit ZIP, with no map of the house:
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/framed/dark/09-home-daycare-privacy.png"><img src="docs/screenshots/framed/light/09-home-daycare-privacy.png" width="240" alt="A home daycare's page: city and ZIP only, no map of the house"></picture>
 
 ## How it works
 

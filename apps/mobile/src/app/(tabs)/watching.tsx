@@ -13,7 +13,7 @@ import { RowSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { startOver, useMyWatches, usePrefetchRecords } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
-import { getPermission, type PermissionState } from '@/lib/notifications';
+import { getPermission, type PermissionState, useAlertsOn } from '@/lib/notifications';
 import { radius, space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
 
 function confirmStartOver() {
@@ -32,6 +32,8 @@ export default function WatchingScreen() {
   const insets = useSafeAreaInsets();
   const watches = useMyWatches();
   const [permission, setPermission] = useState<PermissionState | null>(null);
+  // Only promise an alert when one can arrive: permission granted and this phone registered.
+  const alertsOn = useAlertsOn();
   // Spin only for a pull, not for background refetches on focus.
   const [pulling, setPulling] = useState(false);
 
@@ -139,7 +141,9 @@ export default function WatchingScreen() {
         list.length > 0 ? (
           <View style={{ paddingHorizontal: space.lg, gap: space.sm }}>
             <Text variant="callout" tone="secondary">
-              You&rsquo;ll get an alert when the state posts something new about a daycare you watch.
+              {alertsOn
+                ? 'You’ll get an alert when the state posts something new about a daycare you watch.'
+                : 'New state records show here. Alerts aren’t on for this phone yet.'}
             </Text>
             <LastChecked />
           </View>

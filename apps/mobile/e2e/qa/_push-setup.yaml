@@ -13,6 +13,12 @@ appId: host.exp.Exponent
     commands:
       - tapOn: "Watch this daycare"
       - tapOn: "Turn on alerts"
+      # iOS asks once per install; answer it so the system alert can't outlive this flow.
+      - runFlow:
+          when:
+            visible: "Allow"
+          commands:
+            - tapOn: "Allow"
       - extendedWaitUntil:
           visible: "Done"
           timeout: 15000

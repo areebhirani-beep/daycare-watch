@@ -68,7 +68,7 @@ export default function SearchScreen() {
             <LoadError onRetry={() => void search.refetch()} />
           ) : typed && search.isSuccess ? (
             <Text variant="callout" tone="secondary" style={{ padding: space.lg }}>
-              No Texas daycares match “{q.trim()}”.
+              No Texas daycares match “{q.trim()}”. Check the spelling, or try the city or ZIP.
             </Text>
           ) : !typed ? (
             <Text variant="callout" tone="secondary" style={{ padding: space.lg }}>

@@ -197,6 +197,53 @@ def test_replay_unknown_finding_exits() -> None:
 
 @pytest.mark.db
 @pytest.mark.skipif(not DB, reason="DATABASE_URL not set")
+def test_replay_latest_picks_newest_finding_at_the_daycare(capsys: pytest.CaptureFixture[str]) -> None:
+    from pipeline import __main__ as cli
+    from pipeline.notify import latest_finding
+
+    assert DB
+    with psycopg.connect(DB) as conn:
+        row = conn.execute("""select operation_id from core.violations group by operation_id
+                              having count(distinct activity_date) > 1 limit 1""").fetchone()
+        assert row
+        (op,) = row
+        newest = conn.execute("""select max(activity_date) from core.violations where operation_id = %s""",
+                              (op,)).fetchone()
+        before = conn.execute("select count(*) from core.change_events").fetchone()
+    nc = latest_finding(Settings(DB, None, None), op)
+    with psycopg.connect(DB) as conn:
+        picked = conn.execute("select operation_id, activity_date from core.violations where non_compliance_id = %s",
+                              (nc,)).fetchone()
+    assert newest and picked == (op, newest[0])
+    try:
+        cli.main(["sync", "--replay-latest", str(op), "--dry-run"])
+    finally:
+        structlog.reset_defaults()
+    out = json.loads(capsys.readouterr().out)
+    assert out["non_compliance_id"] == nc and out["operation_id"] == op and out["dry_run"] is True
+    with psycopg.connect(DB) as conn:
+        assert conn.execute("select count(*) from core.change_events").fetchone() == before
+
+
+@pytest.mark.db
+@pytest.mark.skipif(not DB, reason="DATABASE_URL not set")
+def test_replay_latest_refuses_without_findings() -> None:
+    from pipeline.notify import replay_latest
+
+    assert DB
+    with psycopg.connect(DB) as conn:
+        clean = conn.execute("""select operation_id from core.daycares d where not exists
+                                (select 1 from core.violations v where v.operation_id = d.operation_id)
+                                limit 1""").fetchone()
+    assert clean
+    with pytest.raises(SystemExit, match="no findings on record"):
+        replay_latest(Settings(DB, None, None), clean[0], dry_run=True)
+    with pytest.raises(SystemExit, match="no daycare with operation_id"):
+        replay_latest(Settings(DB, None, None), -1, dry_run=True)
+
+
+@pytest.mark.db
+@pytest.mark.skipif(not DB, reason="DATABASE_URL not set")
 def test_receipts_cli_reports_latest_sends(capsys: pytest.CaptureFixture[str]) -> None:
     from pipeline import __main__ as cli
 

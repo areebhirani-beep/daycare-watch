@@ -30,8 +30,11 @@ def main(argv: list[str] | None = None) -> int:
     sync = sub.add_parser("sync", help="daily incremental sync (operations by watermark, full diff of the rest)")
     sync.add_argument("--since", help="operations :updated_at watermark override (ISO, UTC)")
     sync.add_argument("--full", action="store_true", help="re-pull every operation")
-    sync.add_argument("--replay", type=int, metavar="NON_COMPLIANCE_ID",
-                      help="resend a real past finding as a labelled replay, then exit")
+    replays = sync.add_mutually_exclusive_group()
+    replays.add_argument("--replay", type=int, metavar="NON_COMPLIANCE_ID",
+                         help="resend a real past finding as a labelled replay, then exit")
+    replays.add_argument("--replay-latest", type=int, metavar="OPERATION_ID",
+                         help="replay the newest real finding at this daycare, then exit")
     sync.add_argument("--dry-run", action="store_true", help="do everything, then roll back; no pushes")
     sync.add_argument("--no-notify", action="store_true", help="skip sending pushes")
     sub.add_parser("backfill", help="load full history without creating alert events")
@@ -57,6 +60,11 @@ def main(argv: list[str] | None = None) -> int:
         from pipeline.notify import replay
 
         print(json.dumps(replay(settings, args.replay, dry_run=args.dry_run), indent=2, default=str))
+        return 0
+    if args.command == "sync" and args.replay_latest is not None:
+        from pipeline.notify import replay_latest
+
+        print(json.dumps(replay_latest(settings, args.replay_latest, dry_run=args.dry_run), indent=2, default=str))
         return 0
 
     from pipeline.runner import RunOptions, run

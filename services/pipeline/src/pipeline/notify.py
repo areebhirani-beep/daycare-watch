@@ -278,6 +278,31 @@ def replay(settings: Settings, non_compliance_id: int, expo: Expo | None = None,
     return result
 
 
+LATEST_FINDING = """
+select non_compliance_id from core.violations where operation_id = %s
+order by activity_date desc nulls last, non_compliance_id desc limit 1
+"""
+
+
+def latest_finding(settings: Settings, operation_id: int) -> int:
+    """The newest real finding the state posted for this daycare; exits with a reason if it has none."""
+    with connect(settings.require_db()) as conn:
+        known = conn.execute("select 1 from core.daycares where operation_id = %s", (operation_id,)).fetchone()
+        row = conn.execute(LATEST_FINDING, (operation_id,)).fetchone()
+    if known is None:
+        raise SystemExit(f"no daycare with operation_id {operation_id} in core.daycares")
+    if row is None:
+        raise SystemExit(f"daycare {operation_id} has no findings on record, so there is nothing real to replay; "
+                         "pick a daycare with at least one finding")
+    return int(row[0])
+
+
+def replay_latest(settings: Settings, operation_id: int, expo: Expo | None = None,
+                  dry_run: bool = False) -> dict[str, Any]:
+    """Replay the newest real finding at a daycare, so a tester can watch any daycare and get a push."""
+    return replay(settings, latest_finding(settings, operation_id), expo, dry_run)
+
+
 def receipts_now(settings: Settings, min_age_minutes: int = 0, expo: Expo | None = None) -> dict[str, Any]:
     """python -m pipeline receipts: check pending Expo receipts now and show the newest sends."""
     with connect(settings.require_db()) as conn:

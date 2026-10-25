@@ -23,6 +23,14 @@ export function formatDate(iso: string | null | undefined): string {
   return `${MONTHS[p.m]} ${p.d}, ${p.y}`;
 }
 
+/** A timestamp as the parent's local calendar day, "Oct 24, 2026". An ISO timestamp's own date part is UTC. */
+export function formatLocalDay(ts: string | null | undefined): string {
+  if (!ts) return '';
+  const t = new Date(ts);
+  if (Number.isNaN(t.getTime())) return '';
+  return `${MONTHS[t.getMonth()]} ${t.getDate()}, ${t.getFullYear()}`;
+}
+
 /** "Mar 12" when same year as `ref`, otherwise "Mar 12, 2025" */
 export function formatDateShort(iso: string | null | undefined, ref?: string | null): string {
   if (!iso) return '';

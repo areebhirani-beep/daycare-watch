@@ -9,7 +9,7 @@ import { RecordStrip, stripFromRecord } from '@/components/ui/RecordStrip';
 import { PlaceSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useAlertDetail, useDaycareRecord } from '@/lib/api';
-import { formatDate, tidyCase } from '@/lib/format';
+import { formatDate, formatLocalDay, tidyCase } from '@/lib/format';
 import { lawCovers } from '@/lib/rights';
 import type { AlertDetail } from '@/lib/types';
 import { radius, space, useColors } from '@/theme';
@@ -55,7 +55,7 @@ export default function AlertScreen() {
   const a = alert.data;
   const strip = record.data ? stripFromRecord(record.data) : null;
   const visit = a.finding?.date ?? a.source_date;
-  const when = [visit ? `Visit ${formatDate(visit)}` : null, `posted by ${formatDate(a.detected_at.slice(0, 10))}`]
+  const when = [visit ? `Visit ${formatDate(visit)}` : null, `posted by ${formatLocalDay(a.detected_at)}`]
     .filter(Boolean)
     .join(' · ');
 

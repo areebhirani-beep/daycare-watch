@@ -20,6 +20,8 @@ export default function WatchingScreen() {
   const insets = useSafeAreaInsets();
   const watches = useMyWatches();
   const [permission, setPermission] = useState<PermissionState | null>(null);
+  // Spin only for a pull, not for background refetches on focus.
+  const [pulling, setPulling] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -46,7 +48,15 @@ export default function WatchingScreen() {
           onPress={() => router.push(`/daycare/${item.operation_id}`)}
         />
       )}
-      refreshControl={<RefreshControl refreshing={watches.isRefetching} onRefresh={() => void watches.refetch()} />}
+      refreshControl={
+        <RefreshControl
+          refreshing={pulling}
+          onRefresh={() => {
+            setPulling(true);
+            void watches.refetch().finally(() => setPulling(false));
+          }}
+        />
+      }
       ListHeaderComponent={
         list.length > 0 ? (
           <View style={styles.header}>

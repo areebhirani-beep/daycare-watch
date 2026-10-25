@@ -36,7 +36,9 @@ describe('findPosition when the GPS is slow', () => {
     jest.useFakeTimers();
     watchers.length = 0;
   });
-  afterEach(() => jest.useRealTimers());
+  afterEach(() => {
+    jest.useRealTimers();
+  });
 
   it("answers 'slow' at 5 s, then gives up at 30 s instead of finding forever", async () => {
     const late = jest.fn();

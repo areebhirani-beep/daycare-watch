@@ -56,4 +56,6 @@ appId: host.exp.Exponent
 - assertNotVisible: "Fixed.*Oct 30.*"
 - takeScreenshot: e2e/out/qa/u17-viva-0
 # U27: one tap to the state's own page
-- assertVisible: "State record"
+- scrollUntilVisible:
+    element: "State record"
+    direction: DOWN

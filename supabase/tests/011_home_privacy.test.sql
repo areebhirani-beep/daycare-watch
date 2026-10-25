@@ -29,11 +29,11 @@ select ok(
   'daycare_search returns a home point rounded to 2 decimals');
 
 select ok(
-  (select bool_and(n.address is null and n.lat = round(n.lat::numeric, 2)::float8
+  (select bool_and(n.lat = round(n.lat::numeric, 2)::float8
                    and n.distance_km = round(n.distance_km::numeric, 1)::float8)
      from h, public.daycares_near(h.lat, h.lng, 2, '{}') n
     where n.operation_type <> 'Licensed Center'),
-  'daycares_near: every home has no street, a 2-decimal point, and a 0.1 km distance');
+  'daycares_near: every home has a 2-decimal point and a 0.1 km distance');
 
 select ok(
   (select (public.daycare_record(h.operation_id) -> 'daycare' ->> 'address') is null from h),
@@ -58,9 +58,9 @@ select is(
   0::bigint, 'district_recent_visits stays name-free for homes');
 
 select is(
-  (select count(*) from public.daycares_near(33.2, -96.7, 50, '{}')
-    where operation_type <> 'Licensed Center' and zip !~ '^[0-9]{5}$'),
-  0::bigint, 'daycares_near returns a 5-digit ZIP for every home, never a ZIP+4');
+  (select count(*) from public.daycares_near(33.2, -96.7, 50, '{}') n
+    where to_jsonb(n) ?| array['address', 'zip', 'county']),
+  0::bigint, 'daycares_near returns no street, ZIP or county for any row (the record has them)');
 
 select ok(
   (select (public.daycare_record(h.operation_id) -> 'daycare' ->> 'zip') ~ '^[0-9]{5}$' from h),

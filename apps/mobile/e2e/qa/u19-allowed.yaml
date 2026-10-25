@@ -37,7 +37,7 @@ appId: host.exp.Exponent
       - takeScreenshot: e2e/out/qa/u19-0-os-prompt
       - tapOn: "Allow"
 - extendedWaitUntil:
-    visible: "You’re watching.*"
+    visible: "See its record"
     timeout: 15000
 - takeScreenshot: e2e/out/qa/u19-1-done
 - tapOn: "See its record"

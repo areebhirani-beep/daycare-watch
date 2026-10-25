@@ -69,15 +69,11 @@ export type Database = {
       daycares_near: {
         Args: { filters?: Json; km?: number; lat: number; lng: number }
         Returns: {
-          address: string
-          capacity: number
           city: string
-          county: string
           distance_km: number
           district_basis: string
           findings_24mo: number
           geocode_quality: string
-          geocode_source: string
           in_district: boolean
           last_inspection_date: string
           lat: number
@@ -86,7 +82,6 @@ export type Database = {
           operation_id: number
           operation_type: string
           visits_24mo: Json
-          zip: string
         }[]
       }
       district_pulse: { Args: { week_start?: string }; Returns: Json }

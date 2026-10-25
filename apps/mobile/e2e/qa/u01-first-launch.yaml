@@ -17,16 +17,15 @@ appId: host.exp.Exponent
     visible: "Inspectors write down what they find.*"
     timeout: 15000
 - takeScreenshot: e2e/out/qa/u01-0b-how
-- tapOn: "Next"
-- extendedWaitUntil:
-    visible: "We put it in plain words.*"
-    timeout: 5000
-- tapOn: "Next"
-- extendedWaitUntil:
-    visible: "Find your daycare"
-    timeout: 5000
+- repeat:
+    while:
+      visible: "^Next$"
+    commands:
+      - tapOn: "^Next$"
 - takeScreenshot: e2e/out/qa/u01-0c-how-last
-- tapOn: "Find your daycare"
+- tapOn:
+    text: "Find your daycare"
+    optional: true
 # Step 3: find yours.
 - tapOn: "Use my location"
 - runFlow:
@@ -48,7 +47,7 @@ appId: host.exp.Exponent
 - assertVisible: "Not now"
 - tapOn: "Not now"
 - extendedWaitUntil:
-    visible: "You’re watching.*"
+    visible: "See its record"
     timeout: 10000
 - takeScreenshot: e2e/out/qa/u01-3-done
 - tapOn: "Explore the map"

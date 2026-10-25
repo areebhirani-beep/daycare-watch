@@ -52,7 +52,7 @@ appId: com.areebhirani.daycare-watch
 - takeScreenshot: ${SHOTS}/04-alerts
 - tapOn: "Not now"
 - extendedWaitUntil:
-    visible: "You’re watching.*"
+    visible: "See its record"
     timeout: 10000
 - takeScreenshot: ${SHOTS}/05-done
 - tapOn: "Explore the map"

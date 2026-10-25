@@ -88,7 +88,7 @@ create table if not exists core.violations (
   standard_title           text not null,             -- the rest of standard_number_description
   risk_level               public.risk_level not null,
   category                 public.violation_category not null default 'other',
-  plain                    text,                      -- plain-English summary; never adds facts
+  plain                    text,                      -- one-sentence summary of the finding; never adds facts
   narrative                text,                      -- the inspector's own words
   corrected_at_inspection  boolean not null default false,
   corrected_date           date,

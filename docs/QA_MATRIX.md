@@ -84,13 +84,13 @@ What we tested, how, and what happened, Oct 24 to 25 2026. Each case was run by 
 
 ## Every screen on four devices
 
-`apps/mobile/e2e/qa/matrix.sh` installs the Release build on each simulator, clears it, and takes the same 12 screens: welcome, how it works, find, alerts, done, home, two place pages (two screens each), Your rights, Watching. Light, dark, and the largest accessibility text size.
+`apps/mobile/e2e/qa/matrix.sh` installs the Release build on each simulator, clears it (and Apple Maps' tile cache, so the first launch is cold), and takes the same 12 screens: welcome, how it works, find, alerts, done, home, two place pages (two screens each), Your rights, Watching. Light, dark, and the largest accessibility text size. Latest run: 2:50 pm Oct 25, 8 of 9 iPhone cells pass.
 
 | # | Device | Light | Dark | Largest text |
 |---|---|---|---|---|
-| X1 | iPhone SE (3rd gen), 667 pt | PASS with D27, D28 ([sheet](qa/matrix-ios-SE3-light.jpg)) | PASS ([sheet](qa/matrix-ios-SE3-dark.jpg)) | FAIL → D28: the find card's name sits under the buttons, so the pick misses ([shot](qa/D28-se-xxxl-name-under-buttons.jpg)) |
-| X2 | iPhone 17 | PASS ([sheet](qa/matrix-ios-17-light.jpg)) | PASS ([sheet](qa/matrix-ios-17-dark.jpg)) | PASS with D29 ([sheet](qa/matrix-ios-17-xxxl.jpg)) |
-| X3 | iPhone 17 Pro Max | PASS with D30 ([sheet](qa/matrix-ios-ProMax-light.jpg)) | PASS ([sheet](qa/matrix-ios-ProMax-dark.jpg)) | PASS ([sheet](qa/matrix-ios-ProMax-xxxl.jpg)) |
+| X1 | iPhone SE (3rd gen), 667 pt | PASS ([sheet](qa/matrix-ios-SE3-light.jpg)) | PASS ([sheet](qa/matrix-ios-SE3-dark.jpg)) | FAIL → D28: the find card's name sits under the buttons, so the pick misses ([shot](qa/D28-se-xxxl-name-under-buttons.jpg)) |
+| X2 | iPhone 17 | PASS ([sheet](qa/matrix-ios-17-light.jpg)) | PASS ([sheet](qa/matrix-ios-17-dark.jpg)) | PASS with D28 ([sheet](qa/matrix-ios-17-xxxl.jpg)) |
+| X3 | iPhone 17 Pro Max | PASS ([sheet](qa/matrix-ios-ProMax-light.jpg)) | PASS ([sheet](qa/matrix-ios-ProMax-dark.jpg)) | PASS ([sheet](qa/matrix-ios-ProMax-xxxl.jpg)) |
 | X4 | iPad (app runs in its iPhone window) | welcome renders ([shot](qa/ipad-letterbox-welcome.jpg)); the 12-screen tour can't be automated there, because Maestro gets no element tree from an iPhone app on iPad | | |
 
 ## Motion (150 to 250 ms, no overshoot, press 0.98, first-load stagger only, Reduce Motion respected)
@@ -114,8 +114,9 @@ What we tested, how, and what happened, Oct 24 to 25 2026. Each case was run by 
 | W4 | Search, place and rights at 390 px | Chrome | PASS (local build) | no sideways scroll on all three; "75034" returns Frisco rows |
 | W5 | No anonymous sign-in on the web | Resource Timing + storage | PASS (local build) | 0 of 70 requests hit `/auth/v1`; no session keys stored |
 | W6 | The web bundle has no street-photo code or keys | search of the web export | PASS | 0 hits for the Mapillary token, `graph.mapillary.com` and `service_role`; the API URL found once as a control |
-| W7 | Every route answers on a cold open or refresh | `apps/mobile/e2e/qa/web-routes.sh` (20 routes + assets) | FAIL → D24 | 1:44 pm Oct 25: only `/` is 200; deep links are 404 until the fix is deployed |
-| W8 | Lighthouse 90 or higher, mobile and desktop | `LIGHTHOUSE=1 apps/mobile/e2e/qa/web-routes.sh` | FAIL → D26 | `/` mobile: performance 82, accessibility 94, best practices 100, SEO 91; desktop 99 / 94 / 100 / 91 |
+| W7 | Every route answers on a cold open or refresh | `apps/mobile/e2e/qa/web-routes.sh` (20 routes + assets) | PASS | 2:22 pm Oct 25 on the live link: 25 of 25 return 200 (20 routes, an unknown path that gets the app's own not-found screen, and every shell asset). D24 fixed |
+| W8 | Lighthouse 90 or higher, mobile and desktop | `LIGHTHOUSE=1 apps/mobile/e2e/qa/web-routes.sh` | FAIL → D26 | 2:22 pm Oct 25, performance / accessibility / best practices / SEO. `/` mobile 77 / 100 / 100 / 92, desktop 97 / 100 / 100 / 92. Place page mobile 55 / 100 / 100 / 92 (two more runs: 58, 73), desktop 79 / 100 / 100 / 92. Your rights mobile 81 / 94 / 100 / 91, desktop 99 / 100 / 100 / 92. Accessibility, best practices and SEO pass; performance does not |
+| W9 | Every width, light and dark, on the live link | Chrome with real mobile emulation (`isMobile`, 2x) at 360, 390, 430, 768, 1024, 1280, 1440, 1920 px × light, dark × `/`, a place page, Your rights, Watching, a search link | PASS with D31, D32, D33 | 80 of 80 views have no sideways scroll. Up to 430 px the app fills the screen; from 768 px it sits in an iPhone frame beside a column with one `h1`, a `main` landmark and a QR code ([phones](qa/web-phone-390.jpg), [wide](qa/web-frame-wide.jpg)) |
 
 ## Problems found
 
@@ -144,10 +145,13 @@ What we tested, how, and what happened, Oct 24 to 25 2026. Each case was run by 
 | D21 | W4 | Oct 25 | | web tabs had `role=tab` but no `aria-selected` | FIXED, re-tested |
 | D22 | U30 | Oct 25 | | the watch sheet always said a notification prompt was next, but iOS asks only once | FIXED, re-tested |
 | D23 | B1 | Oct 25 | | the API returned a home daycare's ZIP+4 (often one block face) for 4,598 of 4,705 homes | FIXED by migration `20261025110000_home_zip5.sql` + 3 pgTAP asserts that failed before the fix; verified on the cloud |
-| D24 | W7 | Oct 25 | | every deep link on the web link returned 404; only `/` loaded (`vercel.json` rewrote to `/index.html`, which `cleanUrls` redirects) | FIX COMMITTED, waiting on deploy |
+| D24 | W7 | Oct 25 | | every deep link on the web link returned 404; only `/` loaded (`vercel.json` rewrote to `/index.html`, which `cleanUrls` redirects) | FIXED (rewrite to `/`), re-tested on the live link: 25 of 25 |
 | D25 | E5 | Oct 25 | | `watch` on an unknown daycare returned 500, and `register_device` stored a 20,000-character token | FIXED by migration `20261025130000_rpc_http_errors.sql` + pgTAP; verified on the cloud |
-| D26 | W8 | Oct 25 | | Lighthouse mobile performance 82 (LCP 4.8 s, 1,609 KiB, 331 KiB unused JS); accessibility and SEO lose points because the map tiles are `<img>` with no `alt` | OPEN |
-| D27 | X1 | Oct 25 | [D27](qa/D27-se-pin-on-wordmark.jpg) | iPhone SE welcome: the building pin sits on the "Daycare Watch" wordmark; the Apple Maps logo is half under Get started | FIX IN NEXT BUILD, re-test pending |
-| D28 | X1 | Oct 25 | [D28](qa/D28-se-find-clipped.jpg), [largest text](qa/D28-se-xxxl-name-under-buttons.jpg) | iPhone SE onboarding Find: the card's last line is cut by the pinned buttons; at the largest text size the whole name is under them | FIX IN NEXT BUILD, re-test pending |
-| D29 | X2 | Oct 25 | [D29](qa/D29-xxxl-done-clipped.jpg) | iPhone 17, largest text, "You’re watching …": the last line runs under "See its record" | OPEN |
-| D30 | X3 | Oct 25 | [D30](qa/D30-welcome-hero-blank.jpg) | iPhone 17 Pro Max, first launch: the welcome image was flat grey with only the pin while the caption said "3D view, Apple Maps" (it loaded on the other 8 runs) | OPEN |
+| D26 | W8 | Oct 25 | | Lighthouse mobile performance under 90. On the place page: a 447 KB icon font with no `font-display`, 12 map tiles over HTTP/1.1, no preconnect to the API or tile server, 336 KiB of unused JavaScript. On mobile Your rights: the bottom tabs have no `tablist` parent, and row labels don't start with the visible text | OPEN (the map tiles' missing `alt` is fixed) |
+| D27 | X1 | Oct 25 | [D27](qa/D27-se-pin-on-wordmark.jpg) | iPhone SE welcome: the building pin sat on the "Daycare Watch" wordmark; the Apple Maps logo was half under Get started | FIXED, re-tested on the SE (light, dark) |
+| D28 | X1, X2 | Oct 25 | [D28](qa/D28-se-find-clipped.jpg), [largest text](qa/D28-se-xxxl-name-under-buttons.jpg) | onboarding Find: the card's last line was cut by the pinned buttons. Fixed at the default text size; at the largest text size the SE still hides the whole name under the buttons and the iPhone 17 cuts the last line | OPEN at the largest text size |
+| D29 | X2 | Oct 25 | [D29](qa/D29-xxxl-done-clipped.jpg) | iPhone 17, largest text, the onboarding done screen: the last line ran under the button | FIXED, re-tested |
+| D30 | X3 | Oct 25 | [D30](qa/D30-welcome-hero-blank.jpg) | iPhone 17 Pro Max, first launch: the welcome image was flat grey with only the pin while the caption said "3D view, Apple Maps" | FIXED, re-tested on a cold launch with Apple Maps' cache cleared on 3 iPhones |
+| D31 | W9 | Oct 25 | [D31](qa/D31-web-search-query-ignored.jpg) | a search link (`/search?q=Montessori`) opens an empty search box with no results, so a shared search shows nothing | OPEN |
+| D32 | W9 | Oct 25 | [D32](qa/D32-web-watching-skeleton.jpg) | Watching on the web stays on loading placeholders: after 10 s there is no request and no message (the web has no sign-in, so it can never load) | OPEN |
+| D33 | W9 | Oct 25 | [D33](qa/D33-web-credit-covered.jpg) | place page at 390 px: the "Placed from the street address" label covers "Imagery" in the Esri credit | OPEN |

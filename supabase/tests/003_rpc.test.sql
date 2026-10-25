@@ -4,7 +4,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 -- Real records the asserts below name, so they hold on a fresh clone too (rolled back with the test).
 \ir fixtures/real_rows.psql
-select plan(46);
+select plan(47);
 
 insert into auth.users (id, aud, role) values
   ('00000000-0000-4000-8000-00000000000a', 'authenticated', 'authenticated'),
@@ -69,7 +69,12 @@ select ok(
 
 -- daycares_near (Van Alstyne)
 select ok(exists (select 1 from public.daycares_near(33.42, -96.58, 10) where operation_id = 1471156), 'near finds the daycare');
-select ok((select count(*) <= 200 from public.daycares_near(32.78, -96.80, 50)), 'near caps at 200 rows');
+select ok((select count(*) <= 150 from public.daycares_near(32.78, -96.80, 50)), 'near caps at 150 rows');
+select is((select array_agg(k order by k) from jsonb_object_keys(
+            (select to_jsonb(n) from public.daycares_near(33.42, -96.58, 10) n limit 1)) k),
+          array['city', 'distance_km', 'district_basis', 'findings_24mo', 'geocode_quality', 'in_district',
+                'last_inspection_date', 'lat', 'lng', 'name', 'operation_id', 'operation_type', 'visits_24mo'],
+          'near returns only what the map and list draw');
 select ok((select bool_and(lat is not null and lng is not null) from public.daycares_near(33.42, -96.58, 25)), 'near only returns mapped daycares');
 select ok(
   (select bool_and(distance_km >= prev) from (

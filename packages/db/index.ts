@@ -28,14 +28,22 @@ type Enumerated = 'district_basis' | 'geocode_source' | 'geocode_quality' | 'vis
 export type RowVisit = { d: string; n: number; r: number[]; o: (0 | 1)[] };
 
 // Generated table-returning types mark every column non-null; these columns can be null.
-export type DaycareRow = Omit<Rpc['daycares_near']['Returns'][number], NullableKeys | Enumerated> & {
-  [K in Exclude<NullableKeys, Enumerated>]: Rpc['daycares_near']['Returns'][number][K] | null;
+// daycare_search and my_watches return the full row; daycares_near returns NearRow, a subset.
+type SearchRow = Rpc['daycare_search']['Returns'][number];
+export type DaycareRow = Omit<SearchRow, NullableKeys | Enumerated> & {
+  [K in Exclude<NullableKeys, Enumerated>]: SearchRow[K] | null;
 } & {
   district_basis: 'point' | 'county' | null;
   geocode_source: 'state' | 'census' | null; // null = no map point
   geocode_quality: 'exact' | 'non_exact' | null; // set only when geocode_source is 'census'
   visits_24mo: RowVisit[]; // oldest first; [] when no visits in the window
 };
+
+// daycares_near: only what the home map and its list draw (at most 150 rows, nearest first).
+// Street, ZIP, county, capacity and geocode source come from daycare_record when a place opens.
+export type NearRow = Pick<DaycareRow,
+  | 'operation_id' | 'name' | 'operation_type' | 'city' | 'lat' | 'lng' | 'distance_km'
+  | 'last_inspection_date' | 'findings_24mo' | 'in_district' | 'district_basis' | 'visits_24mo' | 'geocode_quality'>;
 
 // daycare_record's header has no visits_24mo; the record carries the full inspections list.
 export type DaycareHeader = Omit<DaycareRow, 'visits_24mo'> & {

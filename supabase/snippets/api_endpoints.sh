@@ -77,14 +77,14 @@ echo "daycares_near"
 t daycares_near good 200 POST "$(rpc daycares_near)" '{"lat":33.2,"lng":-96.7,"km":5}' "" "" 'length > 0'
 t daycares_near km-zero 200 POST "$(rpc daycares_near)" '{"lat":33.2,"lng":-96.7,"km":0}' "" "" '. == []'
 t daycares_near km-negative 200 POST "$(rpc daycares_near)" '{"lat":33.2,"lng":-96.7,"km":-5}' "" "" '. == []'
-t daycares_near km-huge 200 POST "$(rpc daycares_near)" '{"lat":33.2,"lng":-96.7,"km":100000}' "" "" 'length <= 200'
+t daycares_near km-huge 200 POST "$(rpc daycares_near)" '{"lat":33.2,"lng":-96.7,"km":100000}' "" "" 'length <= 150'
 t daycares_near lat-91 200 POST "$(rpc daycares_near)" '{"lat":91,"lng":-96.7,"km":5}' "" "" '. == []'
 t daycares_near lat-1e308 200 POST "$(rpc daycares_near)" '{"lat":1e308,"lng":-96.7,"km":5}' "" "" '. == []'
 t daycares_near lat-text 400 POST "$(rpc daycares_near)" '{"lat":"abc","lng":-96.7,"km":5}'
 t daycares_near null-island 200 POST "$(rpc daycares_near)" '{"lat":0,"lng":0,"km":5}' "" "" '. == []'
 t daycares_near filters-junk 200 POST "$(rpc daycares_near)" '{"lat":33.2,"lng":-96.7,"km":5,"filters":{"x":"; drop"}}' "" "" 'type == "array"'
 t daycares_near filters-text 200 POST "$(rpc daycares_near)" '{"lat":33.2,"lng":-96.7,"km":5,"filters":"x"}' "" "" 'type == "array"'
-t daycares_near home-rounded 200 POST "$(rpc daycares_near)" '{"lat":33.2,"lng":-96.7,"km":30}' "" "" 'all(.[]; .operation_type == "Licensed Center" or (.address == null and (.zip // "" | test("^[0-9]{5}$"))))'
+t daycares_near no-street-zip 200 POST "$(rpc daycares_near)" '{"lat":33.2,"lng":-96.7,"km":30}' "" "" 'all(.[]; has("address") or has("zip") | not)'
 
 echo "daycare_record / area_compare"
 t daycare_record good 200 POST "$(rpc daycare_record)" '{"p_operation_id":1459611}' "" "" 'has("daycare") and has("findings") and has("inspections") and has("photos") and has("official_url") and (.daycare.street_view_checked | type == "boolean") and all(.inspections[]; .self_report | type == "boolean")'

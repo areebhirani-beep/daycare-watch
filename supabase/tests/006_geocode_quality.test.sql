@@ -35,8 +35,8 @@ select ok(
   'daycare_search returns geocode_source + geocode_quality');
 
 select ok(
-  (select count(*) > 0 from public.daycares_near(32.93, -96.46, 10, '{}') where geocode_source is not null),
-  'daycares_near returns geocode_source');
+  (select count(*) > 0 from public.daycares_near(32.93, -96.46, 10, '{}') where geocode_quality is not null),
+  'daycares_near returns geocode_quality');
 
 select ok(
   (public.daycare_record((select operation_id from public.daycare_search('Rockwall') limit 1)) -> 'daycare')

@@ -43,7 +43,7 @@ appId: com.areebhirani.daycare-watch
     text: "^Allow$"
     optional: true
 - extendedWaitUntil:
-    visible: "You’re watching.*"
+    visible: "See its record"
     timeout: 15000
 - tapOn: "Explore the map"
 - extendedWaitUntil:
@@ -57,7 +57,7 @@ appId: com.areebhirani.daycare-watch
 - hideKeyboard
 - tapOn: "Viva World School\\. .*"
 - extendedWaitUntil:
-    visible: "State record"
+    visible: "Watch this daycare|Watching.*"
     timeout: 20000
 - waitForAnimationToEnd
 - runFlow:

@@ -31,7 +31,7 @@ Built for the **2026 Congressional App Challenge · Texas's 4th District**
 1. Open **[daycare-watch.vercel.app](https://daycare-watch.vercel.app)** on any phone or computer.
 2. Search a name, city, or ZIP in TX-04, for example `Montessori`, `Rockwall`, or `75034`.
 3. Open a daycare: its latest state visit in plain English, each finding with the inspector's own words, and a link to the official state record.
-4. Open **Your rights** for the Kids' Law requests, ready to send.
+4. On that daycare's page, tap **Your rights**: the three Kids' Law requests (your child's records, a drop-in visit, incident video), written and ready to send.
 
 ## Contents
 

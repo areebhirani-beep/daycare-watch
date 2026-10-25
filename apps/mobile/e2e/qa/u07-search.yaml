@@ -1,0 +1,46 @@
+# QA U7-U11: search by name, no hit, ZIP, city, typo. Assumes onboarding is done (run u01 first).
+appId: host.exp.Exponent
+---
+- runFlow: _open.yaml
+- extendedWaitUntil:
+    visible: "Search daycares, cities, ZIP"
+    timeout: 30000
+- tapOn: "Search daycares, cities, ZIP"
+
+# U7 name hit
+- inputText: "Viva World"
+- extendedWaitUntil:
+    visible: "Viva World School.*"
+    timeout: 15000
+- takeScreenshot: ../../harness/state/qa/u07-name
+
+# U8 no hit
+- eraseText: 30
+- inputText: "zzqxv"
+- waitForAnimationToEnd
+- assertNotVisible: "Viva World School.*"
+- takeScreenshot: ../../harness/state/qa/u08-no-hit
+
+# U9 ZIP
+- eraseText: 30
+- inputText: "75087"
+- extendedWaitUntil:
+    visible: ".*Rockwall.*"
+    timeout: 15000
+- takeScreenshot: ../../harness/state/qa/u09-zip
+
+# U10 city
+- eraseText: 30
+- inputText: "Sherman"
+- extendedWaitUntil:
+    visible: ".*Sherman.*"
+    timeout: 15000
+- takeScreenshot: ../../harness/state/qa/u10-city
+
+# U11 typo
+- eraseText: 30
+- inputText: "Lionhart"
+- extendedWaitUntil:
+    visible: "Lionheart Children.*"
+    timeout: 15000
+- takeScreenshot: ../../harness/state/qa/u11-typo

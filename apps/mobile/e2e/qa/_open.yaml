@@ -1,0 +1,25 @@
+# Shared: open the app in Expo Go from Metro and dismiss Expo Go's own first-run sheets.
+# Pass CLEAR=true to start from a fresh install state (first launch).
+appId: host.exp.Exponent
+---
+- runFlow:
+    when:
+      true: ${CLEAR == 'true'}
+    commands:
+      - clearState
+- openLink: ${METRO}
+- runFlow:
+    when:
+      visible: "This is the developer menu.*"
+    commands:
+      - tapOn: "Continue"
+- runFlow:
+    when:
+      visible: "Toggle performance monitor"
+    commands:
+      - tapOn: "Close"
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"

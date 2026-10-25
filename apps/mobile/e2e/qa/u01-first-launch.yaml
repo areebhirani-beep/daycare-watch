@@ -1,0 +1,43 @@
+# QA U1 + U2: clean first launch in Expo Go -> onboarding (3 steps) with location allowed -> home.
+# Run with e2e/qa/run.sh (resets Expo Go state + location permission first).
+appId: host.exp.Exponent
+---
+- runFlow:
+    file: _open.yaml
+    env:
+      CLEAR: "true"
+- extendedWaitUntil:
+    visible: "Find your daycare"
+    timeout: 60000
+- takeScreenshot: ../../harness/state/qa/u01-0-welcome
+- tapOn: "Find your daycare"
+- assertVisible: "Step 2 of 3"
+- tapOn: "Use my location"
+- runFlow:
+    when:
+      visible: "Allow While Using App"
+    commands:
+      - tapOn: "Allow While Using App"
+- extendedWaitUntil:
+    visible: ".* mi"
+    timeout: 20000
+- takeScreenshot: ../../harness/state/qa/u01-1-pick
+- tapOn: ".*Center · .* mi"
+- tapOn: "Watch this daycare"
+- extendedWaitUntil:
+    visible: "Turn on alerts"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/qa/u01-2-alerts
+# Step 3 must wait for the parent's choice.
+- assertVisible: "Not now"
+- tapOn: "Not now"
+- extendedWaitUntil:
+    visible: "You’re watching."
+    timeout: 10000
+- takeScreenshot: ../../harness/state/qa/u01-3-done
+- tapOn: "Explore the map"
+- extendedWaitUntil:
+    visible: "Search daycares, cities, ZIP"
+    timeout: 20000
+- assertNotVisible: ".*location off.*"
+- takeScreenshot: ../../harness/state/qa/u01-4-home

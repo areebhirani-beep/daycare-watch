@@ -1,23 +1,42 @@
+<div align="center">
+
 # Daycare Watch
 
-**What Texas state inspectors found at your child's daycare, in plain English, with an alert when the state posts something new.**
+**See what Texas state inspectors found at a daycare, in plain English, and get an alert when the state posts something new.**
 
-![Daycare Watch: the home map, a daycare's state record, and a push alert for a new state finding](docs/screenshots/hero.jpg)
+[![Pipeline CI](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml)
+[![Daily sync](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Platforms](https://img.shields.io/badge/platforms-iOS%20%C2%B7%20Android-lightgrey.svg)
+![Data](https://img.shields.io/badge/data-data.texas.gov-0b6e4f.svg)
 
-Texas inspects every licensed daycare and publishes every finding, but the records sit in a state search site that few parents ever open. Daycare Watch reads the state's own open data every day. It shows each finding with its date, how serious the state rates the rule, and whether the fix was verified. It sends a push alert when the state posts a new finding at a daycare a parent is watching. It also turns the rights Texas parents already have under the **Kairo and the Kids' Law** (SB 1098, 88th Legislature, 2023) into ready-to-send requests.
+<img src="docs/screenshots/hero.jpg" alt="Daycare Watch: the home map, a daycare's state record, and a push alert for a new state finding" width="100%">
 
-Built for the **2026 Congressional App Challenge, Texas's 4th District**. The rights features also line up with Rep. Pat Fallon's proposed federal Kairo Act (H.R. 2425), which is not law.
+Built for the **2026 Congressional App Challenge · Texas's 4th District**
+
+</div>
+
+---
+
+## Contents
+
+- [Why](#why) · [How a parent uses it](#how-a-parent-uses-it) · [Screenshots](#screenshots)
+- [How it works](#how-it-works) · [The data](#the-data) · [Honesty and privacy](#honesty-and-privacy)
+- [Tests](#tests) · [Getting started](#getting-started) · [Project structure](#project-structure) · [Roadmap](#roadmap) · [Docs](#docs)
+
+## Why
+
+Texas inspects every licensed daycare and publishes every finding, but the records sit in a state search site few parents ever open. Daycare Watch reads the state's own open data every day, shows each finding with its date, how serious the state rates the rule, and whether the fix was verified, and sends a push when the state posts something new at a daycare a parent is watching. It also turns the rights Texas parents already have under the **Kairo and the Kids' Law** (88(R) SB 1098, 2023) into ready-to-send requests. The rights features line up with Rep. Pat Fallon's proposed federal Kairo Act (H.R. 2425), which is not law.
 
 > The app never calls a daycare safe or unsafe, and never scores, grades, or ranks one. It shows what the state found, when, and whether the state verified the fix.
 
 | | |
 |---|---|
-| **Daycares in TX-04** | **At least 379** active daycares sit inside the district by map point (PostGIS point-in-polygon against the Census CD119 boundary, spot-checked 10/10 against Census TIGERweb) |
-| **Statewide records loaded** | 14,310 daycares · 157,358 state visits · 118,294 findings, about 5 years of history |
+| **Daycares in TX-04** | **At least 379** active daycares inside the district by map point (PostGIS point-in-polygon against the Census CD119 boundary) |
+| **State records loaded** | 14,310 daycares · 157,358 state visits · 118,294 findings, about 5 years of history |
 | **Freshness** | Synced daily from data.texas.gov. Every data screen shows "Last checked with the state" |
+| **Proven end to end** | A real past state finding, replayed as a labelled alert, reached a real iPhone as a push (Expo receipt `delivered_to_provider`) and opened that daycare's record ([QA matrix B6](docs/QA_MATRIX.md)) |
 | **Platforms** | iPhone and Android from one TypeScript codebase |
-
----
 
 ## How a parent uses it
 
@@ -30,26 +49,26 @@ flowchart LR
 
 | Step | What the parent sees | What changes for the parent |
 |---|---|---|
-| **Find** | Daycares on a map with the last state visit and a 24-month record strip. No grade, no color verdict on a daycare | Finds the record for a daycare they are considering or already use |
-| **Read** | Each finding: date · the state's rule risk level (High to Low) · category · fix status · a one-line plain summary · the inspector's words · a link to the official state record. Area comparison against the median for the same type of daycare in the same county | Understands what happened and whether it was fixed |
-| **Watch** | One tap. A push alert when the state posts a new finding, a license status change, or a corrective or adverse action | Hears about new state findings without checking a website |
-| **Act** | Ready-to-send requests quoting HRC §42.04271 (drop-in during open hours, records and inspection reports, video only after an alleged abuse or neglect incident involving their child). Tour questions built from that daycare's own findings. Verified state report channels | Uses rights that already exist in Texas law |
+| **Find** | Daycares near home or in TX-04, each with its last state visit. No grade, no color verdict on a daycare | Finds the record for a daycare they are considering or already use |
+| **Read** | Each finding: date · the state's risk level for the rule · category · fix status · a one-line plain summary · the inspector's words · a link to the official state record. A comparison with the median for the same type of daycare in the same county | Understands what happened and whether it was fixed |
+| **Watch** | One tap. A push when the state posts a new finding, a permit status change, or a corrective or adverse action | Hears about new state findings without checking a website |
+| **Act** | Ready-to-send requests quoting HRC §42.04271 (drop in during open hours, records and inspection reports, video only after an alleged abuse or neglect incident involving their child). Tour questions built from that daycare's own findings. Verified state report channels | Uses rights that already exist in Texas law |
 
 ## Screenshots
 
-Every screen below is the running app on real state records. Dark-mode versions are in [`docs/screenshots/dark/`](docs/screenshots/dark/).
+Every screen is the running app on real state records. Dark-mode versions are in [`docs/screenshots/dark/`](docs/screenshots/dark/).
 
 | Find | Search | A daycare's record |
 |:-:|:-:|:-:|
-| <img src="docs/screenshots/01-home.jpg" width="250" alt="Home map with the closest daycares"> | <img src="docs/screenshots/02-search.jpg" width="250" alt="Search by name, city, or ZIP"> | <img src="docs/screenshots/03-place-overview.jpg" width="250" alt="Place page: what the state found at the latest visit"> |
+| <img src="docs/screenshots/01-home.jpg" width="250" alt="Home with the closest daycares"> | <img src="docs/screenshots/02-search.jpg" width="250" alt="Search by name, city, or ZIP"> | <img src="docs/screenshots/03-place-overview.jpg" width="250" alt="Place page: what the state found at the latest visit"> |
 | **Past two years** | **Every finding** | **Your rights** |
 | <img src="docs/screenshots/03b-place-history.jpg" width="250" alt="State visits over the past two years"> | <img src="docs/screenshots/04-findings.jpg" width="250" alt="Each finding with the inspector's words and fix status"> | <img src="docs/screenshots/05-rights.jpg" width="250" alt="Kids' Law requests ready to send"> |
 | **Watch** | **Alert** | **Tour questions** |
-| <img src="docs/screenshots/06-watch.jpg" width="250" alt="Turning on alerts for a daycare"> | <img src="docs/screenshots/07-alert.jpg" width="250" alt="A push alert opened: what changed since the last visit"> | <img src="docs/screenshots/08-tour.jpg" width="250" alt="Tour questions built from this daycare's own findings"> |
+| <img src="docs/screenshots/06-watch.jpg" width="250" alt="Turning on alerts for a daycare"> | <img src="docs/screenshots/07-alert.jpg" width="250" alt="A push alert opened: what the state posted"> | <img src="docs/screenshots/08-tour.jpg" width="250" alt="Tour questions built from this daycare's own findings"> |
 
 A home daycare's page shows only the city and ZIP, with no map of the house ([screenshot](docs/screenshots/09-home-daycare-privacy.jpg)).
 
-## Architecture
+## How it works
 
 ```mermaid
 flowchart TB
@@ -58,11 +77,12 @@ flowchart TB
     ACT["Inspections · m5q4-3y3d<br/>full nightly reload"]
     VIO["Violations · tqgd-mf4x<br/>full nightly reload"]
   end
-  CEN["U.S. Census Geocoder<br/>batch API"]
+  CEN["U.S. Census Geocoder"]
   TIG["Census TIGER CD119<br/>TX-04 boundary"]
+  MLY["Mapillary<br/>street-level photos"]
 
   subgraph PIPE["Pipeline · Python 3.12 · daily GitHub Action"]
-    P["extract → validate → stage → transform → diff →<br/>geocode → district → classify → aggregate → notify → log"]
+    P["extract → validate → stage → transform → diff →<br/>geocode → district → classify → aggregate → notify → photos → log"]
   end
 
   subgraph DB["Supabase · Postgres + PostGIS"]
@@ -72,11 +92,10 @@ flowchart TB
   end
 
   PUSH["Expo Push → APNs / FCM"]
-  MOB["Mobile app · Expo React Native · TypeScript<br/>iPhone + Android"]
+  MOB["App · Expo React Native · TypeScript<br/>iPhone · Android"]
 
   OPS & ACT & VIO --> P
-  CEN --> P
-  TIG --> P
+  CEN & TIG & MLY --> P
   P -- "psycopg COPY + SQL upserts" --> CORE
   P -- "new state finding × watchers" --> PUSH
   PUSH --> MOB
@@ -87,54 +106,43 @@ flowchart TB
 
 | Layer | Choice | Why |
 |---|---|---|
-| Mobile | Expo (React Native), TypeScript strict, Expo Router, TanStack Query, react-native-maps, expo-notifications | One codebase for iPhone and Android. Maps need no API key on iOS |
+| App | Expo (React Native), TypeScript strict, Expo Router, TanStack Query, react-native-maps, expo-notifications | One codebase for iPhone and Android |
 | Database | Supabase Postgres + PostGIS, row-level security, RPC functions, materialized views | The product is joins, geography (point-in-polygon, nearest daycares), and medians, all native in SQL |
-| Pipeline | Python 3.12, httpx, pydantic v2, psycopg 3 (COPY), structlog | Daily full-table diffs of 200k+ rows with a real test suite |
+| Pipeline | Python 3.12, httpx, pydantic v2, psycopg 3 (COPY), structlog | Daily full-table diffs of 200,000+ rows with a real test suite |
 | Push | Expo Push API with receipts | One API for both platforms. Tokens Apple or Google reject are disabled |
 | Types | `supabase gen types typescript` → `packages/db/types.ts` | The app's types come from the real schema, so they cannot drift |
 
 ### The daily pipeline
 
-```mermaid
-flowchart LR
-  E[Extract<br/>SODA, paged, retries] --> V[Validate<br/>pydantic data contract]
-  V --> S[Stage<br/>COPY into staging.*]
-  S --> T[Transform<br/>upsert core.*<br/>join rate ≥ 95% or fail]
-  T --> D[Diff<br/>by id + row hash<br/>→ change_events]
-  D --> G[Geocode<br/>Census batch,<br/>cached by address]
-  G --> R[District<br/>ST_Covers vs CD119]
-  R --> C[Classify<br/>deterministic rules<br/>+ plain summary]
-  C --> A[Aggregate<br/>refresh matviews]
-  A --> N[Notify<br/>Expo Push,<br/>dedupe per user+event]
-  N --> L[Log<br/>ops.sync_runs]
-```
-
 | Stage | Guarantee | Tested by |
 |---|---|---|
 | Validate | Unknown risk levels, bad dates, or missing fields fail the run | Contract tests on real captured records |
-| Transform | Violations must join to their inspection at ≥ 95% or the run fails (measured: 100%) | `test_load.py` |
+| Transform | Findings must join their visit at ≥ 95% or the run fails (measured: 100%) | `test_load.py` |
 | Diff | Re-running a sync creates 0 new events | Idempotency test |
-| Classify | Every finding gets one of 9 categories from fixed rules on the state's standard number. The plain summary never adds facts | `test_classify.py`, 100% coverage |
-| Notify | One push per user per event. A replay of a real past finding is labeled "Replay of a real state record from <date>" | `test_notify.py` round trip with receipts |
+| Classify | Every finding gets a category from fixed rules on the state's rule number. The plain summary only shortens the inspector's words | `test_classify.py`, 100% coverage, checked against all 133,739 findings in the state file |
+| Notify | One push per parent per event. A replay of a real past finding is labelled "Replay of a real state record from <date>" | `test_notify.py` round trip with receipts |
+| Photos | Only Licensed Centers with an exact address match; no panoramas; camera facing the building; taken after the permit and within 6 years | `test_photos.py` on recorded real API answers |
+
+More in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## The data
 
 | Dataset | ID | How the state updates it | How we sync it |
 |---|---|---|---|
 | Operations (daycares) | `bc5r-88dy` | Row-level, about 300 to 450 rows a day statewide | Incremental by `:updated_at`, plus a weekly full reconcile |
-| Activities (inspections) | `m5q4-3y3d` | Full reload nightly, about 205,000 rows | Full download, diff by `activity_id` + row hash |
+| Activities (visits) | `m5q4-3y3d` | Full reload nightly, about 205,000 rows | Full download, diff by `activity_id` + row hash |
 | Violations (findings) | `tqgd-mf4x` | Full reload nightly, about 134,000 rows | Full download, diff by `non_compliance_id` + row hash |
 
-**Measured on Oct 24 2026:**
+**Measured Oct 24 to 25 2026:**
 
 | Fact | Number |
 |---|---|
 | In-scope daycares statewide (licensed centers, licensed and registered child-care homes, listed family homes) | 14,310 |
-| State visits loaded | 157,358 |
-| Findings loaded | 118,294 |
+| State visits · findings loaded | 157,358 · 118,294 |
 | Daycares with a map point | 13,024 (577 from state coordinates, 12,447 from the Census Geocoder) |
 | Census match quality | 10,991 exact · 1,456 non-exact (address matched with corrections) |
-| Active daycares inside TX-04 by map point | at least 379 (330 exact, 28 non-exact, 21 state coordinates). 23 more fall back to county only and are never labeled TX-04 |
+| Active daycares inside TX-04 by map point | at least 379 (330 exact, 28 non-exact, 21 state coordinates). 23 more fall back to county only and are never labelled TX-04 |
+| TX-04 centers with a usable street photo | 34 of 209 Licensed Centers with an exact address match |
 | RPC latency, p95 on the full dataset | nearest daycares 7.5 ms · search 30 ms · daycare record 1 ms |
 
 **Inside TX-04 only** (the 379 active daycares placed in the district by map point; 13 complete weeks, Jul 20 to Oct 18 2026):
@@ -142,66 +150,45 @@ flowchart LR
 | Fact | Number |
 |---|---|
 | State activities at these daycares | 284 at 158 daycares, about 22 a week (238 inspections, 42 reports, 4 assessments) |
-| Activities that found violations | 65. Another 23 are still marked "Pending" in the state data, which fits findings being posted 1 to 3 weeks after a visit |
+| Activities that found violations | 65. Another 23 are still marked "Pending", which fits findings being posted 1 to 3 weeks after a visit |
 | Findings posted | 135: 31 under rules the state rates High risk, 55 Medium High, 47 Medium, 2 lower |
 | Most common categories | Paperwork 46 · Safety hazards 34 · Health and medication 30 · Supervision 10 |
 | Time between state inspections at one daycare | Median 66 days, 90th percentile 330 days (inspections since Oct 2023) |
 | Daycares with at least one finding under a High-risk rule in the last 24 months | 140 of 379 |
 
-### Data model
+Every field the app shows, mapped to its state column: [`docs/DATA.md`](docs/DATA.md).
 
-| Table | Key | What it holds |
-|---|---|---|
-| `core.daycares` | `operation_id` | Name, type, address, capacity, ages, hours, permit flags, `geom`, `geocode_source` (state or census), `geocode_quality`, `in_district`, `district_basis` (point or county) |
-| `core.inspections` | `activity_id` | Visit date, type, whether violations were found |
-| `core.violations` | `non_compliance_id` | Date, standard, state risk level, category, plain summary, inspector narrative, correction and verification dates |
-| `core.change_events` | `id` | `new_violation`, `status_change`, `corrective_action`, `adverse_action`, `closure`, `capacity_change`, `permit_conditions`, with before and after values and an `is_replay` flag |
-| `app.watches` | `(user_id, operation_id)` | Which daycares a parent watches. Row-level security: owner only |
-| `app.devices` | push token | Expo push token and platform. Owner only |
-| `app.notifications` | `(user_id, event_id)` | Dedupe key, Expo ticket and receipt status |
-| `geo.districts` | `id` | The TX-04 (CD119) polygon |
-| `ops.sync_runs` | `run_id` | Per-stage counts, join rate, newest source date, ok or error |
-
-Clients never touch tables. They call 11 RPC functions (`daycares_near`, `daycare_search`, `daycare_record`, `area_compare`, `watch`, `unwatch`, `my_watches`, `alert_detail`, `register_device`, `last_sync`, `district_pulse`). Each is `security definer` with an empty `search_path`.
-
-## Honesty and privacy rules
+## Honesty and privacy
 
 These rules are enforced in code and tests, not just in copy review.
 
 | Rule | Why |
 |---|---|
 | No scores, grades, rankings, or safe/unsafe labels. Color marks the state's risk level of one finding, never a daycare | A count of findings is not a verdict, and the state does not publish one |
-| "Fixed" appears only when the inspector saw the fix during the visit or the state posted a check date. The state's `corrected_date` is shown as a due date, with "no state check on record yet" | 124 findings carry a `corrected_date` in the future, so it behaves like a deadline |
-| A daycare is labeled "in TX-04" only when its map point is inside the district | The state's county field can be wrong, and most of Collin and Denton counties are outside TX-04 |
-| Home daycares (4,705 statewide) get no aerial imagery, no map of the house, and no street address on the place page: city and ZIP only, with the full record one tap away on the state's site | They are private residences, often listed under a person's name, and a street-range geocode can land on the wrong house |
-| Map links send the state's address line, not our geocoded point | The geocode is an estimate |
+| "Fixed" appears only when the inspector saw the fix during the visit or the state posted a check date. The state's `corrected_date` is shown as a due date | 124 findings carry a `corrected_date` in the future, so it behaves like a deadline |
+| A daycare is labelled "in TX-04" only when its map point is inside the district | The state's county field can be wrong, and most of Collin and Denton counties are outside TX-04 |
+| Home daycares (4,705 statewide) get no imagery, no map of the house, and no street address: city and ZIP only | They are private residences, often listed under a person's name |
+| Map links send the state's address line, not our estimated point | The geocode is an estimate |
 | Kids' Law request cards are hidden for listed family homes | HRC §42.04271(a) does not cover them |
-| The app never claims to alert when an investigation opens, and never claims to be the only way to get updates | Findings appear only after state due process, and the state already offers email updates per daycare |
-| No made-up data anywhere, including tests | Every fixture is a real captured state record |
+| The app never claims to alert when an investigation opens, or to be the only way to get updates | Findings appear only after state due process, and the state already offers email updates per daycare |
+| No made-up data anywhere, including tests | Every fixture is a real captured record |
 
-## Legal and official sources
-
-Every phone number, URL, and legal line in the app traces to a row in [`docs/OFFICIAL_SOURCES.md`](docs/OFFICIAL_SOURCES.md). Each row was checked against the live official page and quotes it verbatim.
-
-| Source | Used for |
-|---|---|
-| Texas HRC §42.04271, enacted by 88(R) SB 1098, the Kairo and the Kids' Law (effective Sep 1 2023) | Drop-in, records, inspection reports, and the narrow video right |
-| 26 TAC ch. 746 (Minimum Standards for Child-Care Centers) | Parent rights centers must post and follow |
-| Texas Abuse Hotline 1-800-252-5400 · 911 · HHSC Child Care Regulation report form | Report-a-concern channels |
-| HHSC Child Care Regulation Handbook | Plain-English meaning of corrective action, adverse action, and permit conditions |
+Parents sign in anonymously: no name, email, or phone. What is stored and what leaves the phone: [`docs/PRIVACY.md`](docs/PRIVACY.md). Every phone number, URL, and legal line traces to a verbatim quote in [`docs/OFFICIAL_SOURCES.md`](docs/OFFICIAL_SOURCES.md).
 
 ## Tests
 
-| Suite | Count | Command |
-|---|---|---|
-| Database (pgTAP): schema, row-level security allow and deny, every RPC, views, visits, geocode quality | 134 tests in 6 files | `supabase test db` |
-| Pipeline (pytest, plus hypothesis property tests) | 217 tests, 93% coverage | `cd services/pipeline && uv run pytest` |
-| Pipeline static checks | ruff + `mypy --strict` clean | `uv run ruff check . && uv run mypy --strict src` |
-| Mobile unit tests (Jest) | 22 tests | `cd apps/mobile && npx jest` |
-| Mobile end-to-end (Maestro) | 11 flows: home, record, watch, alert tap, reload alert, tour, dialogs, accessibility at the largest text size, full find-to-alert journey | `maestro test apps/mobile/e2e/journey-find-watch.yaml` |
-| Mobile static checks | `tsc --noEmit`, ESLint, expo-doctor | `npm run typecheck --prefix apps/mobile` |
+Run on Oct 25 2026. Details: [`docs/TESTING.md`](docs/TESTING.md) · every user case, tested cold: [`docs/QA_MATRIX.md`](docs/QA_MATRIX.md).
 
-GitHub Actions runs the pipeline checks on every push (`pipeline-ci.yml`) and the daily sync at 10:15 UTC (`daily-sync.yml`), about an hour after the state's nightly reload.
+| Suite | Result | Command |
+|---|---|---|
+| Database (pgTAP): schema, row-level security, every RPC, views, photos rule, search | **167 tests in 10 files, all pass** | `supabase test db` |
+| Pipeline (pytest + hypothesis) | **237 tests, all pass · 91% coverage** | `cd services/pipeline && uv run pytest` |
+| Pipeline static checks | ruff + `mypy --strict` clean | `uv run ruff check . && uv run mypy --strict src` |
+| App unit (Jest) | **37 tests, all pass** | `cd apps/mobile && npx jest` |
+| App end-to-end (Maestro) | 11 flows, including find-to-alert and the largest text size | `maestro test apps/mobile/e2e/journey-find-watch.yaml` |
+| App static checks | `tsc --noEmit`, ESLint | `npm run typecheck --prefix apps/mobile` |
+
+GitHub Actions runs the pipeline checks on every push and the daily sync at 10:15 UTC, about an hour after the state's nightly reload.
 
 ## Getting started
 
@@ -227,24 +214,62 @@ cd apps/mobile && npx expo start
 
 On a real phone, use the computer's LAN address in `EXPO_PUBLIC_SUPABASE_URL` instead of `127.0.0.1`.
 
-Pipeline commands: `python -m pipeline sync` (daily), `backfill` (history, no alerts), `sync --replay <non_compliance_id>` (re-send a real past finding as a labeled replay), `report`, `receipts`.
-
-## Repository layout
-
-| Path | What |
+| Pipeline command | What it does |
 |---|---|
-| `apps/mobile` | The parent app (Expo, iOS and Android) |
-| `services/pipeline` | Daily data pipeline and its tests |
-| `supabase/migrations` | Schema, row-level security, RPC functions, views |
-| `supabase/tests` | pgTAP database tests |
-| `packages/db` | Database types generated from the schema |
-| `docs/ARCHITECTURE.md` | System design and measured data |
-| `docs/OFFICIAL_SOURCES.md` | Every legal claim, phone number, and URL, with a verbatim source quote |
-| `.github/workflows` | Pipeline CI and the daily sync |
+| `python -m pipeline sync` | The daily run: extract, validate, load, diff, classify, alert |
+| `python -m pipeline backfill` | Load full history without sending alerts |
+| `python -m pipeline sync --replay-latest <operation_id>` | Re-send the newest real finding at a daycare, labelled as a replay (add `--dry-run` to preview) |
+| `python -m pipeline photos` | Fill street photos for TX-04 centers (needs `MAPILLARY_TOKEN`) |
+| `python -m pipeline report` · `receipts` | Recent runs · push delivery receipts |
+
+## Project structure
+
+```text
+daycare-watch/
+├── apps/mobile/                 # The parent app: Expo, iOS + Android
+│   ├── src/app/                 #   screens (Expo Router): tabs, daycare/[id], alert, onboarding, search
+│   ├── src/components/ui/       #   design system components
+│   ├── src/lib/                 #   API client, rights text, tour questions, storage
+│   └── e2e/                     #   Maestro flows
+├── services/pipeline/           # Daily data pipeline (Python 3.12)
+│   ├── src/pipeline/            #   soda · models · load · geocode · classify · notify · photos · runner
+│   ├── tests/                   #   pytest + hypothesis
+│   └── fixtures/                #   real captured state records and API answers
+├── supabase/
+│   ├── migrations/              # schema, row-level security, RPC functions, views
+│   └── tests/                   # pgTAP
+├── packages/db/                 # TypeScript types generated from the schema
+├── docs/                        # architecture, data dictionary, privacy, testing, sources
+└── .github/workflows/           # pipeline CI and the daily sync
+```
+
+## Roadmap
+
+| Next | Why |
+|---|---|
+| Android push from a standalone build | Expo Go on Android cannot receive remote pushes |
+| Nightly photo refresh as street-level coverage grows | Today 34 of 209 TX-04 centers have a recent photo facing the building |
+| Spanish | So a parent who reads Spanish first gets the same plain-English summaries and rights, in Spanish |
+| Any Texas district, not only TX-04 | The pipeline already loads the whole state; only the district boundary is TX-04 |
+| Track the federal Kairo Act (H.R. 2425) | If it becomes law, add its rights next to the Texas ones |
 
 ## Known limits
 
 - Findings appear only after the daycare has had due process. Alerts can arrive days to weeks after a visit.
 - 1,286 in-scope daycares have no map point (no state coordinates and no Census match). They stay findable by search.
 - Census matches place an address along its street range, not on the rooftop.
-- Remote push on Android requires a standalone build. The Expo Go test app can show records on Android but cannot receive pushes.
+
+## Docs
+
+| Doc | What |
+|---|---|
+| [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System design, pipeline stages, tables |
+| [`DATA.md`](docs/DATA.md) | Every field shown in the app and its state source |
+| [`PRIVACY.md`](docs/PRIVACY.md) | What is stored, what leaves the phone, and the rules that protect people in the records |
+| [`TESTING.md`](docs/TESTING.md) | Every suite, with the counts from the last run |
+| [`QA_MATRIX.md`](docs/QA_MATRIX.md) | Every user case, tested cold, with evidence |
+| [`OFFICIAL_SOURCES.md`](docs/OFFICIAL_SOURCES.md) | Every legal claim, phone number, and URL, with a verbatim source quote |
+
+## License
+
+[MIT](LICENSE). State records are public data published by the Texas Health and Human Services Commission.

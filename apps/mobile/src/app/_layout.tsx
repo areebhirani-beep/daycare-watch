@@ -6,6 +6,9 @@ import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { FrameChrome, FrameInsets } from '@/components/web/FrameChrome';
+import { PhoneStage } from '@/components/web/PhoneStage';
+import { useLayout } from '@/lib/layout';
 import { useAlertTaps } from '@/lib/notifications';
 import { persister, queryClient, shouldPersist } from '@/lib/query';
 import { mark } from '@/lib/perf';
@@ -17,6 +20,11 @@ void SplashScreen.preventAutoHideAsync();
 mark('js start');
 
 export default function RootLayout() {
+  // On the web from 768 px up this window is the page around a drawn iPhone; the app itself runs inside its iframe.
+  return useLayout().mode === 'framed' ? <PhoneStage /> : <App />;
+}
+
+function App() {
   const scheme = useColorScheme();
   const c = scheme === 'dark' ? dark : light;
   useEffect(() => {
@@ -41,32 +49,35 @@ export default function RootLayout() {
           }}
         >
           <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-          <Stack
-            screenOptions={{
-              headerShadowVisible: false,
-              headerStyle: { backgroundColor: c.bg },
-              headerTintColor: c.accent,
-              headerTitleStyle: { fontFamily: font.semibold, color: c.text },
-              headerBackButtonDisplayMode: 'minimal',
-              // Minimal hides the text, but VoiceOver still reads the previous route's title, e.g. '(tabs)'.
-              headerBackTitle: 'Back',
-              contentStyle: { backgroundColor: c.bg },
-            }}
-          >
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} />
-            <Stack.Screen name="daycare/[id]/watch" options={{ presentation: 'modal', title: 'Watch this daycare' }} />
-            <Stack.Screen name="daycare/[id]/tour" options={{ title: 'Tour questions' }} />
-            <Stack.Screen name="alert/[eventId]" options={{ title: 'New state record' }} />
-            <Stack.Screen name="report" options={{ title: 'Report a concern' }} />
-            <Stack.Screen name="week" options={{ title: 'TX-04 last week' }} />
-            <Stack.Screen
-              name="categories"
-              options={{ presentation: 'formSheet', headerShown: false, sheetAllowedDetents: [0.6, 1], sheetGrabberVisible: true }}
-            />
-            <Stack.Screen name="search" options={{ headerShown: false, animation: 'fade' }} />
-            <Stack.Screen name="daycare/[id]/index" options={{ headerShown: false }} />
-          </Stack>
+          <FrameInsets>
+            <Stack
+              screenOptions={{
+                headerShadowVisible: false,
+                headerStyle: { backgroundColor: c.bg },
+                headerTintColor: c.accent,
+                headerTitleStyle: { fontFamily: font.semibold, color: c.text },
+                headerBackButtonDisplayMode: 'minimal',
+                // Minimal hides the text, but VoiceOver still reads the previous route's title, e.g. '(tabs)'.
+                headerBackTitle: 'Back',
+                contentStyle: { backgroundColor: c.bg },
+              }}
+            >
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} />
+              <Stack.Screen name="daycare/[id]/watch" options={{ presentation: 'modal', title: 'Watch this daycare' }} />
+              <Stack.Screen name="daycare/[id]/tour" options={{ title: 'Tour questions' }} />
+              <Stack.Screen name="alert/[eventId]" options={{ title: 'New state record' }} />
+              <Stack.Screen name="report" options={{ title: 'Report a concern' }} />
+              <Stack.Screen name="week" options={{ title: 'TX-04 last week' }} />
+              <Stack.Screen
+                name="categories"
+                options={{ presentation: 'formSheet', headerShown: false, sheetAllowedDetents: [0.6, 1], sheetGrabberVisible: true }}
+              />
+              <Stack.Screen name="search" options={{ headerShown: false, animation: 'fade' }} />
+              <Stack.Screen name="daycare/[id]/index" options={{ headerShown: false }} />
+            </Stack>
+            <FrameChrome />
+          </FrameInsets>
         </ThemeProvider>
       </PersistQueryClientProvider>
     </GestureHandlerRootView>

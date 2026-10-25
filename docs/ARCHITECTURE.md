@@ -33,7 +33,7 @@
               ┌───────▼────────────────────────────────────────┴──┐
               │ PIPELINE (Python 3.12, runs daily 10:15 UTC)       │
               │ extract → validate → stage → transform → diff →    │
-              │ classify → aggregate → notify → log                │
+              │ classify → district → aggregate → notify → photos  │
               └───────┬────────────────────────────────────────────┘
                       │ SQL (psycopg, COPY)
               ┌───────▼───────────────────────────────┐
@@ -59,19 +59,22 @@
 | **Python pipeline** | Edge functions | Daily full-table diffs of 200k+ rows need COPY, a real test suite, and no 150-second timeout. It runs locally and on a schedule. |
 | **Official API** | A scraper | The SODA API is documented, stable, and legal to use. A scraper breaks when the page changes. Scraping is a fallback only if a field we need exists only on the public site, and none does today. |
 
-**Distribution:** the Congressional App Challenge rules allow any platform. Nothing has to be on the App Store or Google Play. Judges watch the video and may ask for the code. Use EAS builds to put it on real parents' phones: TestFlight on iPhone (external testers need a short beta review, so submit by Sunday morning) and an internal-testing or APK build on Android.
+**Distribution:** the Congressional App Challenge rules allow any platform. Nothing has to be on the App Store or Google Play. Judges watch the video and may ask for the code. The app is tested on a physical iPhone; Android runs from the same code, and Android push needs a standalone build.
 
-## 4. The data, measured (Oct 24 2026)
+## 4. The data, measured (Oct 24 to 25 2026)
+
+Every number below is inside TX-04 by map point (PostGIS point-in-polygon against the Census CD119 boundary), not by county. The full tables are in the [README](../README.md#the-data).
 
 | Fact | Number | What it means for the app |
 |---|---|---|
-| Daycares in the 12 counties CD119 touches (all types, active) | 1,527 (919 licensed centers, 135,630 spots). **County count, not district count**: Collin + Denton are 83% of it but mostly outside TX-04 | Every one has a record on day one (≈5-year backfill). The in-district number comes from geocoding + point-in-polygon |
-| State visits in those counties (county-based, re-measure in district), last 13 weeks | 1,211 visits to 655 different daycares (≈ 90/week) | The district feed is never quiet |
-| Visits that found violations | 258 (≈ 20–39/week in settled weeks) | About 25 real, new findings a week to alert on and to show |
-| Per-daycare visit gap | every 2–8 months | Alerts are rare for any one family, like a smoke alarm. That's correct, not a weakness. |
-| Recent weeks with violations flagged | wk 41: 8, wk 42: 2, wk 43: 0 | Findings seem to be finalized 1–3 weeks after the visit (**inference, verify**). Alerts arrive days to weeks after an inspection. |
-| Statewide table sizes | activities 205,457 rows · violations 133,739 rows | Small for Postgres. A full nightly download and diff is cheap. |
-| How the state publishes | operations: row-level `:updated_at` changes (≈ 300–450 rows/day) · activities and violations: full reload nightly ≈ 09:00 UTC | Operations sync incrementally by watermark. Activities and violations sync by full download and ID/hash diff. |
+| Active daycares inside TX-04 | **At least 379** (330 exact Census match, 28 non-exact, 21 state coordinates). 23 more fall back to county only and are never labelled TX-04 | Every one has about 5 years of record on day one |
+| State activities at those daycares, 13 complete weeks (Jul 20 to Oct 18 2026) | 284 at 158 daycares, about 22 a week | The district feed is never quiet |
+| Activities that found violations | 65, with another 23 still "Pending" | Findings are posted after the visit, so alerts arrive days to weeks after an inspection, never when an investigation opens |
+| Findings posted in those 13 weeks | 135 (31 under High-risk rules) | About 10 new findings a week across the district to alert on |
+| Time between inspections at one daycare | Median 66 days, 90th percentile 330 days | Alerts are rare for any one family, like a smoke alarm. That is correct, not a weakness |
+| Statewide table sizes | activities about 205,000 rows · violations about 134,000 rows | Small for Postgres. A full nightly download and diff is cheap |
+| How the state publishes | operations: row-level `:updated_at` changes (about 300 to 450 rows a day) · activities and violations: full reload nightly, about 09:00 UTC | Operations sync incrementally by watermark. Activities and violations sync by full download and ID + row-hash diff |
+| TX-04 Licensed Centers with a usable street photo | 34 of 209 with an exact address match | Most place pages show the map and the record without a photo, and that page has to stand on its own |
 
 **More signal from the same official source (no scraping):** beyond new violations, the operations table changes daily, so we also alert on license status changes, corrective or adverse action, temporary closure, conditions on the permit, and capacity changes. Every daycare's page also gets an area comparison, and the district gets a weekly "what inspectors found this week" pulse.
 
@@ -85,9 +88,11 @@
 | 4 | **Transform** | SQL upserts into `core.*`. Violations joined to activity dates. Corrected/verified dates parsed. `via_investigation` flagged. | Join rate ≥ 95% or the run fails |
 | 5 | **Diff** | New `non_compliance_id`s, plus field-level changes on operations, become `change_events` (type, before/after) | Idempotent: a re-run creates 0 new events |
 | 6 | **Classify** | Deterministic category rules on the standard number (744.1205 → supervision, 745.6xx → background checks, …). A plain summary from the narrative that never adds facts. | One test per rule, plus a golden file |
-| 7 | **Aggregate** | `REFRESH MATERIALIZED VIEW` for area medians, district totals, and the weekly pulse | Totals reconcile with core |
-| 8 | **Notify** | Events × watchers → Expo Push API (batched, with receipts checked; dead tokens pruned). Dedupe key per (user, event). Replay mode labelled "replaying a real state record from <date>". | A real push on an iPhone (verified Oct 24 2026: replay event 43, receipt delivered_to_provider). Android push needs a standalone build |
-| 9 | **Log** | `ops.sync_runs`: counts per stage, newest source date, join rate, duration, error | The app shows "Last checked with the state" |
+| 7 | **Geocode + district** | Census Geocoder for daycares without state coordinates (exact or non-exact match kept). `in_district` set by PostGIS `ST_Covers` against the TX-04 polygon; county is a fallback only and never labelled TX-04 | Real Frisco, Sherman, and Paris daycares inside, real Dallas ones outside |
+| 8 | **Aggregate** | `REFRESH MATERIALIZED VIEW` for area medians, district totals, and the weekly pulse | Totals reconcile with core |
+| 9 | **Notify** | Events × watchers → Expo Push API (batched, with receipts checked; dead tokens pruned). Dedupe key per (user, event). Replay mode labelled "Replay of a real state record from <date>". | A real push on an iPhone (verified Oct 24 2026: replay event 43, receipt delivered_to_provider). Android push needs a standalone build |
+| 10 | **Photos** | Mapillary street photos for TX-04 active Licensed Centers with an exact address match only: within 50 m, no panoramas, camera facing the building, taken after the permit date and within 6 years, at most 3. No token or a Mapillary outage never fails the run | Recorded real Mapillary answers in `fixtures/mapillary/` |
+| 11 | **Log** | `ops.sync_runs`: counts per stage, newest source date, join rate, duration, error | The app shows "Last checked with the state" |
 
 ## 6. Database (core tables)
 
@@ -96,6 +101,7 @@
 | `core.daycares` | operation_id | name, type, address, city, county, zip, `geom geography(Point)` (state coords, else Census geocode), `geocode_source`, `geocode_quality` (exact/non_exact), capacity, ages[], hours, subsidies, status, corrective/adverse/closed flags, `in_district`, `district_basis` (point/county) |
 | `core.inspections` | activity_id | operation_id, date, type, violation_found, self_report |
 | `core.violations` | non_compliance_id | activity_id, operation_id, date, standard, risk_level, category, plain, narrative, corrected_at_inspection, corrected_date, verified_date, via_investigation |
+| `core.daycare_photos` | (operation_id, image_id) | captured_at, distance_m, compass_angle. Licensed Centers with an exact match only |
 | `core.change_events` | id | operation_id, kind (`new_violation`/`status_change`/`corrective_action`/`adverse_action`/`closure`/`capacity_change`/`permit_conditions`), ref_id, before/after jsonb, `is_replay`, detected_at |
 | `app.watches` | (user_id, operation_id) | created_at. RLS: owner only. |
 | `app.devices` | push_token | user_id, platform (ios/android), expo_push_token, last_seen. RLS: owner only. |

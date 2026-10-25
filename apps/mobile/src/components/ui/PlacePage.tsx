@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { type LayoutChangeEvent, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { type LayoutChangeEvent, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import Animated, {
   FadeIn,
@@ -638,6 +638,8 @@ function History({
   onPress: (id: number) => void;
 }) {
   const c = useColors();
+  // At the largest text sizes the date and the status no longer share a line: the date stacks on top, whole.
+  const stack = useWindowDimensions().fontScale >= 1.6;
   const max = Math.max(1, ...visits.map((v) => v.findings.length));
   const median =
     area && area.peer_count >= 3
@@ -658,7 +660,7 @@ function History({
             const n = v.findings.length;
             const status = visitStatus(v);
             const date = (
-              <Text variant="callout" tabular style={{ flex: 1 }} numberOfLines={1}>
+              <Text variant="callout" tabular style={stack ? undefined : { flex: 1 }} numberOfLines={stack ? undefined : 1}>
                 {formatDateShort(v.date, today)}
               </Text>
             );
@@ -676,8 +678,8 @@ function History({
               <Text
                 variant="callout"
                 tone="secondary"
-                style={{ textAlign: 'right', flexShrink: 1 }}
-                numberOfLines={2}
+                style={stack ? undefined : { textAlign: 'right', flexShrink: 1 }}
+                numberOfLines={stack ? undefined : 2}
               >
                 {status}
               </Text>
@@ -686,7 +688,7 @@ function History({
             // full status words ("Fixed during the visit") at every text size, no truncation.
             const row = (
               <View style={{ flex: 1, gap: space.xs, paddingVertical: space.sm }}>
-                <View style={styles.hLine}>
+                <View style={stack ? { gap: space.xxs } : styles.hLine}>
                   {date}
                   {word}
                 </View>

@@ -181,7 +181,7 @@ Every daycare gets the same white pin, so the map never ranks anyone. Pin color 
 ┌────────────────────────────────────────┐
 │ [‹]                            [share] │  floating round buttons, float elevation
 │                                        │
-│          street photo / 3D view        │  hero 0.62 × width, full bleed
+│        3D view / street photo          │  hero 0.62 × width, full bleed
 │                                        │
 │ ┌ Mar 2024 ┐                           │  capture-date chip (photos only)
 │ Street view near the address  ● ○ ○ ○  │  caption left · page dots right
@@ -191,7 +191,7 @@ Every daycare gets the same white pin, so the map never ranks anyone. Pin color 
 
 | Rule | Spec |
 |---|---|
-| Order | Street photo(s), nearest first (≤ 3) → 3D flyover → aerial (z17) → street-level map tile |
+| Order | Page 1 = 3D flyover (or aerial with pin where the flyover isn't allowed) → street photo(s), nearest first (≤ 3) → aerial (z17) → street-level map tile. The strongest real picture leads; dashcam frames support it |
 | Dots | 6 pt dots, 6 gap, white on a 30% black pill; the current dot is a 16 × 6 capsule |
 | Date chip | Photos only: capture month and year ("Mar 2024") in `caption` on a 50% black pill, top-left of the caption row |
 | Caption | Photo: "Street view near the address". Flyover: "3D view · Apple Maps". Aerial: the §8 caption |
@@ -208,7 +208,7 @@ The record is **one answer and a list of rows**, like Apple Weather's 10-day for
 
 ```
 3 problems found at the Oct 5 visit        largeTitle 28, the answer
-Fixes due by Oct 30 · no state check yet   callout 15, grey
+Fixes due Oct 30 · no state check on record yet   callout 15, grey (tail never splits)
 (◉) <the problem, in plain words>  Serious  top 2 problems: CategoryIcon 36, tag on High only
  See all 9 from the past 2 years        >
 Past 2 years

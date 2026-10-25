@@ -74,8 +74,8 @@ function streetViewUrl(lat: number, lng: number): string {
 
 /**
  * The place-page hero, so a parent can tell it's the right place. A licensed center with an exact address gets
- * street photos (up to 3, newest first, each with its month and credit), Apple's 3D view, the aerial, and a door
- * to Google Street View. Most centers have no photo, so the 3D view is page one and stands on its own.
+ * Apple's 3D view first (the aerial with its pin where there is none), then street photos (up to 3, newest first,
+ * each with its month and credit), the aerial, and a door to Google Street View.
  * An address that only matched approximately gets a plain map with an area, never a point or a photo.
  * Home daycares (private residences) get one neighborhood map: no photo, no pin, no 3D view.
  * Tap a picture to see it full screen.
@@ -132,14 +132,17 @@ export function PlaceGallery({
     ? [{ key: 'area', kind: 'area' }]
     : quality === 'non_exact'
       ? [{ key: 'approx', kind: 'approx' }]
-      : [
-          ...shown.flatMap((p, i): Page[] =>
+      : (() => {
+          // Page one must unmistakably be this place: the 3D view, or the aerial with its pin. Photos follow.
+          const photoPages = shown.flatMap((p, i): Page[] =>
             urls[i]?.isError || broken.has(p.image_id) ? [] : [{ key: p.image_id, kind: 'photo', photo: p, url: urls[i]?.data }],
-          ),
-          ...(flyover && Platform.OS === 'ios' ? [{ key: 'flyover', kind: 'flyover' } as const] : []),
-          { key: 'aerial', kind: 'aerial' } as const,
-          ...(flyover ? [{ key: 'street', kind: 'street' } as const] : []),
-        ];
+          );
+          const aerial: Page = { key: 'aerial', kind: 'aerial' };
+          const street: Page[] = flyover ? [{ key: 'street', kind: 'street' }] : [];
+          return flyover && Platform.OS === 'ios'
+            ? [{ key: 'flyover', kind: 'flyover' } as const, ...photoPages, aerial, ...street]
+            : [aerial, ...photoPages, ...street];
+        })();
   const current = Math.min(page, pages.length - 1);
   const onScroll = useAnimatedScrollHandler((e) => {
     x.value = e.contentOffset.x;

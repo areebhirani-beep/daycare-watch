@@ -1,5 +1,5 @@
 /**
- * Home daycares are private residences (CONTRACT data rules, Oct 24 11:15 pm): no satellite or aerial imagery of
+ * Home daycares are private residences (docs/PRIVACY.md): no satellite or aerial imagery of
  * them anywhere, and their place map stays at neighborhood zoom with no pin on a house. Centers are unchanged.
  */
 export const RESIDENCE_TYPES = ['Licensed Child-Care Home', 'Registered Child-Care Home', 'Listed Family Home'] as const;

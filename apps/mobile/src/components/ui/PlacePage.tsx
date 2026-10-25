@@ -525,8 +525,8 @@ export function visitAnswer(last: Visit | undefined, today: string): { headline:
     else {
       // Short form + a short "not checked" tail held together, so the line never wraps an orphan word.
       const short = shortStatus(open).replace(/(\w{3}) (\d)/g, '$1\u00A0$2');
-      const status = open.corrected_date ? `${short} · no\u00A0state\u00A0check\u00A0yet` : plainStatus(open);
-      sub = openCount > 1 ? status.replace(/^Fix due/, 'Fixes due by').replace(/^Fix date was/, 'Latest fix date was') : status;
+      const status = open.corrected_date ? `${short} · no\u00A0state\u00A0check\u00A0on\u00A0record\u00A0yet` : plainStatus(open);
+      sub = openCount > 1 ? status.replace(/^Fix due/, 'Fixes due').replace(/^Fix date was/, 'Latest fix date was') : status;
       if (openCount < n) sub = `${n - openCount} fixed · ${sub}`;
     }
   }

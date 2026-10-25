@@ -1,4 +1,4 @@
-// RPC return shapes from CONTRACT.md section 4.1, generated and pinned by platform in packages/db.
+// RPC return shapes, generated from the database and pinned in packages/db.
 export type {
   AlertDetail,
   AreaCompare,

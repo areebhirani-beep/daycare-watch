@@ -1,0 +1,14 @@
+# QA U22 (simulator part): a push tap calls router.push(`/alert/${event_id}?operationId=…`)
+# (lib/notifications.ts openFromNotification). Expo Go on a simulator drops simctl pushes, so this opens that
+# exact route for real event 43 (daycare 1304920) with the app running. Banner taps (cold, warm, background)
+# are checked on a real phone; a cold tap goes through getLastNotificationResponse, not a deep link.
+appId: host.exp.Exponent
+---
+- runFlow: _push-setup.yaml
+# Warm: app running.
+- openLink: ${METRO}/--/alert/43?operationId=1304920
+- extendedWaitUntil:
+    visible: ".*Replay of a real state record.*"
+    timeout: 30000
+- assertNotVisible: "This alert isn’t on this phone."
+- takeScreenshot: ../../harness/state/qa/u22-warm-alert

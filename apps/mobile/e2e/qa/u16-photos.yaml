@@ -1,0 +1,62 @@
+# QA U16a-d: street photos on real records (daycare_record.photos):
+#   241227  3 photos   1470186  2 photos   1459611  0 photos (3D first)
+#   98685   approximate geocode: no photos   1462404  home: neighborhood map only, no photos
+appId: host.exp.Exponent
+---
+- runFlow: _open.yaml
+# 3 photos: page one is the place itself, photos follow with month + credit; the viewer shows them too.
+- openLink: ${METRO}/--/daycare/241227
+- extendedWaitUntil:
+    visible: "3D view · Apple Maps"
+    timeout: 20000
+- takeScreenshot: ../../harness/state/qa/u16a-3-0
+- swipe:
+    start: 80%, 18%
+    end: 15%, 18%
+- extendedWaitUntil:
+    visible: ".*Mapillary contributors.*"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/qa/u16a-3-1-photo
+- tapOn:
+    point: 50%, 15%
+- extendedWaitUntil:
+    visible: "Close"
+    timeout: 10000
+- assertVisible: ".*Mapillary contributors.*"
+- takeScreenshot: ../../harness/state/qa/u16d-viewer
+- tapOn: "Close"
+# 2 photos
+- openLink: ${METRO}/--/daycare/1470186
+- extendedWaitUntil:
+    visible: "3D view · Apple Maps"
+    timeout: 20000
+- swipe:
+    start: 80%, 18%
+    end: 15%, 18%
+- extendedWaitUntil:
+    visible: ".*Mapillary contributors.*"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/qa/u16a-2-photo
+# 0 photos
+- openLink: ${METRO}/--/daycare/1459611
+- extendedWaitUntil:
+    visible: "Viva World School.*"
+    timeout: 20000
+- assertNotVisible: ".*Mapillary.*"
+- takeScreenshot: ../../harness/state/qa/u16a-0
+# approximate: no photos
+- openLink: ${METRO}/--/daycare/98685
+- extendedWaitUntil:
+    visible: "Play House.*"
+    timeout: 20000
+- assertVisible: "Approximate location"
+- assertNotVisible: ".*Mapillary.*"
+- takeScreenshot: ../../harness/state/qa/u16c-approx
+# home: neighborhood only, no photos
+- openLink: ${METRO}/--/daycare/1462404
+- extendedWaitUntil:
+    visible: "Neighborhood only · private home"
+    timeout: 20000
+- assertNotVisible: ".*Mapillary.*"
+- assertNotVisible: "3D view · Apple Maps"
+- takeScreenshot: ../../harness/state/qa/u16b-home

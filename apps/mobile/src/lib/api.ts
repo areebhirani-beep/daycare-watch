@@ -14,7 +14,7 @@ import type {
   LastSync,
 } from './types';
 
-// The app reaches data only through the RPCs in CONTRACT.md section 4.
+// The app reaches data only through the Postgres RPCs in supabase/migrations; no direct table reads.
 async function rpc<T>(fn: string, args?: Record<string, unknown>, limit?: number): Promise<T> {
   if (configError) throw new Error(configError);
   if (!isWeb) await ensureSession();

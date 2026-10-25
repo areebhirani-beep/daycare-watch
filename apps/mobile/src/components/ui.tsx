@@ -114,7 +114,7 @@ export function Surface({ children, style }: { children: ReactNode; style?: View
   );
 }
 
-/** Required on every data screen (CONTRACT 3): read from ops.sync_runs via last_sync(). */
+/** Required on every data screen : read from ops.sync_runs via the last_sync() RPC. */
 export function LastChecked({ fallback }: { fallback?: string | null }) {
   const { data } = useLastSync();
   const ts = data?.finished_at ?? fallback ?? null;

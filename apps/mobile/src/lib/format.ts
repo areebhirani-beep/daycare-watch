@@ -90,7 +90,7 @@ export function todayIso(now: Date = new Date()): string {
 
 /**
  * The state's corrected_date behaves like a due date (it can be in the future), so it never reads as "Fixed".
- * Only a correction at the inspection or a state verification counts as fixed (CONTRACT 3).
+ * Only a correction at the inspection or a state verification counts as fixed (docs/DATA.md).
  */
 export function fixedLabel(
   f: Pick<Finding, 'corrected_at_inspection' | 'corrected_date' | 'verified_date' | 'date'>,

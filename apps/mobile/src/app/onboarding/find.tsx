@@ -9,6 +9,7 @@ import { ActionPill, SearchPill } from '@/components/ui/Chrome';
 import { PlaceRow } from '@/components/ui/DaycareCard';
 import { rowFallback, rowMeta, rowStrip } from '@/components/ui/HomeMap';
 import { OnboardingFrame } from '@/components/ui/OnboardingFrame';
+import { LoadError } from '@/components/LoadError';
 import { RowSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useDaycaresNear, useDaycareSearch, useSetWatch } from '@/lib/api';
@@ -28,6 +29,7 @@ export default function FindScreen() {
 
   const rows = ((searching ? search.data : center ? near.data : undefined) ?? []).slice(0, 8);
   const loading = searching ? search.isPending : center !== null && near.isPending;
+  const failed = searching ? search.isError : center !== null && near.isError;
 
   const locate = async () => {
     setLocating(true);
@@ -120,7 +122,9 @@ export default function FindScreen() {
                 />
               </Animated.View>
             ))}
-        {searching && !loading && rows.length === 0 ? (
+        {failed ? (
+          <LoadError style={{ padding: space.xl }} onRetry={() => void (searching ? search : near).refetch()} />
+        ) : searching && !loading && rows.length === 0 ? (
           <Text variant="callout" tone="secondary" style={{ padding: space.xl }}>
             {`No daycare in the state’s list matches “${query.trim()}”. Try the city or ZIP.`}
           </Text>

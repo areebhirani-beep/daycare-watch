@@ -58,7 +58,8 @@ export default function FindScreen() {
     <View style={{ flex: 1 }}>
       <HomeMap
         rows={near.data ?? []}
-        loading={!problem && (position === undefined || near.isPending)}
+        // On an error the sheet keeps its skeleton under the error card, never "0 daycares".
+        loading={problem !== null || position === undefined || near.isPending}
         center={position ?? null}
         fallbackCenter={DISTRICT_CENTER}
         areaLabel={position === null ? 'Near Frisco · location off' : 'Finding your location…'}

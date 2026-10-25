@@ -53,7 +53,7 @@ import { Text } from './Text';
 export type { RequestKind };
 type Tab = 'overview' | 'findings' | 'rights';
 
-const HERO = 260;
+const HERO = 236;
 
 type Props = {
   record: DaycareRecord;
@@ -379,7 +379,8 @@ function HeroFact({ lastVisit, visits, months }: { lastVisit: string | null; vis
       accessibilityLabel={days != null ? `${days} days since the state's last visit, on ${formatDate(lastVisit)}` : `No state visits in ${months} months`}
       style={{ gap: space.xxs }}
     >
-      <Text variant="hero" tabular>
+      {/* The line box keeps descender room the digits never use; pull the label up so number and label read as one. */}
+      <Text variant="hero" tabular style={{ marginBottom: -14 }}>
         {days != null ? String(days) : String(visits)}
       </Text>
       <Text variant="title">{days != null ? (days === 1 ? 'day since the state’s last visit' : 'days since the state’s last visit') : `state visits in ${months} months`}</Text>

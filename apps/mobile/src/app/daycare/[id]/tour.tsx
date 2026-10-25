@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { ScrollView, Share, StyleSheet, View } from 'react-native';
 
+import { LoadError } from '@/components/LoadError';
 import { Button } from '@/components/ui/Button';
 import { StickyBar } from '@/components/ui/Chrome';
 import { PlaceSkeleton } from '@/components/ui/Skeletons';
@@ -17,7 +18,7 @@ export default function TourScreen() {
   if (!record.data) {
     return (
       <View style={{ flex: 1, backgroundColor: c.bg }}>
-        <PlaceSkeleton heroHeight={0} />
+        {record.isError ? <LoadError style={{ paddingTop: space.xl }} onRetry={() => void record.refetch()} /> : <PlaceSkeleton heroHeight={0} />}
       </View>
     );
   }

@@ -1,6 +1,7 @@
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { LoadError } from '@/components/LoadError';
 import { ListSkeleton } from '@/components/Skeleton';
 import { T } from '@/components/T';
 import { LastChecked, Rule, SectionLabel } from '@/components/ui';
@@ -32,7 +33,9 @@ export default function PulseScreen() {
         </T>
       </View>
 
-      {!p ? (
+      {!p && pulse.isError ? (
+        <LoadError style={{ padding: 0 }} onRetry={() => void pulse.refetch()} />
+      ) : !p ? (
         <ListSkeleton rows={4} />
       ) : (
         <>

@@ -94,3 +94,20 @@ describe('ensureSession', () => {
     expect(mockAuth.signInAnonymously).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('onNewUser', () => {
+  it('fires on a fresh anonymous sign-in, not when the stored session is kept', async () => {
+    const kept = load();
+    const keptListener = jest.fn();
+    kept.onNewUser(keptListener);
+    await kept.ensureSession();
+    expect(keptListener).not.toHaveBeenCalled();
+
+    mockAuth.getSession.mockResolvedValue({ data: { session: null } });
+    const first = load();
+    const listener = jest.fn();
+    first.onNewUser(listener);
+    expect(await first.ensureSession()).toBe('fresh-user');
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+});

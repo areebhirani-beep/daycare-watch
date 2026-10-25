@@ -4,6 +4,7 @@ import { FlatList, Linking, RefreshControl, StyleSheet, View } from 'react-nativ
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LastChecked } from '@/components/ui';
+import { LoadError } from '@/components/LoadError';
 import { Button } from '@/components/ui/Button';
 import { PlaceRow } from '@/components/ui/DaycareCard';
 import { Glyph } from '@/components/ui/Glyph';
@@ -79,6 +80,8 @@ export default function WatchingScreen() {
             <RowSkeleton />
             <RowSkeleton />
           </View>
+        ) : watches.isError ? (
+          <LoadError style={{ paddingTop: space.xl }} onRetry={() => void watches.refetch()} />
         ) : (
           <View style={styles.empty}>
             <View style={[styles.disc, { backgroundColor: c.signal }]}>

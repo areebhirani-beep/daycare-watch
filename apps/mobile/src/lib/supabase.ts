@@ -47,6 +47,13 @@ AppState.addEventListener('change', (state) => {
 
 let verifiedUserId: string | null = null;
 let pending: Promise<string> | null = null;
+const newUserListeners = new Set<() => void>();
+
+/** Runs after every fresh anonymous sign-in, so data cached for the previous user can be dropped. */
+export function onNewUser(listener: () => void): () => void {
+  newUserListeners.add(listener);
+  return () => newUserListeners.delete(listener);
+}
 
 /**
  * Anonymous sign-in on first launch, so watching needs no account.
@@ -73,6 +80,7 @@ async function establish(): Promise<string> {
   }
   const { data: signed, error } = await supabase.auth.signInAnonymously();
   if (error || !signed.user) throw error ?? new Error('Anonymous sign-in failed');
+  newUserListeners.forEach((listener) => listener());
   return (verifiedUserId = signed.user.id);
 }
 

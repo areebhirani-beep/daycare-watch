@@ -3,6 +3,7 @@ import { QueryClient } from '@tanstack/react-query';
 import type { Query } from '@tanstack/react-query';
 
 import { queryStorage } from './storage';
+import { onNewUser } from './supabase';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,3 +28,10 @@ export function shouldPersist(query: Query): boolean {
   const head = query.queryKey[0];
   return query.state.status === 'success' && typeof head === 'string' && PERSISTED.has(head);
 }
+
+// Watches and alerts belong to the signed-in user. A new anonymous user must not see the previous one's.
+const USER_SCOPED = ['my_watches', 'alert_detail'];
+
+onNewUser(() => {
+  for (const head of USER_SCOPED) queryClient.removeQueries({ queryKey: [head] });
+});

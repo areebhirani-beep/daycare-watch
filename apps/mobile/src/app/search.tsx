@@ -4,6 +4,7 @@ import { FlatList, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SearchPill } from '@/components/ui/Chrome';
+import { LoadError } from '@/components/LoadError';
 import { PlaceRow } from '@/components/ui/DaycareCard';
 import { rowFallback, rowMeta, rowStrip } from '@/components/ui/HomeMap';
 import { RowSkeleton } from '@/components/ui/Skeletons';
@@ -53,6 +54,8 @@ export default function SearchScreen() {
               <RowSkeleton />
               <RowSkeleton />
             </View>
+          ) : typed && search.isError ? (
+            <LoadError onRetry={() => void search.refetch()} />
           ) : typed && search.isSuccess ? (
             <Text variant="callout" tone="secondary" style={{ padding: space.lg }}>
               No Texas daycares match “{q.trim()}”.

@@ -1,6 +1,8 @@
 -- geocode_quality: allowed values, census-only rule, and exposure on DaycareRow + DaycareHeader.
 begin;
 create extension if not exists pgtap with schema extensions;
+-- Real records the asserts below name, so they hold on a fresh clone too (rolled back with the test).
+\ir fixtures/real_rows.psql
 select plan(8);
 
 select has_column('core', 'daycares', 'geocode_quality', 'core.daycares.geocode_quality exists');

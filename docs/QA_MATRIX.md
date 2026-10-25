@@ -19,6 +19,7 @@ Rows are tested cold, by someone who did not write the UI.
 | B7 | Push on Android | | CUT | Expo Go on Android has no remote push (decided 11:00 pm Oct 24) | |
 | B8 | "In TX-04" only on point basis | pgTAP + SQL + source review | PASS | 379 point / 23 county-only in district; every app check is `in_district && district_basis === 'point'` (HomeMap.tsx:66, HomeMap.web.tsx:52, PlacePage.tsx:190); `district_pulse_weekly` and `district_recent_visits` filter `district_basis = 'point'` (pgTAP 004, 008) | platform |
 | B9 | Replays are labelled as replays | push body + alert screen | PASS (source) | push body prefix `Replay of a real state record from {date}:` (notify.py:49); alert screen shows "Replay of a real state record" when `is_replay` (alert/[eventId].tsx:69); on-screen check in U21 | pipeline / mobile |
+| B10 | A fresh clone builds and passes from zero | isolated second stack: `supabase start` → `supabase test db` → `uv run python -m pipeline backfill` → pipeline `pytest` | PASS | start 33 s (15 migrations + seed); pgTAP 177/177 on the seed alone (before the fix: 9 asserts failed because they named rows only a full load has; tests now include real rows from `supabase/tests/fixtures/real_rows.psql` and roll them back); cold backfill 259.9 s, 14,310 daycares, 379 in TX-04 by point (same as the loaded DB); pytest 270 pass, 1 skip | platform |
 
 ## App (iOS simulator, Expo Go)
 

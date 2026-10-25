@@ -3,6 +3,8 @@
 -- name-free. Also the photo age rule (no photo before the permit or older than 6 years).
 begin;
 create extension if not exists pgtap with schema extensions;
+-- Real records the asserts below name, so they hold on a fresh clone too (rolled back with the test).
+\ir fixtures/real_rows.psql
 select plan(10);
 
 create temp table h on commit drop as

@@ -2,6 +2,8 @@
 -- with an exact geocode, at most 3, newest first. Rows below use real operation ids and are rolled back.
 begin;
 create extension if not exists pgtap with schema extensions;
+-- Real records the asserts below name, so they hold on a fresh clone too (rolled back with the test).
+\ir fixtures/real_rows.psql
 select plan(9);
 
 select ok(not has_table_privilege('anon', 'core.daycare_photos', 'select'), 'anon cannot read core.daycare_photos');

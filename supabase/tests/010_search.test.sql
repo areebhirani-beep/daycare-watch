@@ -2,6 +2,8 @@
 -- carries a SET of an extension GUC (cloud roles may not set those, so a migration with one fails).
 begin;
 create extension if not exists pgtap with schema extensions;
+-- Real records the asserts below name, so they hold on a fresh clone too (rolled back with the test).
+\ir fixtures/real_rows.psql
 select plan(9);
 
 set local role anon;
@@ -10,7 +12,7 @@ select ok((select count(*) >= 1 from public.daycare_search('Viva World') where n
           'exact name finds Viva World School');
 select ok((select bool_and(zip like '75087%') from (select zip from public.daycare_search('75087') limit 5) s),
           'a ZIP query ranks that ZIP first');
-select ok((select count(*) > 0 from public.daycare_search('Sherman') where city ilike 'Sherman'),
+select ok((select count(*) > 0 from public.daycare_search('Rockwall') where city ilike 'Rockwall'),
           'a city query finds daycares in that city');
 select ok((select count(*) > 0 from public.daycare_search('Montesori') where name ilike '%Montessori%'),
           'typo "Montesori" finds Montessori schools');

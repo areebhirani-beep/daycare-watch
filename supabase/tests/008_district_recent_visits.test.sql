@@ -2,6 +2,11 @@
 -- home daycares never expose name, and finding counts match core.
 begin;
 create extension if not exists pgtap with schema extensions;
+-- Real records the asserts below name, so they hold on a fresh clone too (rolled back with the test).
+\ir fixtures/real_rows.psql
+-- Pin today so "last week" stays the week those visits happened, whenever the test runs.
+create or replace function core.today() returns date language sql stable set search_path = ''
+as $$ select date '2026-10-25' $$;
 select plan(10);
 
 select ok(has_function_privilege('anon', 'public.district_recent_visits(integer)', 'execute'),

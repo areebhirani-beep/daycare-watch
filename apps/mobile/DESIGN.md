@@ -178,29 +178,37 @@ Every daycare gets the same white pin, so the map never ranks anyone. Pin color 
 ## 9. Place hero carousel (`PlaceGallery`)
 
 ```
-┌────────────────────────────────────────┐
-│ [‹]                            [share] │  floating round buttons, float elevation
-│                                        │
-│        3D view with our pin            │  hero 0.62 × width, full bleed
-│                                        │
-│ 3D view · Apple Maps            ━ ○ ○  │  caption left · page dots right
-└────────────────────────────────────────┘
+ page 1: street photo        page 2: street photo        page 3: ONE overhead
+┌──────────────────────┐   ┌──────────────────────┐   ┌──────────────────────┐
+│ (‹)            (⇪)   │   │ (‹)            (⇪)   │   │ (‹)            (⇪)   │
+│                      │   │                      │   │        [pin]         │
+│   the building,      │   │   another angle or   │   │   3D view (iOS) or   │
+│   full bleed         │   │   another source     │   │   aerial z17 + pin   │
+│[Look Around · Apple] ━○○│[Photo · Mapillary · Jun 2024]○━○│[3D view · Apple Maps]○○━│
+└──────────────────────┘   └──────────────────────┘   └──────────────────────┘
 ```
 
 | Rule | Spec |
 |---|---|
-| Order | 3D flyover with our pin (aerial with pin where the flyover isn't allowed) → aerial (z17) with pin → a Street View tile that opens Google Street View at the address |
-| Pin | Every picture page carries our pin at the point, so page 1 is unmistakably this place (`FlyoverHero` draws it on the 3D view) |
-| Dots | 6 pt dots, 6 gap, on a 30% black pill; the current dot is a 16 × 6 capsule that stretches with the finger |
-| Caption | Flyover: "3D view · Apple Maps". Aerial: the §8 caption |
-| Credit | Aerial: "Imagery © Esri, Maxar". Apple's legal mark stays visible, moved clear of text with `legalTop` |
-| Scrim | Bottom 35% stepped black scrim (0 → 45%) so white text clears 4.5:1; top 64 pt at 22% so the status bar reads |
-| Street View | The last page is a tile that opens Google Street View at the address; we host no street image |
-| One page | No dots |
-| Homes | Never a carousel: the §8 canvas, no dots, no pin |
-| Card thumbnail | The aerial with our pin |
+| Order | Up to **2 verified street photos of the building**, then **one** overhead view. Never more than one overhead page |
+| Photo sources | 1st: Apple Look Around snapshot, only when Apple's map item matched the daycare by name and sits within 60 m of our point. 2nd: Mapillary photos with `verified = true` (a person looked at it and it shows this building), newest first, from a different sequence than any other shown. Two photos max |
+| Overhead | iOS and `flyoverAllowed`: the 3D flyover with our pin. Everywhere else: the aerial at z17 with our pin. Never both |
+| Counts | 0 photos → the overhead alone, no dots. 1 photo → 2 pages. 2 photos → 3 pages. No "no photo" placeholder, ever |
+| Photo page | Full bleed, `cover`, focal point centre. No pin on a photo (a pin on a street scene says nothing). Same height as today: 0.62 × width (phone), 260 pt in the desktop panel |
+| Credit chip | Bottom-left, on a 30% black pill (same pill as the dots), `caption2` white, one line, AX cap 1.3×. Look Around: "Look Around · Apple Maps". Mapillary: "Photo · Mapillary · Jun 2024" (capture month, always shown, so an older photo says it is older). Overhead: "3D view · Apple Maps" or "Imagery © Esri, Maxar" |
+| License line | Mapillary photos are CC BY-SA: the full-screen viewer shows "© <creator> · CC BY-SA 4.0 · Mapillary" under the photo. The chip stays short |
+| Dots | Bottom-right, 6 pt dots, 6 gap, 30% black pill; current dot is a 16 × 6 capsule. Hidden with one page |
+| Scrim | Photos: bottom 28% stepped black (0 → 35%) so the chip pill clears on bright sidewalks; top 64 pt at 22% for the status bar and the round buttons. Overhead: unchanged |
+| Loading | The overhead renders first (it is local and instant). Photos resolve in the background. If they arrive before the parent has swiped, they slide in ahead of it and page 1 fades to the first photo (200 ms, `easeOut`, none with Reduce Motion). If the parent has already swiped, insert them without moving the page in view (adjust the offset, no animation). **Never move what the parent is looking at** |
+| Failure | A photo that fails to load drops out of the set silently; the dots recount. No broken-image box, no spinner longer than the 200 ms fade |
+| Tap | Look Around → Apple's interactive Look Around viewer (iOS). Mapillary → our full-screen viewer: photo, credit, license, date, "Close". Overhead → the existing full-screen 3D view |
+| VoiceOver | Photo: "Street photo of <name>, Apple Look Around" or "Street photo of <name>, Mapillary, June 2024". Overhead: "3D view of <name> from above, Apple Maps" / "Aerial view of <name>". Each page is one element; the carousel is adjustable (swipe up/down = next/previous page) |
+| Street View tile | **Gone on every platform.** It was a fourth, satellite-backed page. "Directions" already opens the maps app at the address |
+| Homes | Unchanged: never a photo, never a carousel; the §8 neighborhood canvas, no dots, no pin |
+| Card thumbnail | Stays the aerial with our pin: every card gets one, instantly, and it can never show the wrong building. Photos live on the place page |
+| Web | Same pages; no Look Around module, so photos are Mapillary-verified only. On desktop the carousel sits in the 420 px panel, 260 tall, with hover arrows (‹ ›, 32 pt round, `float` elevation) at the vertical centre |
 
-**No street photos in the submission.** Mapillary street photos were wired and tested, but in a hand check 2 of 5 showed the wrong building or a reflection, and a picture that might be the wrong place breaks the app's one promise. They stay off until each photo can be matched to the building.
+**Honesty rule:** a street photo ships only when it was checked to show that daycare's building: Apple matched by name and distance, or a person marked a Mapillary photo `verified`. Anything unchecked is never shown.
 
 ## 10. The record, in words
 
@@ -285,6 +293,7 @@ Past 2 years
 ### Change log after the freeze
 | Date | Change | Why |
 |---|---|---|
+| Oct 25 12:28 | Carousel = up to 2 verified street photos of the building, then ONE overhead; Street View tile cut | Owner: "2 pics of the building itself, then the satellite view", not three satellite angles |
 | Oct 25 06:20 | At ≥1.6× text, a history row stacks the date over its status | Dates truncated to "J…" at the largest size |
 | Oct 25 05:45 | The Home map is one VoiceOver element pointing to the list | The maps library reads every custom pin as "Map pin"; the list carries the same daycares with their records |
 | Oct 25 05:30 | Spoken labels are sentences: a card reads name, meta, record line, "Watching"; " · " becomes ", "; a clean visit is said once; stepped-back onboarding cards are hidden | Read back from the accessibility tree on every screen |

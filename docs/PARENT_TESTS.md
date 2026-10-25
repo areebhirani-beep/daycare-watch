@@ -16,7 +16,7 @@ Do not help unless they are stuck for 30 seconds. Note where they got stuck.
 | T2 | "In your own words, what did the state find at its most recent visit?" | Says the count, the date, and whether it was fixed, without reading the screen word for word |
 | T3 | "Is anything here serious, according to the state?" | Points to the state's risk level on a finding |
 | T4 | "You want to know if the state posts something new about this daycare. What would you do?" | Taps Watch and turns on alerts |
-| T5 | (After they tap Allow in T4, send a labeled replay of the newest real finding at the daycare they watched; command in `supabase/OWNER_STEPS.md` section 4.) "You just got this. What is it telling you?" | Opens it and explains it is a past real record being replayed, plus what changed |
+| T5 | (After they tap Allow in T4, send a labeled replay of the newest real finding at the daycare they watched with `pipeline sync --replay-latest <operation_id>`; the full command is in `supabase/OWNER_STEPS.md` section 4.) "You just got this. What is it telling you?" | Opens it and explains it is a past real record being replayed, plus what changed |
 | T6 | "You want to see this daycare's inspection reports or drop in. What can you do?" | Finds the Your rights request and the share sheet |
 | T7 | "You're touring this daycare tomorrow. What would you ask?" | Opens the tour questions and picks one |
 

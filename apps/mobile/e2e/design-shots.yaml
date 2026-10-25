@@ -39,7 +39,7 @@ appId: com.areebhirani.daycare-watch
 - takeScreenshot: ../../harness/state/screens/light-watching
 - openLink: daycarewatch://rights
 - extendedWaitUntil:
-    visible: "Send a request"
+    visible: "Read the law"
     timeout: 10000
 - takeScreenshot: ../../harness/state/screens/light-rights
 - scroll

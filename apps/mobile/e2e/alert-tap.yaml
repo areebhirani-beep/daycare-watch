@@ -17,7 +17,7 @@ appId: com.areebhirani.daycare-watch
           text: "Replay of a real state record.*"
           index: 0
 - extendedWaitUntil:
-    visible: "What the state posted"
+    visible: "Open full record"
     timeout: 20000
 - takeScreenshot: ../../harness/state/screens/alert-1-detail
 - scroll

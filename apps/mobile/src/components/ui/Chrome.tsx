@@ -208,8 +208,8 @@ export function ActionPill({ icon, label, onPress, primary }: { icon: GlyphName;
         pressed && { opacity: 0.75 },
       ]}
     >
-      <Glyph name={icon} size={15} color={primary ? c.onSignal : c.accent} weight="bold" />
-      <Text variant="subhead" color={primary ? c.onSignal : c.accent} numberOfLines={1} maxFontSizeMultiplier={1.6}>
+      <Glyph name={icon} size={15} color={primary ? c.onSignal : c.text} weight="bold" />
+      <Text variant="subhead" color={primary ? c.onSignal : c.text} numberOfLines={1} maxFontSizeMultiplier={1.6}>
         {label}
       </Text>
     </Pressable>

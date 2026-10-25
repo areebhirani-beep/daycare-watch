@@ -1,20 +1,31 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { T } from '@/components/T';
-import { RowLink, Rule } from '@/components/ui';
-import { InspectorQuote, SectionHead } from '@/components/ui/Prose';
+import { ActionPill } from '@/components/ui/Chrome';
+import type { GlyphName } from '@/components/ui/Glyph';
+import { SectionHead } from '@/components/ui/Prose';
+import { RightCard } from '@/components/ui/RightCard';
+import { Text } from '@/components/ui/Text';
 import { useDaycareRecord } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
-import { FEDERAL_NOTE, LAW_CITE, LAW_NAME, LAW_SCOPE, requestText, type RequestKind, RIGHTS } from '@/lib/rights';
+import { FEDERAL_NOTE, LAW_CITE, LAW_NAME, LAW_URL, requestText, type RequestKind, RIGHTS } from '@/lib/rights';
 import { space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
 
-const REQUESTS: { kind: RequestKind; title: string; detail: string }[] = [
-  { kind: 'records', title: 'Request records', detail: 'Your child’s records, inspection reports, policies, training' },
-  { kind: 'video', title: 'Request to inspect video', detail: 'Only for an alleged abuse or neglect incident involving your child' },
-  { kind: 'visit', title: 'Show your right to drop in', detail: 'A note citing the law, for the front desk' },
-];
+type Action = { request: RequestKind } | { route: '/report' } | { law: true };
+
+// What tapping each right does: a ready-to-send letter, the official complaint channels, or the law itself.
+const ACTIONS: Record<string, { icon: GlyphName; action: Action }> = {
+  visit: { icon: 'clock', action: { request: 'visit' } },
+  records: { icon: 'doc', action: { request: 'records' } },
+  reports: { icon: 'record', action: { request: 'records' } },
+  video: { icon: 'shield', action: { request: 'video' } },
+  policies: { icon: 'list', action: { request: 'records' } },
+  training: { icon: 'check', action: { request: 'records' } },
+  complain: { icon: 'phone', action: { route: '/report' } },
+  retaliation: { icon: 'external', action: { law: true } },
+};
 
 export default function RightsScreen() {
   const c = useColors();
@@ -23,9 +34,15 @@ export default function RightsScreen() {
   const record = useDaycareRecord(Number(operationId ?? 0));
   const daycare = operationId && record.data ? tidyCase(record.data.daycare.name) : null;
 
-  async function share(kind: RequestKind) {
-    const { subject, body } = requestText(kind, daycare);
-    await Share.share({ title: subject, message: body }, { subject });
+  function run(action: Action) {
+    if ('request' in action) {
+      const { subject, body } = requestText(action.request, daycare);
+      void Share.share({ title: subject, message: body }, { subject });
+    } else if ('route' in action) {
+      router.push(action.route);
+    } else {
+      void WebBrowser.openBrowserAsync(LAW_URL);
+    }
   }
 
   return (
@@ -34,79 +51,59 @@ export default function RightsScreen() {
       style={{ backgroundColor: c.bg, marginTop: insets.top }}
       contentContainerStyle={[styles.content, { paddingTop: space.md }]}
     >
-      <View style={{ gap: space.sm }}>
-        <T variant="largeTitle" accessibilityRole="header">
+      <View style={{ gap: space.xs }}>
+        <Text variant="largeTitle" accessibilityRole="header">
           Your rights
-        </T>
-        <T variant="callout" tone="secondary">
-          Texas law gives you these rights at your child&rsquo;s daycare.
-        </T>
+        </Text>
+        <Text variant="callout" tone="secondary">
+          {daycare ? `At ${daycare}, Texas law lets you:` : 'At your child’s daycare, Texas law lets you:'}
+        </Text>
       </View>
 
-      <View style={styles.section}>
-        <SectionHead title={daycare ? `Send a request to ${daycare}` : 'Send a request'} first />
-        <View>
-          {REQUESTS.map((r, i) => (
-            <View key={r.kind}>
-              {i > 0 ? <Rule /> : null}
-              <RowLink
-                flush
-                title={r.title}
-                detail={r.detail}
-                accessibilityHint="Opens the share sheet with a ready-to-send letter citing the law"
-                onPress={() => void share(r.kind)}
-              />
-            </View>
-          ))}
+      <View style={styles.cards}>
+        {RIGHTS.map((r) => {
+          const a = ACTIONS[r.id] ?? { icon: 'doc' as const, action: { law: true as const } };
+          const trailing = 'route' in a.action ? 'chevronRight' : 'law' in a.action ? 'external' : 'share';
+          const hint =
+            'route' in a.action
+              ? 'Opens the official ways to report to the state'
+              : 'law' in a.action
+                ? 'Opens the law on the Texas Legislature site'
+                : undefined;
+          return (
+            <RightCard
+              key={r.id}
+              icon={a.icon}
+              title={r.title}
+              detail={r.plain}
+              trailing={trailing}
+              hint={hint}
+              onPress={() => run(a.action)}
+            />
+          );
+        })}
+      </View>
+
+      <View style={{ gap: space.sm }}>
+        <Text variant="footnote" tone="tertiary">
+          {LAW_NAME}, {LAW_CITE}.
+        </Text>
+        <View style={{ alignSelf: 'flex-start' }}>
+          <ActionPill icon="external" label="Read the law" onPress={() => run({ law: true })} />
         </View>
-        <T variant="footnote" tone="tertiary">
-          Each opens a letter that cites {LAW_CITE}. Fill in the bracketed parts, then send by text or email.
-        </T>
       </View>
 
-      <View style={styles.section}>
-        <SectionHead title="What the law says" />
-        {RIGHTS.map((r) => (
-          <RightRow key={r.id} title={r.title} plain={r.plain} quote={r.quote} clause={r.clause} />
-        ))}
-      </View>
-
-      <View style={styles.section}>
-        <SectionHead title="Something wrong?" />
-        <RowLink flush title="Report a concern to the state" detail="Official Texas channels" onPress={() => router.push('/report')} />
-      </View>
-
-      <View style={styles.section}>
-        <SectionHead title="About the law" />
-        <T variant="footnote" tone="secondary">
-          {LAW_NAME}, {LAW_CITE}. {LAW_SCOPE}
-        </T>
-      </View>
-
-      <View style={styles.section}>
+      <View style={{ gap: space.sm }}>
         <SectionHead title="In Congress" />
-        <T variant="callout" tone="secondary">
+        <Text variant="callout" tone="secondary">
           {FEDERAL_NOTE}
-        </T>
+        </Text>
       </View>
     </ScrollView>
   );
 }
 
-function RightRow({ title, plain, quote, clause }: { title: string; plain: string; quote: string; clause: string }) {
-  return (
-    <View style={styles.right}>
-      <T variant="headline">{title}</T>
-      <T variant="callout" tone="secondary">
-        {plain}
-      </T>
-      <InspectorQuote text={quote} source={`${LAW_CITE}${clause}`} label="The law’s words" />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: space.xl, paddingBottom: TAB_BAR_CLEARANCE },
-  section: { gap: space.md },
-  right: { paddingVertical: space.sm, gap: space.xs },
+  content: { paddingHorizontal: space.lg, paddingBottom: TAB_BAR_CLEARANCE, gap: space.xl },
+  cards: { gap: 10 },
 });

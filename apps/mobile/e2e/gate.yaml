@@ -67,7 +67,7 @@ appId: com.areebhirani.daycare-watch
 
 - openLink: daycarewatch://watching
 - extendedWaitUntil:
-    visible: ".*\\. Latest: .*"
+    visible: "Watching"
     timeout: 20000
 - waitForAnimationToEnd:
     timeout: 1500
@@ -75,7 +75,7 @@ appId: com.areebhirani.daycare-watch
 
 - openLink: daycarewatch://rights
 - extendedWaitUntil:
-    visible: "Send a request"
+    visible: "Read the law"
     timeout: 10000
 - waitForAnimationToEnd:
     timeout: 1500
@@ -83,7 +83,7 @@ appId: com.areebhirani.daycare-watch
 
 - openLink: daycarewatch://alert/${EVENT_ID}
 - extendedWaitUntil:
-    visible: "What the state posted"
+    visible: "Open full record"
     timeout: 20000
 - waitForAnimationToEnd:
     timeout: 1500

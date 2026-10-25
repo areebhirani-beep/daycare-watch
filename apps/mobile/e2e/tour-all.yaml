@@ -40,7 +40,7 @@ appId: com.areebhirani.daycare-watch
 - takeScreenshot: ../../harness/state/screens/${MODE}-record-2
 - openLink: daycarewatch://daycare/1459611/tour
 - extendedWaitUntil:
-    visible: "Questions for.*"
+    visible: "Share these questions"
     timeout: 20000
 - waitForAnimationToEnd
 - takeScreenshot: ../../harness/state/screens/${MODE}-tour
@@ -52,7 +52,7 @@ appId: com.areebhirani.daycare-watch
 - takeScreenshot: ../../harness/state/screens/${MODE}-report
 - openLink: daycarewatch://alert/45
 - extendedWaitUntil:
-    visible: "What the state posted"
+    visible: "Open full record"
     timeout: 20000
 - waitForAnimationToEnd
 - takeScreenshot: ../../harness/state/screens/${MODE}-alert

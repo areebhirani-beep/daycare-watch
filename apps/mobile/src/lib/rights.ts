@@ -1,6 +1,8 @@
 // Every claim here traces to docs/OFFICIAL_SOURCES.md section 2 (verified Oct 24 2026).
 // Quoted phrases are the statute's own words from Texas Human Resources Code §42.04271.
 
+import type { GlyphName } from '@/components/ui/Glyph';
+
 export const LAW_CITE = 'Texas Human Resources Code §42.04271';
 export const LAW_NAME = 'Kairo and the Kids’ Law (88(R) SB 1098, 2023)';
 
@@ -74,6 +76,16 @@ export const FEDERAL_NOTE =
   'Rep. Pat Fallon’s Kairo Act (H.R. 2425) would bring a similar parent bill of rights to child care programs that receive federal funds, with a 2-business-day deadline for access to incident video. It was introduced March 27, 2025 and is not law.';
 
 export type RequestKind = 'records' | 'video' | 'visit';
+
+/** Official text of the code chapter that holds the section. */
+export const LAW_URL = 'https://statutes.capitol.texas.gov/Docs/HR/htm/HR.42.htm';
+
+/** The three requests a parent can send, as cards (Rights tab and the place page). */
+export const REQUEST_CARDS: { kind: RequestKind; icon: GlyphName; title: string; detail: string }[] = [
+  { kind: 'records', icon: 'doc', title: 'Request records', detail: 'Your child’s records and the inspection reports' },
+  { kind: 'visit', icon: 'clock', title: 'Drop in any time', detail: 'A note citing the law, for the front desk' },
+  { kind: 'video', icon: 'shield', title: 'Ask to inspect video', detail: 'Only after an alleged abuse or neglect incident involving your child' },
+];
 
 export function requestText(kind: RequestKind, daycare: string | null): { subject: string; body: string } {
   const at = daycare ?? '[daycare name]';

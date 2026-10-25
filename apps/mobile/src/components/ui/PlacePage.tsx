@@ -24,6 +24,7 @@ import {
   tidyCase,
 } from '@/lib/format';
 import { groupByVisit, summarize, visibleVisits, visitTypeLabel } from '@/lib/record';
+import { REQUEST_CARDS, type RequestKind } from '@/lib/rights';
 import type { AreaCompare, DaycareRecord } from '@/lib/types';
 import { radius, space, useColors } from '@/theme';
 
@@ -45,16 +46,10 @@ import { Text } from './Text';
  * Data and navigation come in as props.
  */
 
-export type RequestKind = 'records' | 'video' | 'visit';
+export type { RequestKind };
 type Tab = 'overview' | 'findings' | 'rights';
 
 const HERO = 260;
-
-const REQUESTS: { kind: RequestKind; icon: GlyphName; title: string; detail: string }[] = [
-  { kind: 'records', icon: 'doc', title: 'Request records', detail: 'Your child’s records and the inspection reports' },
-  { kind: 'visit', icon: 'clock', title: 'Drop in any time', detail: 'A note citing the law, for the front desk' },
-  { kind: 'video', icon: 'shield', title: 'Ask to inspect video', detail: 'Only after an alleged abuse or neglect incident involving your child' },
-];
 
 type Props = {
   record: DaycareRecord;
@@ -238,11 +233,11 @@ export function PlacePage({
           ) : null}
 
           {tab === 'rights' ? (
-            <View style={{ gap: 10 }}>
-              {REQUESTS.map((r) => (
+            <View>
+              {REQUEST_CARDS.map((r) => (
                 <RightCard key={r.kind} icon={r.icon} title={r.title} detail={r.detail} onPress={() => onRequest(r.kind)} />
               ))}
-              <Text variant="footnote" tone="tertiary">
+              <Text variant="footnote" tone="tertiary" style={{ marginTop: space.lg }}>
                 {lawCite}
               </Text>
             </View>

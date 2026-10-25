@@ -2,7 +2,8 @@
 # Parent journey on the iOS simulator: find -> record -> watch -> alert.
 # The alert is pipeline's replay of real state findings at Viva World School (op 1459611; run its --replay-latest first),
 # delivered with simctl because the simulator has no Expo push token. PAYLOAD_ONLY=1 prints the push and stops.
-# Needs: local Supabase stack, Metro (npx expo start --dev-client), the dev build on a booted simulator.
+# Needs: local Supabase stack, Metro (npx expo start --dev-client), the dev build on a booted simulator
+# (or the Release build, no Metro). With several simulators booted, set DEVICE=<udid>.
 set -euo pipefail
 # Maestro resolves screenshot paths from the working directory, so run from apps/mobile.
 cd "$(dirname "$0")/.."
@@ -10,6 +11,9 @@ cd "$(dirname "$0")/.."
 export JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk@17}
 export PATH="$JAVA_HOME/bin:$HOME/.maestro/bin:$PATH"
 BUNDLE=com.areebhirani.daycare-watch
+# With several simulators booted, Maestro and simctl each pick one on their own; DEVICE=<udid> pins both to the same one.
+DEVICE=${DEVICE:-booted}
+maestro() { if [ "$DEVICE" = booted ]; then command maestro "$@"; else command maestro --device "$DEVICE" "$@"; fi; }
 OP=1459611
 # Event ids change whenever pipeline replays, so take the newest one for Viva World School from the local database.
 EVENT_ID=${EVENT_ID:-$(docker exec supabase_db_daycare-watch psql -U postgres -d postgres -At \
@@ -41,7 +45,7 @@ json.dump({"Simulator Target Bundle": bundle, "aps": {"alert": {"title": m["titl
 
 maestro test e2e/journey-find-watch.yaml
 # Fire the push once Maestro is up, so it taps the live banner (Notification Center taps don't open the app in the iOS 26 simulator).
-(sleep 12 && xcrun simctl push booted "$BUNDLE" "$payload" && rm -f "$payload") &
+(sleep 12 && xcrun simctl push "$DEVICE" "$BUNDLE" "$payload" && rm -f "$payload") &
 maestro test e2e/alert-tap.yaml
 wait
 echo "journey: find -> record -> watch -> alert COMPLETED"

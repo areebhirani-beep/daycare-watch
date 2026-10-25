@@ -8,6 +8,12 @@ appId: com.areebhirani.daycare-watch
       visible: "Open"
     commands:
       - tapOn: "Open"
+# The app can come back on another tab (a previous run, a push tap); start from Find.
+- runFlow:
+    when:
+      visible: "Find"
+    commands:
+      - tapOn: "Find"
 # Home is the map with a bottom sheet; the search pill opens the search screen.
 - extendedWaitUntil:
     visible: "Search daycares, cities, ZIP"

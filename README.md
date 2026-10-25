@@ -207,10 +207,16 @@ Requirements: Node 20+, Python 3.12 with [uv](https://docs.astral.sh/uv/), the S
 supabase start
 supabase test db
 
-# 2. Data: load the real state records (about 1 minute)
+# 2. Data: load the real state records. About 4 to 5 minutes the first time: it downloads
+#    about 205,000 visits and 134,000 findings and geocodes about 13,700 addresses with the
+#    Census batch geocoder (cached after that)
 cd services/pipeline
 uv sync
 DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55322/postgres uv run python -m pipeline backfill
+
+# Optional: the pipeline tests (26 use the database; one more reads the full findings file)
+curl -o .cache/tqgd-mf4x.csv "https://data.texas.gov/resource/tqgd-mf4x.csv?\$limit=200000"
+DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55322/postgres uv run pytest -q
 cd ../..
 
 # 3. App
@@ -220,13 +226,15 @@ echo "EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon key from: supabase status>" >> apps/mo
 cd apps/mobile && npx expo start
 ```
 
+A fresh clone run this way on Oct 25 2026 loaded the same numbers as this README: 14,310 daycares, 379 inside TX-04 by map point, and pipeline tests at 270 passed, 1 skipped, 0 failed. The skipped one reads the full findings file from the optional download.
+
 On a real phone, use the computer's LAN address in `EXPO_PUBLIC_SUPABASE_URL` instead of `127.0.0.1`.
 
 | Pipeline command | What it does |
 |---|---|
 | `python -m pipeline sync` | The daily run: extract, validate, load, diff, classify, alert |
 | `python -m pipeline backfill` | Load full history without sending alerts |
-| `python -m pipeline sync --replay-latest <operation_id>` | Re-send the newest real finding at a daycare, labelled as a replay (add `--dry-run` to preview) |
+| `python -m pipeline sync --replay-latest <operation_id>` | Re-send the findings from the newest visit at a daycare as one push, labelled as a replay (add `--dry-run` to preview) |
 | `python -m pipeline photos` | Collect and measure street photos for TX-04 centers; not shown in the app (needs `MAPILLARY_TOKEN`) |
 | `python -m pipeline report` · `receipts` | Recent runs · push delivery receipts |
 

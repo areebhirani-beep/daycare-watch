@@ -342,7 +342,8 @@ def test_golden(row: dict[str, Any]) -> None:
 SNAPSHOT = Path(__file__).parent.parent / ".cache" / "tqgd-mf4x.csv"
 
 
-@pytest.mark.skipif(not SNAPSHOT.exists(), reason="local data.texas.gov snapshot not downloaded")
+@pytest.mark.skipif(not SNAPSHOT.exists(),
+                    reason="needs the full findings file: see the optional download in README Getting started")
 def test_full_snapshot_is_faithful() -> None:
     with SNAPSHOT.open(encoding="utf-8", newline="") as f:
         for row in csv.DictReader(f):

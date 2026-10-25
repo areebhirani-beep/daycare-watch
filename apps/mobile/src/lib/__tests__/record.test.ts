@@ -83,7 +83,7 @@ describe('format', () => {
 
   it('tidies only ALL CAPS source text', () => {
     expect(tidyCase('300 N. COIT RD')).toBe('300 N. Coit Rd');
-    expect(tidyCase('MCKINNEY')).toBe('Mckinney');
+    expect(tidyCase('MCKINNEY')).toBe('McKinney');
     expect(tidyCase('Ivy Kids of Coit')).toBe('Ivy Kids of Coit');
   });
 

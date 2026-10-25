@@ -57,6 +57,7 @@ export default function RootLayout() {
             <Stack.Screen name="daycare/[id]/tour" options={{ title: 'Tour questions' }} />
             <Stack.Screen name="alert/[eventId]" options={{ title: 'New state record' }} />
             <Stack.Screen name="report" options={{ title: 'Report a concern' }} />
+            <Stack.Screen name="week" options={{ title: 'TX-04 last week' }} />
             <Stack.Screen
               name="categories"
               options={{ presentation: 'formSheet', headerShown: false, sheetAllowedDetents: [0.6, 1], sheetGrabberVisible: true }}

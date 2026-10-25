@@ -16,6 +16,8 @@ appId: host.exp.Exponent
 - extendedWaitUntil:
     visible: "Viva World School.*"
     timeout: 20000
+# The deep link pushes over the previous place page; tapping mid-slide lands on the incoming Watch button.
+- waitForAnimationToEnd
 - tapOn: "Share"
 - extendedWaitUntil:
     visible: "(Copy|AirDrop|Messages)"

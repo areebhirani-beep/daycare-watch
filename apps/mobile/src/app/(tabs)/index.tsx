@@ -102,7 +102,7 @@ export default function FindScreen() {
         }
         watchedIds={watchedIds}
         onOpen={open}
-        feed={<LastWeek onOpen={open} />}
+        feed={<LastWeek onOpen={open} onSeeAll={() => router.push('/week')} />}
         refreshing={refreshing}
         onRefresh={() => void refresh()}
         onSearch={() => router.push('/search')}

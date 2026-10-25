@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { pulseLine, visitMeta, visitName, visitStatus, weekRange } from '../feed';
+import { pulseLine, visitMeta, visitName, visitStatus, weekRange, weekVisits } from '../feed';
 import type { DistrictPulse, DistrictRecentVisit } from '../types';
 
 // district_pulse() on the local database, Oct 25 2026 (last complete week Oct 12 – 18).
@@ -50,5 +50,11 @@ describe('feed copy', () => {
   it('never shows a home by its name', () => {
     const home = { display_name: 'A Listed Family Home in Frisco', name: null };
     expect(visitName(home)).toBe('A Listed Family Home in Frisco');
+  });
+
+  it('keeps only the pulse week when the RPC runs into earlier weeks', () => {
+    // district_recent_visits(50) dates around the Oct 12 – 18 week, same day.
+    const rows = [{ date: '2026-10-16' }, { date: '2026-10-12' }, { date: '2026-10-10' }, { date: '2026-10-09' }];
+    expect(weekVisits(rows, pulse).map((r) => r.date)).toEqual(['2026-10-16', '2026-10-12']);
   });
 });

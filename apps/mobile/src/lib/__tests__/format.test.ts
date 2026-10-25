@@ -29,5 +29,7 @@ describe('tidyCase', () => {
   it('collapses the double spaces in state names', () => {
     // Operation 1304920 as data.texas.gov carries it.
     expect(tidyCase('Childrens Lighthouse of  McKinney')).toBe('Childrens Lighthouse of McKinney');
+    // The state's city column is all caps: MCKINNEY (Ivy Kids of Coit, op 1358089).
+    expect(tidyCase('MCKINNEY')).toBe('McKinney');
   });
 });

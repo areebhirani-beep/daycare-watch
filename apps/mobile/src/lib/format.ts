@@ -139,6 +139,8 @@ export function tidyCase(raw: string | null | undefined): string {
       const up = w.toUpperCase();
       if (KEEP_UPPER.has(up.replace(/[.,]/g, ''))) return up;
       if (i > 0 && SMALL_WORDS.has(w)) return w;
+      // MCKINNEY → McKinney, as the state writes it in mixed-case names.
+      if (/^mc[a-z]{2,}/.test(w)) return `Mc${w.charAt(2).toUpperCase()}${w.slice(3)}`;
       return w.charAt(0).toUpperCase() + w.slice(1);
     })
     .join('');

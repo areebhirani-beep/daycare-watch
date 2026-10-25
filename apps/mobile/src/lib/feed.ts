@@ -34,3 +34,8 @@ export function visitMeta(v: Pick<DistrictRecentVisit, 'city' | 'date'>, today: 
 export function visitStatus(v: Pick<DistrictRecentVisit, 'findings_posted_so_far'>): string {
   return v.findings_posted_so_far > 0 ? `${plural(v.findings_posted_so_far, 'problem')} posted so far` : 'No problems posted so far';
 }
+
+/** The visits inside the pulse's week, newest first as the RPC returns them (the RPC continues into earlier weeks). */
+export function weekVisits<V extends Pick<DistrictRecentVisit, 'date'>>(visits: V[], p: Pick<DistrictPulse, 'week_start' | 'week_end'>): V[] {
+  return visits.filter((v) => v.date >= p.week_start && v.date <= p.week_end);
+}

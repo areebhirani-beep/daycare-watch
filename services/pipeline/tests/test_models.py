@@ -145,6 +145,17 @@ def test_inspector_text_gets_back_only_its_lost_apostrophes(viols_raw: list[dict
     assert v.narrative is not None and "?" not in v.narrative  # both "?" in this record were "child?s"
 
 
+@pytest.mark.parametrize(("state_text", "shown"), [
+    # Exact fragments of real narratives (didn?t 9, wasn?t 3, don?t, wouldn?t, can?t, doesn?t in all)
+    ("it didn?t assess", "it didn't assess"), ("and wasn?t discontinued", "and wasn't discontinued"),
+    ("you can?t call", "you can't call"),
+    # Not an apostrophe, or not certain: left as the state wrote it
+    ("los ni?os", "los ni?os"), ("the 18?23-month-old", "the 18?23-month-old"),
+])
+def test_contractions_get_their_apostrophe_and_nothing_else_does(state_text: str, shown: str) -> None:
+    assert restore_lost_apostrophes(state_text) == shown
+
+
 @given(st.text())
 def test_apostrophe_repair_only_ever_swaps_question_marks(text: str) -> None:
     fixed = restore_lost_apostrophes(text)

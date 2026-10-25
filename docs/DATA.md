@@ -44,7 +44,7 @@ Every row passes a pydantic data contract before it is loaded ([`models.py`](../
 | Date | via `activity_id` → visit date | `activity_date` | Joined to the visit; the run fails if fewer than 95% join (measured: 100%) |
 | Risk level of the rule | `standard_risk_level` | `risk_level` | The state's own weight for the rule: High, Medium High, Medium, Medium Low, Low. It rates the rule, not the daycare |
 | Rule | `standard_number_description` | `standard_code`, `standard_title` | Split at the first " - " |
-| The inspector's words | `narrative` | `narrative` | Verbatim, with one repair: the state's file turned an apostrophe into `?` ("the child?s arm") in 387 findings, and we put it back. Nothing else in the inspector's words changes. The rule titles get the same repair |
+| The inspector's words | `narrative` | `narrative` | Verbatim, with one repair: the state's file turned an apostrophe into `?` ("the child?s arm", "didn?t") in 400 findings, and we put it back. Nothing else in the inspector's words changes. The rule titles get the same repair |
 | Fixed during the visit | `corrected_at_inspection` | `corrected_at_inspection` | Shown as "Fixed during the visit" |
 | Fix due date | `corrected_date` | `corrected_date` | 124 fall in the future, so it is a due date, never proof of a fix: "Fix due <date>" or "Fix date was <date>", each with "no state check on record yet" on the finding |
 | State checked the fix | `date_correction_verified` | `verified_date` | "Fixed · the state checked <date>" (list rows: "Fixed · state checked"). Only this, or a fix during the visit, earns the word "Fixed", and never on its own |

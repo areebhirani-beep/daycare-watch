@@ -97,9 +97,14 @@ def restore_lost_chars(name: str) -> str:
     return name
 
 
+_LOST_CONTRACTION = re.compile(r"(?<=[A-Za-z][nN])\?(?=[tT]\b)")  # "didn?t", "can?t"
+
+
 def restore_lost_apostrophes(text: str | None) -> str | None:
-    """The one repair made to an inspector's words: "child?s" back to "child's". Nothing else changes."""
-    return None if text is None else _LOST_APOSTROPHE[0].sub(_LOST_APOSTROPHE[1], text)
+    """The one repair made to an inspector's words: a lost apostrophe ("child?s", "didn?t") put back."""
+    if text is None:
+        return None
+    return _LOST_CONTRACTION.sub("'", _LOST_APOSTROPHE[0].sub(_LOST_APOSTROPHE[1], text))
 
 
 Name = Annotated[str, Field(min_length=1), AfterValidator(restore_lost_chars)]

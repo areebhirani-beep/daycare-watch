@@ -10,8 +10,8 @@ import { RightCard } from '@/components/ui/RightCard';
 import { Text } from '@/components/ui/Text';
 import { useDaycareRecord } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
-import { FEDERAL_NOTE, LAW_CITE, LAW_NAME, LAW_URL, requestText, type RequestKind, RIGHTS } from '@/lib/rights';
-import { space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
+import { FEDERAL_NOTE, LAW_CITE, LAW_NAME, LAW_URL, lawCovers, NOT_COVERED, requestText, type RequestKind, RIGHTS } from '@/lib/rights';
+import { radius, space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
 
 type Action = { request: RequestKind } | { route: '/report' } | { law: true };
 
@@ -33,6 +33,7 @@ export default function RightsScreen() {
   const { operationId } = useLocalSearchParams<{ operationId?: string }>();
   const record = useDaycareRecord(Number(operationId ?? 0));
   const daycare = operationId && record.data ? tidyCase(record.data.daycare.name) : null;
+  const covered = !record.data || lawCovers(record.data.daycare.operation_type);
 
   function run(action: Action) {
     if ('request' in action) {
@@ -56,8 +57,15 @@ export default function RightsScreen() {
           Your rights
         </Text>
         <Text variant="callout" tone="secondary">
-          {daycare ? `At ${daycare}, Texas law lets you:` : 'At your child’s daycare, Texas law lets you:'}
+          {daycare && covered ? `At ${daycare}, Texas law lets you:` : 'At most daycares, Texas law lets you:'}
         </Text>
+        {!covered ? (
+          <View style={[styles.note, { backgroundColor: c.sunken }]}>
+            <Text variant="callout">
+              {NOT_COVERED} {daycare} is a listed family home.
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.cards}>
@@ -86,7 +94,7 @@ export default function RightsScreen() {
 
       <View style={{ gap: space.sm }}>
         <Text variant="footnote" tone="tertiary">
-          {LAW_NAME}, {LAW_CITE}.
+          {LAW_NAME}, {LAW_CITE}. Covers centers and licensed or registered homes, not listed family homes.
         </Text>
         <View style={{ alignSelf: 'flex-start' }}>
           <ActionPill icon="external" label="Read the law" onPress={() => run({ law: true })} />
@@ -106,4 +114,5 @@ export default function RightsScreen() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: space.lg, paddingBottom: TAB_BAR_CLEARANCE, gap: space.xl },
   cards: { gap: 10 },
+  note: { borderRadius: radius.card, padding: space.lg, marginTop: space.sm },
 });

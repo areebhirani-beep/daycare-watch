@@ -46,7 +46,7 @@ export default function ReportScreen() {
           onPress={() => void Linking.openURL(`tel:${HOTLINE}`)}
         />
         <RightCard
-          icon="external"
+          icon="doc"
           title="Report online"
           detail="TxAbuseHotline.org · not for urgent situations"
           hint={WEB}

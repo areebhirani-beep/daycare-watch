@@ -77,13 +77,23 @@ export const FEDERAL_NOTE =
 
 export type RequestKind = 'records' | 'video' | 'visit';
 
+/**
+ * §42.04271(a): the section covers centers, group day-care homes (Licensed Child-Care Home), school-age programs,
+ * and registered family homes. Listed family homes are not covered.
+ */
+export function lawCovers(operationType: string | null | undefined): boolean {
+  return operationType !== 'Listed Family Home';
+}
+
+export const NOT_COVERED = 'The Kids’ Law rights don’t apply to listed family homes.';
+
 /** Official text of the code chapter that holds the section. */
 export const LAW_URL = 'https://statutes.capitol.texas.gov/Docs/HR/htm/HR.42.htm';
 
 /** The three requests a parent can send, as cards (Rights tab and the place page). */
 export const REQUEST_CARDS: { kind: RequestKind; icon: GlyphName; title: string; detail: string }[] = [
   { kind: 'records', icon: 'doc', title: 'Request records', detail: 'Your child’s records and the inspection reports' },
-  { kind: 'visit', icon: 'clock', title: 'Drop in any time', detail: 'A note citing the law, for the front desk' },
+  { kind: 'visit', icon: 'clock', title: 'Drop in without notice', detail: 'Any time it’s open. A note citing the law, for the front desk' },
   { kind: 'video', icon: 'shield', title: 'Ask to inspect video', detail: 'Only after an alleged abuse or neglect incident involving your child' },
 ];
 

@@ -10,6 +10,7 @@ import { PlaceSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useAlertDetail, useDaycareRecord } from '@/lib/api';
 import { formatDate, tidyCase } from '@/lib/format';
+import { lawCovers } from '@/lib/rights';
 import type { AlertDetail } from '@/lib/types';
 import { radius, space, useColors } from '@/theme';
 
@@ -92,11 +93,13 @@ export default function AlertScreen() {
           <SectionHeader title="What you can do" inset={0} />
           <View style={styles.pills}>
             <ActionPill icon="list" label="Tour questions" onPress={() => router.push(`/daycare/${a.operation_id}/tour`)} />
-            <ActionPill
-              icon="doc"
-              label="Request records"
-              onPress={() => router.push({ pathname: '/rights', params: { operationId: String(a.operation_id) } })}
-            />
+            {!record.data || lawCovers(record.data.daycare.operation_type) ? (
+              <ActionPill
+                icon="doc"
+                label="Request records"
+                onPress={() => router.push({ pathname: '/rights', params: { operationId: String(a.operation_id) } })}
+              />
+            ) : null}
           </View>
         </View>
 

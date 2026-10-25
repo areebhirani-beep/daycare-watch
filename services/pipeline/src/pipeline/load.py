@@ -173,6 +173,11 @@ on conflict (operation_id) do update set
     when d.geocode_source = 'census' and d.geocode_address is not distinct from excluded.geocode_address
       then 'census'
   end,
+  geocode_quality = case
+    when excluded.geocode_source is null and d.geocode_source = 'census'
+      and d.geocode_address is not distinct from excluded.geocode_address
+      then d.geocode_quality
+  end,
   geocode_attempted_at = case when d.geocode_address is not distinct from excluded.geocode_address
                               then d.geocode_attempted_at end,
   geocode_address = excluded.geocode_address,

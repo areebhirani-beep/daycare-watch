@@ -53,6 +53,8 @@ export type Database = {
           distance_km: number
           district_basis: string
           findings_24mo: number
+          geocode_quality: string
+          geocode_source: string
           in_district: boolean
           last_inspection_date: string
           lat: number
@@ -74,6 +76,8 @@ export type Database = {
           distance_km: number
           district_basis: string
           findings_24mo: number
+          geocode_quality: string
+          geocode_source: string
           in_district: boolean
           last_inspection_date: string
           lat: number
@@ -97,6 +101,8 @@ export type Database = {
           distance_km: number
           district_basis: string
           findings_24mo: number
+          geocode_quality: string
+          geocode_source: string
           in_district: boolean
           last_inspection_date: string
           lat: number

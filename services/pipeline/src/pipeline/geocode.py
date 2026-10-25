@@ -1,8 +1,9 @@
 """Stage 5a: Census geocoding for daycares the state published without coordinates.
 
 Pending rows (no geom, no geocode_source, a geocode_address) go to the U.S. Census Geocoder
-batch endpoint in chunks. Only a "Match" (Exact or Non_Exact) is written; a Tie or No_Match
-never is. Matches land in a temp table and reach core.daycares in one UPDATE that skips any
+batch endpoint in chunks. Only a "Match" (Exact or Non_Exact) is written, with its match type in
+geocode_quality; a Tie or No_Match never is. Even an Exact match sits along the street's address
+range, not on the rooftop. Matches land in a temp table and reach core.daycares in one UPDATE that skips any
 row whose geocode_address changed while the request was out.
 
 An optional JSON cache (geocode_address -> last Census answer) survives database resets:
@@ -41,8 +42,11 @@ DEFAULT_CACHE = Path(__file__).resolve().parents[2] / ".cache" / "geocode_cache.
 
 PENDING = """
 select operation_id, geocode_address from core.daycares
-where geom is null and geocode_source is null and geocode_address is not null
-  and (geocode_attempted_at is null or geocode_attempted_at < now() - interval '7 days')
+where geocode_address is not null
+  and ((geom is null and geocode_source is null
+        and (geocode_attempted_at is null or geocode_attempted_at < now() - interval '7 days'))
+       -- matched before geocode_quality existed: look the match type up again (the cache usually has it)
+       or (geocode_source = 'census' and geocode_quality is null))
 order by coalesce(county = any(%(priority)s), false) desc, coalesce(operation_status = 'Y', false) desc,
          operation_id
 limit %(limit)s
@@ -51,10 +55,18 @@ limit %(limit)s
 APPLY = """
 update core.daycares d
 set geom = extensions.st_setsrid(extensions.st_makepoint(t.lon, t.lat), 4326)::extensions.geography,
-    geocode_source = 'census'
+    geocode_source = 'census', geocode_quality = t.quality
 from t_geocode t
 where d.operation_id = t.operation_id and d.geocode_address = t.geocode_address
   and d.geom is null and d.geocode_source is null
+"""
+
+# Rows already on the map keep their point (and district); only the match type is filled in.
+APPLY_QUALITY = """
+update core.daycares d set geocode_quality = t.quality
+from t_geocode t
+where d.operation_id = t.operation_id and d.geocode_address = t.geocode_address
+  and d.geocode_source = 'census' and d.geocode_quality is null
 """
 
 Entry = dict[str, Any]  # {"match", "exactness", "lon", "lat", "matched_address", "at"}
@@ -122,6 +134,11 @@ def post_batch(http: httpx.Client, body: str, sleep: Callable[[float], None] = t
     raise GeocodeError(f"gave up after {MAX_ATTEMPTS} attempts: {err}")
 
 
+def quality(entry: Entry) -> str:
+    """Census "Exact" -> 'exact'; anything else it called a Match ("Non_Exact") -> 'non_exact'."""
+    return "exact" if entry.get("exactness") == "Exact" else "non_exact"
+
+
 def _fresh_negative(entry: Entry, now: datetime) -> bool:
     return entry.get("match") != "Match" and now - datetime.fromisoformat(entry["at"]) < NEGATIVE_TTL
 
@@ -182,19 +199,21 @@ def geocode_pending(
     n["geocode_matched"] = n["geocode_exact"] + n["geocode_non_exact"]
     addr = dict(pending)
     conn.execute("create temp table t_geocode (operation_id bigint primary key, geocode_address text, "
-                 "lon float8, lat float8) on commit drop")
+                 "lon float8, lat float8, quality text) on commit drop")
     with conn.cursor() as cur:
         with cur.copy("copy t_geocode from stdin") as cp:
             for oid, e in results.items():
-                cp.write_row((oid, addr[oid], e["lon"], e["lat"]))
+                cp.write_row((oid, addr[oid], e["lon"], e["lat"], quality(e)))
         cur.execute(APPLY)
         n["geocode_written"] = cur.rowcount
+        cur.execute(APPLY_QUALITY)
+        n["geocode_quality_filled"] = cur.rowcount
         cur.execute("update core.daycares set geocode_attempted_at = now() where operation_id = any(%s)",
                     (attempted,))
     conn.execute("drop table t_geocode")
     keys = ("geocode_pending", "geocode_cached", "geocode_skipped_recent", "geocode_sent", "geocode_matched",
             "geocode_exact", "geocode_non_exact", "geocode_tie", "geocode_no_match", "geocode_failed",
-            "geocode_written")
+            "geocode_written", "geocode_quality_filled")
     return {k: n[k] for k in keys}
 
 

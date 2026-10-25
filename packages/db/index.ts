@@ -18,7 +18,9 @@ export type DevicePlatform = PublicSchema['Enums']['device_platform'];
 
 type NullableKeys =
   | 'address' | 'city' | 'zip' | 'county' | 'lat' | 'lng' | 'distance_km'
-  | 'capacity' | 'last_inspection_date' | 'district_basis';
+  | 'capacity' | 'last_inspection_date' | 'district_basis' | 'geocode_source' | 'geocode_quality';
+
+type Enumerated = 'district_basis' | 'geocode_source' | 'geocode_quality' | 'visits_24mo';
 
 // One state visit in the last 24 months (core.daycare_visits). r = risk rank per finding
 // (High 5 .. Low 1), o = 1 when that finding was neither corrected at the inspection nor
@@ -26,10 +28,12 @@ type NullableKeys =
 export type RowVisit = { d: string; n: number; r: number[]; o: (0 | 1)[] };
 
 // Generated table-returning types mark every column non-null; these columns can be null.
-export type DaycareRow = Omit<Rpc['daycares_near']['Returns'][number], NullableKeys | 'district_basis' | 'visits_24mo'> & {
-  [K in Exclude<NullableKeys, 'district_basis'>]: Rpc['daycares_near']['Returns'][number][K] | null;
+export type DaycareRow = Omit<Rpc['daycares_near']['Returns'][number], NullableKeys | Enumerated> & {
+  [K in Exclude<NullableKeys, Enumerated>]: Rpc['daycares_near']['Returns'][number][K] | null;
 } & {
   district_basis: 'point' | 'county' | null;
+  geocode_source: 'state' | 'census' | null; // null = no map point
+  geocode_quality: 'exact' | 'non_exact' | null; // set only when geocode_source is 'census'
   visits_24mo: RowVisit[]; // oldest first; [] when no visits in the window
 };
 

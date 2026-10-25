@@ -111,8 +111,10 @@ def test_update_guard_and_cache(tmp_path: Path) -> None:
                 where geocode_source = 'census' order by operation_id limit 2""").fetchall()]
             if len(ids) < 2:
                 pytest.skip("no census-geocoded rows to reset")
-            conn.execute("""update core.daycares set geom = null, geocode_source = null, district_basis = null,
-                geocode_attempted_at = null where operation_id = any(%s)""", (ids,))
+            conn.execute("""update core.daycares set geom = null, geocode_source = null, geocode_quality = null,
+                district_basis = null, geocode_attempted_at = null where operation_id = any(%s)""", (ids,))
+            conn.execute("""update core.daycares set geocode_quality = 'exact'
+                where geocode_source = 'census' and geocode_quality is null""")
             conn.execute("""update core.daycares set geocode_attempted_at = coalesce(geocode_attempted_at, now())
                 where geom is null and not (operation_id = any(%s))""", (ids,))
             return ids
@@ -135,6 +137,8 @@ def test_update_guard_and_cache(tmp_path: Path) -> None:
             got: dict[int, str | None] = dict(conn.execute("select operation_id, geocode_source from core.daycares "
                                     "where operation_id = any(%s)", ([a, b],)).fetchall())
             assert got == {a: "census", b: None}
+            q = conn.execute("select geocode_quality from core.daycares where operation_id = %s", (a,)).fetchone()
+            assert q == ("exact",)
             assert len(json.loads(cache.read_text())) == 2
             attempted = conn.execute("""select count(*) from core.daycares
                 where operation_id = any(%s) and geocode_attempted_at is not null""", ([a, b],)).fetchone()
@@ -150,5 +154,42 @@ def test_update_guard_and_cache(tmp_path: Path) -> None:
             n = geocode.geocode_pending(conn, httpx.Client(transport=httpx.MockTransport(offline)), limit=2,
                                         cache_path=cache)
             assert (n["geocode_cached"], n["geocode_sent"], n["geocode_written"]) == (2, 0, 2)
+        finally:
+            conn.rollback()
+
+
+def test_quality_from_match_type() -> None:
+    assert geocode.quality({"match": "Match", "exactness": "Exact"}) == "exact"
+    assert geocode.quality({"match": "Match", "exactness": "Non_Exact"}) == "non_exact"
+
+
+@pytest.mark.db
+@pytest.mark.skipif(not DB, reason="DATABASE_URL not set")
+def test_legacy_census_rows_get_quality_without_moving(tmp_path: Path) -> None:
+    """A row matched before geocode_quality existed: the cache fills the match type; point and district stay."""
+    assert DB
+    with psycopg.connect(DB) as conn:
+        try:
+            row = conn.execute("""select operation_id, geocode_address, geom::text, district_basis
+                from core.daycares where geocode_source = 'census' order by operation_id limit 1""").fetchone()
+            if row is None:
+                pytest.skip("no census-geocoded rows")
+            oid, addr, geom, basis = row
+            conn.execute("update core.daycares set geocode_quality = 'exact' "
+                         "where geocode_source = 'census' and operation_id <> %s", (oid,))
+            conn.execute("update core.daycares set geocode_quality = null where operation_id = %s", (oid,))
+            conn.execute("update core.daycares set geocode_attempted_at = now() where geom is null")
+            cache = tmp_path / "cache.json"
+            cache.write_text(json.dumps({addr: {"match": "Match", "exactness": "Non_Exact", "lon": 0.0, "lat": 0.0,
+                                                "matched_address": "x", "at": "2026-10-24T00:00:00+00:00"}}))
+
+            def offline(req: httpx.Request) -> httpx.Response:
+                raise AssertionError("cached addresses must not be re-sent")
+
+            n = geocode.geocode_pending(conn, httpx.Client(transport=httpx.MockTransport(offline)), cache_path=cache)
+            assert (n["geocode_pending"], n["geocode_written"], n["geocode_quality_filled"]) == (1, 0, 1)
+            after = conn.execute("""select geocode_quality, geom::text, district_basis from core.daycares
+                where operation_id = %s""", (oid,)).fetchone()
+            assert after == ("non_exact", geom, basis)
         finally:
             conn.rollback()

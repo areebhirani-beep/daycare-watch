@@ -141,3 +141,30 @@ def test_geocode_key() -> None:
                                    "city": "SHERMAN", "zipcode": "75090 4112"})
     assert load.geocode_key(op) == "2111 E TUCK ST, SHERMAN, TX 75090"
     assert load.geocode_key(op.model_copy(update={"city": None})) is None
+
+
+def test_census_quality_survives_reload_and_clears_on_address_change(
+        conn: psycopg.Connection[Any], ops_raw: list[dict[str, Any]]) -> None:
+    (parsed, _, _) = _parsed(ops_raw, [], [])
+    load.load_daycares(conn, uuid.uuid4(), parsed, False)
+    conn.execute("drop table t_daycares")
+    row = conn.execute("""select operation_id from core.daycares where operation_id = any(%s)
+                          and geocode_source is distinct from 'state' and geocode_address is not null
+                          order by operation_id limit 1""", ([o.operation_id for o, _ in parsed],)).fetchone()
+    assert row, "fixtures need one daycare without state coordinates"
+    oid = row[0]
+    conn.execute("""update core.daycares set geom = extensions.st_setsrid(extensions.st_makepoint(-96.6, 33.6), 4326),
+                    geocode_source = 'census', geocode_quality = 'non_exact' where operation_id = %s""", (oid,))
+
+    def reload(ops: Any) -> tuple[Any, ...]:
+        load.load_daycares(conn, uuid.uuid4(), ops, False)
+        conn.execute("drop table t_daycares")
+        got = conn.execute("select geocode_source, geocode_quality, geom is not null from core.daycares "
+                           "where operation_id = %s", (oid,)).fetchone()
+        assert got
+        return tuple(got)
+
+    same = [(o, h) for o, h in parsed if o.operation_id == oid]
+    assert reload(same) == ("census", "non_exact", True)
+    moved = [(o.model_copy(update={"address_line": "1 NEW ST"}), h + "x") for o, h in same]
+    assert reload(moved) == (None, None, False)

@@ -20,7 +20,7 @@ import structlog
 from psycopg.types.json import Jsonb
 
 from pipeline import district, geocode, load
-from pipeline.config import ACTIVITIES, VIOLATIONS, Settings
+from pipeline.config import ACTIVITIES, VIOLATIONS, Settings, connect
 from pipeline.models import Activity, Operation, Violation, validate_rows
 from pipeline.soda import SodaClient
 
@@ -85,7 +85,7 @@ def run(settings: Settings, opts: RunOptions, soda: SodaClient | None = None) ->
     started = time.monotonic()
     started_at = datetime.now(UTC)
     counts: dict[str, Any] = {}
-    with psycopg.connect(db_url, autocommit=True) as logconn:
+    with connect(db_url, autocommit=True) as logconn:
         logconn.execute("insert into ops.sync_runs (run_id, mode, started_at) values (%s, %s, %s)",
                         (run_id, opts.mode + (" dry-run" if opts.dry_run else ""), started_at))
     bound = log.bind(run_id=str(run_id), mode=opts.mode)
@@ -94,7 +94,7 @@ def run(settings: Settings, opts: RunOptions, soda: SodaClient | None = None) ->
     newest: datetime | None = None
     lag: tuple[Any, Any] = (None, None)
     try:
-        with psycopg.connect(db_url) as conn:
+        with connect(db_url) as conn:
             backfill = opts.mode == "backfill"
             first_load = conn.execute("select not exists (select 1 from core.violations)").fetchone()
             if first_load and first_load[0] and not backfill:
@@ -148,13 +148,13 @@ def run(settings: Settings, opts: RunOptions, soda: SodaClient | None = None) ->
         if opts.notify and not opts.dry_run and not backfill:
             from pipeline.notify import Expo, notify
 
-            with psycopg.connect(db_url) as nconn:
+            with connect(db_url) as nconn:
                 counts.update(notify(nconn, Expo(settings.expo_access_token)))
     except Exception as exc:
         ok, error = False, f"{type(exc).__name__}: {exc}"
         bound.error("run.failed", error=error, trace=traceback.format_exc(limit=5))
     duration_ms = int((time.monotonic() - started) * 1000)
-    with psycopg.connect(db_url, autocommit=True) as logconn:
+    with connect(db_url, autocommit=True) as logconn:
         logconn.execute(
             """update ops.sync_runs set finished_at = now(), ok = %s, error = %s, stage_counts = %s,
                join_rate = %s, newest_source_date = %s, lag_median_days = %s, lag_p90_days = %s,

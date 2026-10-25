@@ -16,7 +16,7 @@ import pytest
 import structlog
 
 from pipeline import __main__ as cli
-from pipeline.config import ACTIVITIES, Settings
+from pipeline.config import ACTIVITIES, Settings, connect
 from pipeline.runner import RunOptions, run
 from tests.conftest import FIXTURES, read_csv
 
@@ -101,3 +101,13 @@ def test_replay_dry_run_command(settings: Settings, capsys: pytest.CaptureFixtur
     assert cli.main(["sync", "--replay", nc, "--dry-run"]) == 0
     out = json.loads(capsys.readouterr().out)
     assert out["dry_run"] is True and out["non_compliance_id"] == int(nc)
+
+
+def test_connect_never_prepares_statements() -> None:
+    # Supabase's pooler hands one server connection to many clients; a prepared statement would leak.
+    assert DB
+    with connect(DB) as conn:
+        assert conn.prepare_threshold is None
+        for _ in range(10):
+            conn.execute("select %s::int", (1,))
+        assert conn.execute("select count(*) from pg_prepared_statements").fetchone() == (0,)

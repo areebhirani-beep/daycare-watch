@@ -1,4 +1,4 @@
-"""Command line: python -m pipeline {sync,backfill,report}."""
+"""Command line: python -m pipeline {sync,backfill,report,receipts}."""
 
 from __future__ import annotations
 
@@ -36,6 +36,9 @@ def main(argv: list[str] | None = None) -> int:
     sync.add_argument("--no-notify", action="store_true", help="skip sending pushes")
     sub.add_parser("backfill", help="load full history without creating alert events")
     sub.add_parser("report", help="print the latest runs from ops.sync_runs")
+    receipts = sub.add_parser("receipts", help="check Expo push receipts now and show the newest sends")
+    receipts.add_argument("--min-age", type=int, default=0, metavar="MINUTES",
+                          help="only check tickets sent at least this long ago (default 0)")
     args = parser.parse_args(argv)
     _configure_logging()
     settings = Settings.from_env()
@@ -44,6 +47,11 @@ def main(argv: list[str] | None = None) -> int:
         from pipeline.report import report
 
         print(json.dumps(report(settings), indent=2, default=str))
+        return 0
+    if args.command == "receipts":
+        from pipeline.notify import receipts_now
+
+        print(json.dumps(receipts_now(settings, args.min_age), indent=2, default=str))
         return 0
     if args.command == "sync" and args.replay is not None:
         from pipeline.notify import replay

@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-import psycopg
 from psycopg.rows import dict_row
 
-from pipeline.config import Settings
+from pipeline.config import Settings, connect
 
 
 def report(settings: Settings, runs: int = 10) -> dict[str, Any]:
-    with psycopg.connect(settings.require_db()) as conn, conn.cursor(row_factory=dict_row) as cur:
+    with connect(settings.require_db()) as conn, conn.cursor(row_factory=dict_row) as cur:
         recent = cur.execute(
             """select run_id, mode, started_at, finished_at, ok, error, join_rate, newest_source_date,
                       lag_median_days, lag_p90_days, duration_ms, stage_counts

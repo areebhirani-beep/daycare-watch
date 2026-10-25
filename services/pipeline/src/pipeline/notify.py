@@ -20,7 +20,7 @@ import psycopg
 import structlog
 from psycopg.rows import dict_row
 
-from pipeline.config import Settings
+from pipeline.config import Settings, connect
 
 log = structlog.get_logger()
 
@@ -195,11 +195,13 @@ def send_groups(conn: Conn, expo: Expo, groups: list[Group]) -> dict[str, int]:
             if _dead(t):
                 cur.execute("update app.devices set disabled_at = now() where expo_push_token = %s", (token,))
                 disabled += 1
+            # One row per (user, event) even with several devices: a failed ticket never replaces a good one.
             cur.executemany(
                 """update app.notifications set expo_push_token = %s, ticket_id = %s, receipt_status = %s,
-                   error = %s, sent_at = now() where user_id = %s and event_id = %s""",
-                [(token, t.get("id"), status, None if t.get("status") == "ok" else t.get("message"), g.user_id, e)
-                 for e in g.event_ids])
+                   error = %s, sent_at = now()
+                   where user_id = %s and event_id = %s and (%s or receipt_status is distinct from 'ticket_ok')""",
+                [(token, t.get("id"), status, None if t.get("status") == "ok" else t.get("message"), g.user_id, e,
+                  t.get("status") == "ok") for e in g.event_ids])
     log.info("notify.sent", groups=len(groups), messages=len(messages), ok=ok, errors=errors, disabled=disabled)
     return {"push_groups": len(groups), "push_messages": len(messages), "push_ok": ok, "push_errors": errors,
             "tokens_disabled": disabled}
@@ -252,7 +254,7 @@ def replay(settings: Settings, non_compliance_id: int, expo: Expo | None = None,
     Each call is a new event (replays are never deduped against each other). A dry run builds the
     exact pushes, then rolls back: no event is kept, Expo is never called, no token is touched.
     """
-    with psycopg.connect(settings.require_db()) as conn:
+    with connect(settings.require_db()) as conn:
         conn.execute("begin")
         row = conn.execute(REPLAY_INSERT, (non_compliance_id,)).fetchone()
         if row is None:
@@ -271,4 +273,17 @@ def replay(settings: Settings, non_compliance_id: int, expo: Expo | None = None,
             conn.commit()
             result.update(send_groups(conn, expo or Expo(settings.expo_access_token), groups))
     log.info("replay.done", event_id=result["event_id"], recipients=len(groups), dry_run=dry_run)
+    return result
+
+
+def receipts_now(settings: Settings, min_age_minutes: int = 0, expo: Expo | None = None) -> dict[str, Any]:
+    """python -m pipeline receipts: check pending Expo receipts now and show the newest sends."""
+    with connect(settings.require_db()) as conn:
+        result: dict[str, Any] = dict(check_receipts(conn, expo or Expo(settings.expo_access_token),
+                                                     min_age_minutes))
+        result["latest"] = [
+            {"event_id": r[0], "ticket_id": r[1], "receipt_status": r[2], "sent_at": r[3],
+             "to": (r[4] or "")[:22] + "…"}
+            for r in conn.execute("""select event_id, ticket_id, receipt_status, sent_at, expo_push_token
+                                     from app.notifications order by sent_at desc nulls last limit 10""")]
     return result

@@ -24,9 +24,9 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-import psycopg
 import structlog
 
+from pipeline.config import connect
 from pipeline.load import Conn
 
 log = structlog.get_logger()
@@ -218,7 +218,7 @@ def main() -> None:
 
     cache_path = cache_path_from_env()
     started = time.monotonic()
-    with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+    with connect(os.environ["DATABASE_URL"]) as conn:
         counts = geocode_pending(conn, priority_counties=TX04_COUNTIES, cache_path=cache_path)
         counts |= assign_district(conn)
         if conn.execute("select to_regproc('core.refresh_aggregates')").fetchone() != (None,):

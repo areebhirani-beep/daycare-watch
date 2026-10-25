@@ -30,6 +30,9 @@ Category = Literal[
 # parse_standard
 # --------------------------------------------------------------------------------------------
 
+# The state's export turns an apostrophe into "?" ("child?s", "don?t").
+_LOST_APOSTROPHE = r"(?<=[A-Za-z])\?(?=(?:s|t)\b)"
+
 _STANDARD_RE = re.compile(
     r"^\s*(?P<code>(?:HRC\s*(?:Sec\.\s*)?)?\d[\d ]*\.\d+(?:\s*\([^)]*\))*)\s*(?:-\s*)?(?P<title>.*)$",
     re.IGNORECASE | re.DOTALL,
@@ -47,7 +50,7 @@ def parse_standard(desc: str) -> tuple[str, str]:
         return "", " ".join(desc.split())
     code = re.sub(r"\s+|Sec\.", "", match["code"], flags=re.IGNORECASE)
     code = re.sub(r"^hrc", "HRC", code, flags=re.IGNORECASE)
-    return code, " ".join(match["title"].split())
+    return code, re.sub(_LOST_APOSTROPHE, "'", " ".join(match["title"].split()))
 
 
 # --------------------------------------------------------------------------------------------
@@ -182,7 +185,7 @@ ELLIPSIS = "…"
 REPLACEMENTS: tuple[tuple[re.Pattern[str], str], ...] = tuple(
     (re.compile(pattern, re.IGNORECASE), replacement)
     for pattern, replacement in (
-        (r"(?<=[A-Za-z])\?(?=(?:s|t)\b)", "'"),  # "child?s" -> "child's" (export lost apostrophes)
+        (_LOST_APOSTROPHE, "'"),  # "child?s" -> "child's"
         (r"\b(the|this|that) operation's\b", r"\1 daycare's"),
         (r"\b(the|this|that) operation\b", r"\1 daycare"),
         (r"\bw/o\b", "without"),

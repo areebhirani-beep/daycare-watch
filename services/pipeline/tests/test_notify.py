@@ -11,8 +11,19 @@ from typing import Any
 import httpx
 import psycopg
 import pytest
+import structlog
 
-from pipeline.notify import Expo, Group, display_name, fmt_date, pending_groups, send_groups
+from pipeline.config import Settings
+from pipeline.notify import (
+    Expo,
+    Group,
+    check_receipts,
+    display_name,
+    fmt_date,
+    pending_groups,
+    receipts_now,
+    send_groups,
+)
 
 
 def group(kind: str, before: Any = None, after: Any = None, n: int = 1, replay: bool = False) -> Group:
@@ -101,6 +112,8 @@ def test_replay_round_trip_dedupes_and_prunes() -> None:
     sent: list[dict[str, Any]] = []
 
     def handle(req: httpx.Request) -> httpx.Response:
+        if req.url.path.endswith("getReceipts"):
+            return httpx.Response(200, json={"data": {i: {"status": "ok"} for i in json.loads(req.content)["ids"]}})
         msgs = json.loads(req.content)
         sent.extend(msgs)
         return httpx.Response(200, json={"data": [
@@ -139,6 +152,13 @@ def test_replay_round_trip_dedupes_and_prunes() -> None:
             dead = conn.execute("""select disabled_at is not null from app.devices
                                    where expo_push_token = 'ExponentPushToken[dead]'""").fetchone()
             assert dead == (True,)
+            # receipts: sent_at is this transaction's now(), so age the ticket past the cutoff
+            conn.execute("update app.notifications set sent_at = sent_at - interval '1 second' where event_id = %s",
+                         (eid,))
+            assert check_receipts(conn, expo, min_age_minutes=0) == {"receipts_checked": 1, "receipts_errors": 0}
+            status = conn.execute("select receipt_status from app.notifications where ticket_id is not null "
+                                  "and event_id = %s", (eid,)).fetchone()
+            assert status == ("delivered_to_provider",)
         finally:
             tx.__exit__(psycopg.Rollback, psycopg.Rollback(), None)
 
@@ -172,3 +192,25 @@ def test_replay_unknown_finding_exits() -> None:
         pytest.skip("DATABASE_URL not set")
     with pytest.raises(SystemExit, match="no finding"):
         replay(Settings(DB, None, None), -1, dry_run=True)
+
+
+@pytest.mark.db
+@pytest.mark.skipif(not DB, reason="DATABASE_URL not set")
+def test_receipts_cli_reports_latest_sends(capsys: pytest.CaptureFixture[str]) -> None:
+    from pipeline import __main__ as cli
+
+    asked: list[str] = []
+
+    def handle(req: httpx.Request) -> httpx.Response:
+        asked.extend(json.loads(req.content)["ids"])
+        return httpx.Response(200, json={"data": {}})
+
+    expo = Expo(None, httpx.Client(transport=httpx.MockTransport(handle)))
+    out = receipts_now(Settings(DB, None, None), min_age_minutes=100_000, expo=expo)
+    assert out["receipts_checked"] == 0 and asked == [] and isinstance(out["latest"], list)
+    assert all(r["to"].endswith("…") for r in out["latest"])
+    try:
+        cli.main(["receipts", "--min-age", "100000"])
+    finally:
+        structlog.reset_defaults()  # the CLI binds structlog to pytest's captured stderr
+    assert '"receipts_checked": 0' in capsys.readouterr().out

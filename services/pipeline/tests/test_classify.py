@@ -77,6 +77,13 @@ def assert_faithful(source: str, summary: str | None) -> None:
             "749.2447(7)(B)(i)",
             "Foster Home Screening- Obtain service call information from law enforcement for past two years",
         ),
+        (  # real fixture row: the export lost the apostrophes
+            "746.1205(a)(4) - Supervision ensures each child?s safety, well-being, including physical proximity "
+            "and auditory or visual awareness of each child?s on going activity",
+            "746.1205(a)(4)",
+            "Supervision ensures each child's safety, well-being, including physical proximity and auditory or "
+            "visual awareness of each child's on going activity",
+        ),
         ("746.1601", "746.1601", ""),
         ("746.1601(a)Child/Caregiver Ratio", "746.1601(a)", "Child/Caregiver Ratio"),
         ("746.2805-Prohibited Punishments", "746.2805", "Prohibited Punishments"),

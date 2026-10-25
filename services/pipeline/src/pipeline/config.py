@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from typing import Any
+
+import psycopg
 
 SODA_BASE = "https://data.texas.gov/resource/"
 
@@ -44,3 +47,9 @@ class Settings:
         if not self.database_url:
             raise RuntimeError("DATABASE_URL is not set")
         return self.database_url
+
+
+def connect(url: str, *, autocommit: bool = False) -> psycopg.Connection[Any]:
+    """Every pipeline connection. Supabase's pooler cannot keep server-side prepared statements
+    across clients, so psycopg never prepares; the cost is negligible for this workload."""
+    return psycopg.connect(url, autocommit=autocommit, prepare_threshold=None)

@@ -346,7 +346,8 @@ def token_from_env() -> str | None:
 
 COVERAGE_BY_CITY = f"""
 select initcap(d.city) as city, count(*) as centers,
-       count(*) filter (where exists (select 1 from core.daycare_photos p where p.operation_id = d.operation_id))
+       count(*) filter (where exists (select 1 from core.daycare_photos p
+                                     where p.operation_id = d.operation_id and p.verified))
          as with_photo
 from ({TARGETS}) t join core.daycares d using (operation_id)
 group by 1 order by 2 desc
@@ -354,7 +355,7 @@ group by 1 order by 2 desc
 
 
 def coverage(conn: Conn) -> dict[str, Any]:
-    """Share of TX-04 target centers with at least one stored photo, overall and by city."""
+    """Share of TX-04 target centers with at least one verified photo, overall and by city."""
     rows = conn.execute(COVERAGE_BY_CITY).fetchall()
     total = sum(r[1] for r in rows)
     with_photo = sum(r[2] for r in rows)

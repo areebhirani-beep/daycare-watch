@@ -218,7 +218,9 @@ def test_fill_queries_only_exact_tx04_centers_and_reports_coverage(tmp_path: Pat
             assert counts["photos_kept"] == 0 and counts["photos_failed"] == 0
             assert len(list(tmp_path.glob("*.json"))) == expected
             cov = photos.coverage(conn)
-            assert cov["targets"] == expected and cov["with_photo"] == 0
+            verified = conn.execute(f"""select count(*) from ({photos.TARGETS}) t where exists (select 1 from
+                core.daycare_photos p where p.operation_id = t.operation_id and p.verified)""").fetchone()
+            assert cov["targets"] == expected and (cov["with_photo"],) == verified  # an empty answer removes none
         finally:
             tx.__exit__(psycopg.Rollback, psycopg.Rollback(), None)
 

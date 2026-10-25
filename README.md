@@ -37,7 +37,7 @@ Built for the **2026 Congressional App Challenge · Texas's 4th District**
 
 - [Why](#why) · [How a parent uses it](#how-a-parent-uses-it) · [Screenshots](#screenshots)
 - [How it works](#how-it-works) · [The data](#the-data) · [Honesty and privacy](#honesty-and-privacy)
-- [Try it](#try-it-in-30-seconds) · [Tests](#tests) · [Getting started](#getting-started) · [Project structure](#project-structure) · [Roadmap](#roadmap) · [Docs](#docs)
+- [Try it](#try-it-in-30-seconds) · [Tests](#tests) · [Getting started](#getting-started) · [Project structure](#project-structure) · [Roadmap](#roadmap) · [Docs](#docs) · [Built with](#built-with)
 
 ## Why
 
@@ -295,6 +295,26 @@ daycare-watch/
 | [`TESTING.md`](docs/TESTING.md) | Every suite, with the counts from the last run |
 | [`QA_MATRIX.md`](docs/QA_MATRIX.md) | Every user case, tested cold, with evidence |
 | [`OFFICIAL_SOURCES.md`](docs/OFFICIAL_SOURCES.md) | Every legal claim, phone number, and URL, with a verbatim source quote |
+
+## Built with
+
+Every outside library, data source, and service the project uses, as the contest rules ask.
+
+| Part | Open-source libraries (license) |
+|---|---|
+| App | Expo SDK and Expo Router (MIT) · React Native and React Native Web (MIT) · TypeScript (Apache-2.0) · @supabase/supabase-js (MIT) · TanStack Query (MIT) · react-native-maps (MIT) · @gorhom/bottom-sheet (MIT) · Reanimated and Gesture Handler (MIT) · react-native-mmkv (MIT) · react-native-svg (MIT) · Newsreader and Public Sans fonts (SIL OFL 1.1) |
+| Database | PostgreSQL (PostgreSQL License) · PostGIS (GPL-2.0) · pgTAP for tests (PostgreSQL License) |
+| Pipeline | Python 3.12 · httpx (BSD-3) · pydantic (MIT) · psycopg 3 (LGPL-3.0) · structlog (MIT / Apache-2.0) · pytest, ruff, mypy for checks |
+| App tests | Jest and jest-expo (MIT) · React Native Testing Library (MIT) · Maestro flows for the simulator |
+
+| Data or service | Used for |
+|---|---|
+| [data.texas.gov](https://data.texas.gov), Texas HHSC Child Care Regulation | Every daycare, visit, and finding (public open data) |
+| U.S. Census Geocoder and TIGER/Line CD119 | Map points for addresses, and the TX-04 boundary (public domain) |
+| Esri World Imagery | Aerial view on the place page, credited on screen |
+| Apple Maps (MapKit) | Map, 3D view, and directions on iPhone |
+| Mapillary (CC BY-SA 4.0) | Street photos, shown only after a person checks the photo shows that daycare, with the photographer credited |
+| Supabase · GitHub Actions · Expo Push · Vercel | Database hosting · the daily sync · push alerts · the web link |
 
 ## License
 

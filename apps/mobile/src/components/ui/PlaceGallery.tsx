@@ -430,13 +430,18 @@ function PageBody({
  */
 function Scrim({ height, steps, edge = 'bottom' }: { height: number; steps: readonly number[]; edge?: 'top' | 'bottom' }) {
   const stops = steps.map((o, i) => `rgba(0,0,0,${o}) ${Math.round((i / (steps.length - 1)) * 100)}%`).join(', ');
+  const direction = edge === 'top' ? 'to top' : 'to bottom';
   return (
     <View
       pointerEvents="none"
       style={[
         styles.scrim,
         edge === 'top' ? { top: 0, bottom: undefined } : null,
-        { height, backgroundImage: `linear-gradient(${edge === 'top' ? 'to top' : 'to bottom'}, ${stops})` },
+        {
+          height,
+          // slopcheck: black scrim
+          backgroundImage: `linear-gradient(${direction}, ${stops})`,
+        },
       ]}
     />
   );

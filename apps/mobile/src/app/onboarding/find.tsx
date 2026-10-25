@@ -49,7 +49,9 @@ function Lift({ selected, children }: { selected: boolean; children: ReactNode }
  * The pre-filled cards are centers only: home daycares appear when a parent searches for one.
  */
 export default function FindScreen() {
-  const { width } = useWindowDimensions();
+  const { width, fontScale } = useWindowDimensions();
+  // Large text: a wider, shorter picture so the name and the record stay in the first view.
+  const heroRatio = fontScale > 1.3 ? 2.2 : 1.2;
   const [query, setQuery] = useState('');
   const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
@@ -192,8 +194,8 @@ export default function FindScreen() {
               ListEmptyComponent={
                 near.isPending ? (
                   <View style={{ flexDirection: 'row', gap: space.md }}>
-                    <CardSkeleton width={cardW} heroRatio={1.2} />
-                    <CardSkeleton width={cardW} heroRatio={1.2} />
+                    <CardSkeleton width={cardW} heroRatio={heroRatio} />
+                    <CardSkeleton width={cardW} heroRatio={heroRatio} />
                   </View>
                 ) : (
                   <Text variant="callout" tone="secondary">
@@ -206,7 +208,7 @@ export default function FindScreen() {
                   <Lift selected={picked?.operation_id === d.operation_id}>
                     <DaycareCard
                       width={cardW}
-                      heroRatio={1.2}
+                      heroRatio={heroRatio}
                       name={tidyCase(d.name)}
                       meta={rowMeta(d)}
                       lat={d.lat}

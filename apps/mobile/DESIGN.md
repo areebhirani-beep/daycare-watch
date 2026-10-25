@@ -1,6 +1,6 @@
 # Daycare Watch — design system v4 (frozen)
 
-**One line:** a map app, not a document. Grouped grey surfaces carry white cards, the map and the photos supply the color, the type is the native grotesk set heavy and big, and every daycare page answers one question in one sentence before anything else: *what did the state find last time?*
+**One line:** a map app, not a document. Grouped grey surfaces carry white cards, the map and the 3D views supply the color, the type is the native grotesk set heavy and big, and every daycare page answers one question in one sentence before anything else: *what did the state find last time?*
 
 v4 is frozen for the Oct 26 2026 submission. Changes after the freeze go into §12 with a date and a reason.
 
@@ -32,7 +32,7 @@ v4 is frozen for the Oct 26 2026 submission. Changes after the freeze go into §
 | Signal color | **School-bus yellow `#FFC800`** (dark `#FFD21F`), used only for *watching* and *alerts* | Every parent already reads it as "kids on the move", it can't be mistaken for a rating, and it is never on a daycare's record. A fill only, always with ink on top |
 | Category hues | Nine categorical tints, one per kind of rule (§4) | They answer "what kind of problem", never "how bad". Hue order carries no meaning |
 | Record | Words and counts, no colored rating. A single ink "Serious" tag for findings under a rule the state rates High risk | One tag, earned by the state's own label |
-| Imagery | Real places only: street photos, Apple 3D flyover, aerial tiles. No stock art, no illustration | We have no photos of our own; the location *is* the picture |
+| Imagery | Real places only: Apple 3D flyover and aerial tiles, each with our pin. No stock art, no illustration | We have no photos of our own; the location *is* the picture |
 | Depth | Three levels: card (soft), float (map chrome, pins), sheet | Shadows say "this floats"; 3D buttons use a solid edge, not a blur |
 | Motion | 150–250 ms, ease-out, no bounce, no overshoot (§6) | Motion explains where things came from; it never decorates |
 
@@ -169,11 +169,11 @@ Every daycare gets the same white pin, so the map never ranks anyone. Pin color 
 
 | Daycare | Hero | Cards / thumbs | Caption |
 |---|---|---|---|
-| Licensed Center, exact address | `PlaceGallery` carousel (§9) | Street photo if one exists, else aerial with pin | "Location from the state record" / "Placed from the street address" |
+| Licensed Center, exact address | `PlaceGallery` carousel (§9) | Aerial with pin | "Location from the state record" / "Placed from the street address" |
 | Licensed Center, approximate address | Plain muted map with an area, no aerial, no flyover | Aerial | "Approximate location (address matched with corrections)" |
 | Any home type, or unknown type | Grey street canvas, zoom ≤ 14, ~400 m area circle on a 0.005° grid point, **no pin, no photo, no flyover**. City + ZIP only | Same canvas | "Neighborhood only · private home" |
 
-`lib/imagery.ts` (`imageryAllowed`) is the single test, and `FlyoverHero.flyoverAllowed` adds the exact-address check. Credit shows on every image ("Imagery © Esri, Maxar", "Map © Esri, HERE, Garmin, OSM", "© Esri" on thumbs, "© Mapillary contributors · CC BY-SA" on street photos). An aerial never claims to show the building.
+`lib/imagery.ts` (`imageryAllowed`) is the single test, and `FlyoverHero.flyoverAllowed` adds the exact-address check. Credit shows on every image ("Imagery © Esri, Maxar", "Map © Esri, HERE, Garmin, OSM", "© Esri" on thumbs, Apple's legal mark on the 3D view). An aerial never claims to show the building.
 
 ## 9. Place hero carousel (`PlaceGallery`)
 
@@ -181,26 +181,26 @@ Every daycare gets the same white pin, so the map never ranks anyone. Pin color 
 ┌────────────────────────────────────────┐
 │ [‹]                            [share] │  floating round buttons, float elevation
 │                                        │
-│        3D view / street photo          │  hero 0.62 × width, full bleed
+│        3D view with our pin            │  hero 0.62 × width, full bleed
 │                                        │
-│ ┌ Mar 2024 ┐                           │  capture-date chip (photos only)
-│ Street view near the address  ● ○ ○ ○  │  caption left · page dots right
-│ © Mapillary contributors · CC BY-SA    │  credit, caption 12
+│ 3D view · Apple Maps            ━ ○ ○  │  caption left · page dots right
 └────────────────────────────────────────┘
 ```
 
 | Rule | Spec |
 |---|---|
-| Order | Page 1 = 3D flyover (or aerial with pin where the flyover isn't allowed) → street photo(s), nearest first (≤ 3) → aerial (z17) → street-level map tile. The strongest real picture leads; dashcam frames support it |
-| Dots | 6 pt dots, 6 gap, white on a 30% black pill; the current dot is a 16 × 6 capsule |
-| Date chip | Photos only: capture month and year ("Mar 2024") in `caption` on a 50% black pill, top-left of the caption row |
-| Caption | Photo: "Street view near the address". Flyover: "3D view · Apple Maps". Aerial: the §8 caption |
-| Credit | Photo: "© Mapillary contributors · CC BY-SA" (the imagery license, named on the hero and in the viewer). Aerial: "Imagery © Esri, Maxar". Always visible, never under the head card |
-| Scrim | Bottom 35% stepped black scrim (0 → 45%) so white text clears 4.5:1 on any photo |
-| Tap | Opens a full-screen black viewer: pinch-zoom, swipe between the same pages, the caption, date and credit in the bottom bar, close top-left |
-| No photo | **The default case** (most centers have no street photo): the flyover is page 1 and must look finished on its own: no dots when there is one page, caption + credit only |
-| Homes | Never a carousel: the §8 canvas, no dots, no photos |
-| Card thumbnail | A street photo if one exists; otherwise the aerial with our pin |
+| Order | 3D flyover with our pin (aerial with pin where the flyover isn't allowed) → aerial (z17) with pin → a Street View tile that opens Google Street View at the address |
+| Pin | Every picture page carries our pin at the point, so page 1 is unmistakably this place (`FlyoverHero` draws it on the 3D view) |
+| Dots | 6 pt dots, 6 gap, on a 30% black pill; the current dot is a 16 × 6 capsule that stretches with the finger |
+| Caption | Flyover: "3D view · Apple Maps". Aerial: the §8 caption |
+| Credit | Aerial: "Imagery © Esri, Maxar". Apple's legal mark stays visible, moved clear of text with `legalTop` |
+| Scrim | Bottom 35% stepped black scrim (0 → 45%) so white text clears 4.5:1; top 64 pt at 22% so the status bar reads |
+| Street View | The last page is a tile that opens Google Street View at the address; we host no street image |
+| One page | No dots |
+| Homes | Never a carousel: the §8 canvas, no dots, no pin |
+| Card thumbnail | The aerial with our pin |
+
+**No street photos in the submission.** Mapillary street photos were wired and tested, but in a hand check 2 of 5 showed the wrong building or a reflection, and a picture that might be the wrong place breaks the app's one promise. They stay off until each photo can be matched to the building.
 
 ## 10. The record, in words
 
@@ -275,7 +275,7 @@ Past 2 years
 | Grid of identical stat cards | One sentence that answers, then rows |
 | Colored left-border callouts | Pills, plain labels, category discs |
 | Stock icon sets, emoji | SF Symbols / Material Symbols via `expo-symbols`; pins and the mark drawn by us |
-| Clip-art illustration | Real places: street photos, flyover, aerial |
+| Clip-art illustration | Real places: 3D flyover and aerial, with our pin |
 | Generic copy ("Welcome back!", "Unlock insights") | DoorDash-length labels; numbers carry the message |
 | Generic empty / error states | Skeletons shaped like the real card; empty states say what's true and give one action |
 | Confetti, bouncing, pulsing | §6: 150–250 ms, no overshoot |
@@ -285,6 +285,8 @@ Past 2 years
 ### Change log after the freeze
 | Date | Change | Why |
 |---|---|---|
+| Oct 25 02:36 | Street photos off; carousel = 3D → aerial → Street View link | 2 of 5 hand-checked photos showed the wrong building |
+| Oct 25 02:33 | Our pin on the 3D view | A whole block from above can't say which building is the daycare |
 | Oct 25 02:25 | Carousel page 1 = 3D view, photos second | Street photos are dashcam frames near the address; the flyover is the strongest real picture |
 | Oct 25 02:24 | Answer line keeps "on record" ("no state check on record yet"), tail held with non-breaking spaces | The state may have checked without posting it; the tail wraps as one unit |
 | Oct 25 02:12 | Serious tag rides the meta line in top problems | The tag column squeezed the finding text at large sizes |

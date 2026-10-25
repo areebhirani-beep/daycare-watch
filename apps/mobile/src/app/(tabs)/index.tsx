@@ -1,8 +1,10 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { LastWeek } from '@/components/LastWeek';
 import { LastChecked } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
 import { HomeMap } from '@/components/ui/HomeMap';
@@ -55,6 +57,24 @@ export default function FindScreen() {
   usePrefetchRecords(useMemo(() => (near.data ?? []).slice(0, 5).map((d) => d.operation_id), [near.data]));
   const watchedIds = useMemo(() => new Set(watches.data?.map((d) => d.operation_id)), [watches.data]);
 
+  const open = (id: number) => {
+    tapped('place');
+    router.push(`/daycare/${id}`);
+  };
+  // Pull to refresh asks the state data again: the list, last week's visits, and when we last checked.
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+  const refresh = async () => {
+    setRefreshing(true);
+    await Promise.all([
+      near.refetch(),
+      queryClient.refetchQueries({ queryKey: ['district_pulse'] }),
+      queryClient.refetchQueries({ queryKey: ['district_recent_visits'] }),
+      queryClient.refetchQueries({ queryKey: ['last_sync'] }),
+    ]).catch(() => undefined);
+    setRefreshing(false);
+  };
+
   const problem = configError ?? (near.isError ? 'We couldn’t reach the state records. Check your connection.' : null);
 
   return (
@@ -79,10 +99,10 @@ export default function FindScreen() {
                 : 'Finding your location…'
         }
         watchedIds={watchedIds}
-        onOpen={(id) => {
-          tapped('place');
-          router.push(`/daycare/${id}`);
-        }}
+        onOpen={open}
+        feed={<LastWeek onOpen={open} />}
+        refreshing={refreshing}
+        onRefresh={() => void refresh()}
         onSearch={() => router.push('/search')}
         onLocate={() => void locate()}
         footer={<LastChecked />}

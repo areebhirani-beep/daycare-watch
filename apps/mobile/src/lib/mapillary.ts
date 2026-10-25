@@ -7,8 +7,12 @@ import type { Photo } from './types';
 // looked up when the photo is about to show and never saved.
 const token = process.env.EXPO_PUBLIC_MAPILLARY_TOKEN;
 
-/** False without a token: photo pages are skipped and the carousel starts at the 3D view. */
-export const photosEnabled = Boolean(token);
+// Off for now: a hand check of the nearest frames found the daycare's own building in only 2 of 5, because the
+// address point sits on the street, not the building. The 3D view and aerial always show the right place.
+export const SHOW_STREET_PHOTOS = false;
+
+/** False when street photos are off or there is no token: the carousel is 3D view, aerial, Street View link. */
+export const photosEnabled = SHOW_STREET_PHOTOS && Boolean(token);
 
 export async function photoUrl(imageId: string, signal?: AbortSignal): Promise<string> {
   const res = await fetch(`https://graph.mapillary.com/${encodeURIComponent(imageId)}?fields=thumb_1024_url`, {

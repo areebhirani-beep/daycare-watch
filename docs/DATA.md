@@ -9,7 +9,7 @@ Every fact in the app comes from one of three public sources. This page maps eac
 | Findings | [`tqgd-mf4x`](https://data.texas.gov/d/tqgd-mf4x) Child Care Regulation non-compliance | Texas HHSC on data.texas.gov |
 | Map points | Census Geocoder batch API (`Public_AR_Current`) | U.S. Census Bureau |
 | District boundary | TIGER/Line CD119, Texas district 4 | U.S. Census Bureau |
-| Street photos | Mapillary Graph API `images` | Mapillary (open street-level imagery) |
+| Street photos (collected, not shown) | Mapillary Graph API `images` | Mapillary (open street-level imagery) |
 
 Every row passes a pydantic data contract before it is loaded ([`models.py`](../services/pipeline/src/pipeline/models.py)). An unknown risk level, a missing required field, or a bad date fails the whole run rather than loading a guess.
 
@@ -62,7 +62,7 @@ Every row passes a pydantic data contract before it is loaded ([`models.py`](../
 | In TX-04 | The map point inside the CD119 polygon (PostGIS `ST_Covers`). The state's county field is never used to claim the district | [`load.py`](../services/pipeline/src/pipeline/load.py) |
 | Area comparison | Median findings in 24 months for the same daycare type in the same county | `core.area_medians` (materialized view) |
 | Alerts | A new finding, a permit status change, a capacity change, or a change in any enforcement flag, found by diffing each night's state files | `core.change_events`; [`load.py`](../services/pipeline/src/pipeline/load.py), [`notify.py`](../services/pipeline/src/pipeline/notify.py) |
-| Street photos | Up to 3 Mapillary images within 50 m of an exactly matched Licensed Center whose camera faces the building and looks sideways from its direction of travel, so dashcam frames looking down the road are dropped. Frames from the same moment and angle count once. A photo is kept only if it was taken on or after the daycare's permit `issuance_date` and within the last 6 years, so it shows this daycare and today's street. No panoramas | [`photos.py`](../services/pipeline/src/pipeline/photos.py) |
+| Street photos (collected and measured, **not shown in the app**: a hand check found 2 of 5 showed the right building, because a Census address point sits on the street, not the building; 14 of 209 TX-04 centers pass every rule) | Up to 3 Mapillary images within 50 m of an exactly matched Licensed Center whose camera faces the building and looks sideways from its direction of travel, so dashcam frames looking down the road are dropped. Frames from the same moment and angle count once. A photo is kept only if it was taken on or after the daycare's permit `issuance_date` and within the last 6 years, so it shows this daycare and today's street. No panoramas | [`photos.py`](../services/pipeline/src/pipeline/photos.py) |
 
 ## Freshness
 

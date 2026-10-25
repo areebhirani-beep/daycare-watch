@@ -42,6 +42,21 @@ export default function WatchScreen() {
     }
   }
 
+  // 'Not now' answers the alerts question, not the watch: the parent asked to watch, so watch without alerts.
+  // The place button then reads 'Watching · alerts off' and the Watching tab lists it.
+  async function watchQuietly() {
+    setStep('working');
+    setError(null);
+    try {
+      await setWatch.mutateAsync(true);
+      haptic.select();
+      router.back();
+    } catch {
+      setError('We couldn’t save this right now. Check your connection and try again.');
+      setStep('explain');
+    }
+  }
+
   if (watching && step === 'explain') {
     return (
       <ScrollView style={{ backgroundColor: c.bg }} contentContainerStyle={styles.content}>
@@ -126,7 +141,7 @@ export default function WatchScreen() {
           disabled={step === 'working'}
           onPress={() => void turnOn()}
         />
-        <Button label="Not now" kind="plain" onPress={() => router.back()} />
+        <Button label="Not now" kind="plain" disabled={step === 'working'} onPress={() => void watchQuietly()} />
       </View>
     </ScrollView>
   );

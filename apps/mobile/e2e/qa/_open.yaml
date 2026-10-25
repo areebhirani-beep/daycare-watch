@@ -1,8 +1,10 @@
 # Shared: open the app in Expo Go from Metro and dismiss Expo Go's own first-run sheets.
 # Expo Go's floating gear is its own chrome; filming and store builds don't have it.
-# Pass CLEAR=true to start from a fresh install state (first launch).
+# Pass CLEAR=true to start from a fresh install state (first launch). Every flow starts from a stopped app,
+# so a sheet left open by the previous flow (share, permission) can't cover this one.
 appId: host.exp.Exponent
 ---
+- stopApp
 - runFlow:
     when:
       true: ${CLEAR == 'true'}

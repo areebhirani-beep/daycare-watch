@@ -11,6 +11,7 @@ import type {
   DaycareRecord,
   DaycareRow,
   DistrictPulse,
+  DistrictRecentVisit,
   LastSync,
 } from './types';
 
@@ -37,6 +38,7 @@ export const keys = {
   watches: ['my_watches'] as const,
   alert: (id: number) => ['alert_detail', id] as const,
   pulse: (week: string | null) => ['district_pulse', week] as const,
+  recentVisits: (limit: number) => ['district_recent_visits', limit] as const,
   lastSync: ['last_sync'] as const,
 };
 
@@ -112,6 +114,14 @@ export function useDistrictPulse(week: string | null = null) {
   return useQuery({
     queryKey: keys.pulse(week),
     queryFn: () => rpc<DistrictPulse>('district_pulse', { week_start: week }),
+  });
+}
+
+/** The newest TX-04 visits, up to the end of the last complete week. Homes come back name-free (display_name). */
+export function useDistrictRecentVisits(limit = 3) {
+  return useQuery({
+    queryKey: keys.recentVisits(limit),
+    queryFn: () => rpc<DistrictRecentVisit[]>('district_recent_visits', { p_limit: limit }),
   });
 }
 

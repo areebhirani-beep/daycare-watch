@@ -36,7 +36,9 @@ appId: host.exp.Exponent
     visible: "Share these questions"
     timeout: 10000
 - takeScreenshot: ../../harness/state/qa/u26-tour
-- back
+# iOS has no hardware back; use the screen's own back button (top left).
+- tapOn:
+    point: 9%, 9%
 # U25: rights request -> generated note in the share sheet.
 - extendedWaitUntil:
     visible: "Viva World School.*"
@@ -47,11 +49,11 @@ appId: host.exp.Exponent
     timeout: 10000
 - tapOn: "Your rights"
 - scrollUntilVisible:
-    element: "Request records"
+    element: "Request records.*"
     direction: DOWN
     timeout: 15000
 - takeScreenshot: ../../harness/state/qa/u25-rights-tab
-- tapOn: "Request records"
+- tapOn: "Request records.*"
 - extendedWaitUntil:
     visible: "(Copy|AirDrop|Messages|Mail)"
     timeout: 10000

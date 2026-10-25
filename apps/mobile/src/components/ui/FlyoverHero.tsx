@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, StyleSheet, View, type ViewStyle } from 'react-native';
-import MapView from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 
 import { imageryAllowed } from '@/lib/imagery';
 import type { DaycareHeader } from '@/lib/types';
 import { useColors } from '@/theme';
 
+import { MapPin } from './MapPin';
 import { MapSnapshot } from './MapSnapshot';
 
 const DRIFT_DEG = 24;
@@ -18,20 +19,25 @@ export function flyoverAllowed(d: Pick<DaycareHeader, 'operation_type' | 'geocod
 }
 
 /**
- * Apple's 3D flyover of a real place, turning slowly like a drone shot. Decoration only: no touch,
- * no pin, no labels. Licensed centers with an exact geocode only (flyoverAllowed); the caller checks.
+ * Apple's 3D flyover of a real place, turning slowly like a drone shot. No touch and no labels; our pin
+ * marks the building so the picture is unmistakably this place. Licensed centers with an exact geocode only (flyoverAllowed); the caller checks.
  * Android, web and Reduce Motion get a still aerial instead.
  */
 export function FlyoverHero({
   lat,
   lng,
   legalTop,
+  pin = true,
+  watched,
   style,
 }: {
   lat: number | null | undefined;
   lng: number | null | undefined;
   /** Moves Apple's required Maps mark up to this y (from the top) when the bottom is covered by content. */
   legalTop?: number;
+  /** Our white pin on the point (the same one the aerial and the map use). */
+  pin?: boolean;
+  watched?: boolean;
   style?: ViewStyle;
 }) {
   const c = useColors();
@@ -59,7 +65,7 @@ export function FlyoverHero({
   }, [still, lat, lng]);
 
   if (lat == null || lng == null) return <View style={[StyleSheet.absoluteFill, { backgroundColor: '#0B0B0C' }, style]} />;
-  if (still) return <MapSnapshot lat={lat} lng={lng} zoom={17} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, ...style }} />;
+  if (still) return <MapSnapshot lat={lat} lng={lng} zoom={17} showPin={pin} watched={watched} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, ...style }} />;
 
   return (
     <View
@@ -84,7 +90,13 @@ export function FlyoverHero({
         showsCompass={false}
         showsScale={false}
         toolbarEnabled={false}
-      />
+      >
+        {pin ? (
+          <Marker coordinate={{ latitude: lat, longitude: lng }} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={false}>
+            <MapPin kind="center" watched={watched} selected />
+          </Marker>
+        ) : null}
+      </MapView>
     </View>
   );
 }

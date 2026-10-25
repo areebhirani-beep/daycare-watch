@@ -88,6 +88,7 @@ export function PlaceGallery({
   flyover,
   photos = [],
   kind = 'center',
+  watched,
   height,
   bottomInset = 0,
 }: {
@@ -100,7 +101,7 @@ export function PlaceGallery({
   flyover: boolean;
   photos?: Photo[];
   kind?: PinKind;
-  /** Kept for callers; the hero shows the place, not the watch state. */
+  /** Turns our pin yellow on the 3D view and the aerial, as on the map. */
   watched?: boolean;
   height: number;
   /** Space taken by whatever overlaps the bottom of the hero (the head card). */
@@ -200,6 +201,7 @@ export function PlaceGallery({
               live={Math.abs(i - current) <= 1}
               bottomInset={bottomInset}
               height={height}
+              watched={watched}
               onPhoto={onPhoto}
             />
           </Pressable>
@@ -260,6 +262,7 @@ function PageBody({
   bottomInset,
   height,
   full = false,
+  watched,
   onPhoto,
 }: {
   page: Page;
@@ -270,6 +273,7 @@ function PageBody({
   bottomInset: number;
   height: number;
   full?: boolean;
+  watched?: boolean;
   onPhoto?: (imageId: string, ok: boolean) => void;
 }) {
   const c = useColors();
@@ -281,8 +285,6 @@ function PageBody({
           source={{ uri: page.url }}
           style={StyleSheet.absoluteFill}
           contentFit={full ? 'contain' : 'cover'}
-          // Most are dashcam frames with a hood along the bottom; frame the street, not the car.
-          contentPosition={full ? 'center' : { left: '50%', top: '30%' }}
           cachePolicy="memory-disk"
           accessibilityIgnoresInvertColors
           onLoad={() => onPhoto?.(page.photo.image_id, true)}
@@ -292,9 +294,9 @@ function PageBody({
         <View style={[StyleSheet.absoluteFill, { backgroundColor: '#1C1C1E' }]} />
       );
     case 'flyover':
-      return live ? <FlyoverHero lat={lat} lng={lng} legalTop={full ? undefined : height - bottomInset - 64} /> : null;
+      return live ? <FlyoverHero lat={lat} lng={lng} watched={watched} legalTop={full ? undefined : height - bottomInset - 64} /> : null;
     case 'aerial':
-      return <MapSnapshot lat={lat} lng={lng} zoom={17} attribution={false} style={{ height }} />;
+      return <MapSnapshot lat={lat} lng={lng} zoom={17} watched={watched} attribution={false} style={{ height }} />;
     case 'street':
       return (
         <View style={StyleSheet.absoluteFill}>

@@ -4,7 +4,7 @@
 
 Texas inspects every licensed daycare and publishes every finding, but the records sit in a state search site that few parents ever open. Daycare Watch reads the state's own open data every day. It shows each finding with its date, how serious the state rates the rule, and whether the fix was verified. It sends a push alert when the state posts a new finding at a daycare a parent is watching. It also turns the rights Texas parents already have under the **Kairo and the Kids' Law** (SB 1098, 88th Legislature, 2023) into ready-to-send requests.
 
-Built for the **2026 Congressional App Challenge, Texas's 4th District**. Rep. Pat Fallon (TX-04) introduced the federal **Kairo Act of 2025 (H.R. 2425)**, which would give parents a similar bill of rights at federally funded child care. It is not law yet. The Texas law it closely tracks already is.
+Built for the **2026 Congressional App Challenge, Texas's 4th District**. The rights features also line up with Rep. Pat Fallon's proposed federal Kairo Act (H.R. 2425), which is not law.
 
 > The app never calls a daycare safe or unsafe, and never scores, grades, or ranks one. It shows what the state found, when, and whether the state verified the fix.
 
@@ -163,7 +163,6 @@ Every phone number, URL, and legal line in the app traces to a row in [`docs/OFF
 | Source | Used for |
 |---|---|
 | Texas HRC §42.04271, enacted by 88(R) SB 1098, the Kairo and the Kids' Law (effective Sep 1 2023) | Drop-in, records, inspection reports, and the narrow video right |
-| H.R. 2425, Kairo Act of 2025 (Rep. Fallon, introduced Mar 27 2025, in committee) | Context only. Never presented as law |
 | 26 TAC ch. 746 (Minimum Standards for Child-Care Centers) | Parent rights centers must post and follow |
 | Texas Abuse Hotline 1-800-252-5400 · 911 · HHSC Child Care Regulation report form | Report-a-concern channels |
 | HHSC Child Care Regulation Handbook | Plain-English meaning of corrective action, adverse action, and permit conditions |

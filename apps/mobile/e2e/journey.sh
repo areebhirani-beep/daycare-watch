@@ -24,7 +24,9 @@ EVENT_ID=${EVENT_ID:-$(docker exec supabase_db_daycare-watch psql -U postgres -d
 # It groups the replayed findings of one visit into one push, as pipeline's notify does.
 psql() { docker exec supabase_db_daycare-watch psql -U postgres -d postgres -At -c "$1"; }
 event=$(psql "select row_to_json(t) from (select e.operation_id, e.kind::text as kind, e.is_replay, e.source_date, e.before, e.after,
-  (e.after ->> 'activity_id')::bigint as activity_id, d.name from core.change_events e join core.daycares d using (operation_id)
+  (e.after ->> 'activity_id')::bigint as activity_id, d.name, i.activity_type, i.self_report
+  from core.change_events e join core.daycares d using (operation_id)
+  left join core.inspections i on i.activity_id = (e.after ->> 'activity_id')::bigint
   where e.id = $EVENT_ID) t")
 # One replay call stamps all its events with one detected_at, the same batch notify sends; older replays of the visit stay out.
 ids=$(psql "select json_agg(id order by id) from core.change_events where operation_id = $OP and is_replay
@@ -37,7 +39,7 @@ from pipeline.notify import Group
 e, ids, bundle, out = json.loads(sys.argv[1]), json.loads(sys.argv[2]), sys.argv[3], sys.argv[4]
 day = datetime.date.fromisoformat(e["source_date"]) if e["source_date"] else None
 m = Group(None, e["operation_id"], e["kind"], e["name"], ids, e["is_replay"], day, e["before"], e["after"],
-          e["activity_id"], ["simulator"]).messages()[0]
+          e["activity_id"], ["simulator"], e["activity_type"], e["self_report"]).messages()[0]
 json.dump({"Simulator Target Bundle": bundle, "aps": {"alert": {"title": m["title"], "body": m["body"]}, "sound": "default"},
            "body": m["data"]}, open(out, "w"))
 ' "$event" "$ids" "$BUNDLE" "$payload")

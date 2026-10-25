@@ -15,7 +15,7 @@ import {
   stripBoilerplate,
   tidyCase,
 } from '../format';
-import { groupByVisit, summarize, visibleVisits, whatChanged } from '../record';
+import { activityNoun, activityPhrase, groupByVisit, summarize, visibleVisits, whatChanged } from '../record';
 import { buildTourQuestions } from '../tour';
 import type { Finding, Inspection } from '../types';
 import type { RiskLevel } from '@/theme/tokens';
@@ -53,6 +53,7 @@ const inspections: Inspection[] = activities.map((a) => {
     findings_count: at.length,
     high_count: at.filter((f) => f.risk_level === 'High').length,
     open_count: at.filter((f) => !f.corrected_at_inspection && f.verified_date === null).length,
+    self_report: 'self_report' in a && a.self_report === 'Y',
   };
 });
 
@@ -167,5 +168,23 @@ describe('tour questions', () => {
     expect(first.fact).toMatch(/^The state found \d+ [a-z ]+ problems? in the past 2 years, most recently [A-Z][a-z]{2} \d{1,2}, \d{4}\./);
     expect(first.fact).not.toMatch(/finding|cited|verified/i);
     expect(first.question).toMatch(/^What changed after the [a-z ]*problem the state found on [A-Z][a-z]{2} \d{1,2}(, \d{4})?\?$/);
+  });
+});
+
+describe('what an activity is called', () => {
+  // Operation 245451 (Apple Creek, Frisco), from the state's activity file: May 4 2026 is a REPORT the daycare filed
+  // about itself (self_report Y), Apr 29 2026 an inspection.
+  const rows = [
+    { activity_id: 904024902, date: '2026-05-04', type: 'REPORT', violation_found: 'Yes', findings_count: 1, high_count: 0, open_count: 0, self_report: true },
+    { activity_id: 903884663, date: '2026-04-29', type: 'INSPECTION', violation_found: 'Yes', findings_count: 3, high_count: 0, open_count: 0, self_report: false },
+  ] satisfies Inspection[];
+
+  it('never calls a report a visit', () => {
+    const [own, inspection] = groupByVisit({ findings: [], inspections: rows });
+    expect(activityNoun(own!)).toBe('own report');
+    expect(activityPhrase(own!, 'May 4')).toBe('in the daycare’s own May 4 report');
+    expect(activityNoun({ type: 'REPORT', selfReport: false })).toBe('report');
+    expect(activityNoun({ type: 'ASSESSMENT', selfReport: false })).toBe('assessment');
+    expect(activityPhrase(inspection!, 'Apr 29')).toBe('at the Apr 29 visit');
   });
 });

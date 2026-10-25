@@ -71,6 +71,7 @@ export type Inspection = {
   activity_id: number;
   date: string;
   type: 'INSPECTION' | 'REPORT' | 'ASSESSMENT';
+  self_report: boolean; // the daycare's own report to the state, not a state visit
   violation_found: 'Yes' | 'No' | 'Pending';
   findings_count: number; // findings cited at this visit
   high_count: number; // of those, risk level High

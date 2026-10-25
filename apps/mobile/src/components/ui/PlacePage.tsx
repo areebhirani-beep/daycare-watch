@@ -18,7 +18,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { agesLabel, daysLabel, formatDate, formatDateShort, hoursLabel, isFixed, operationTypeLabel, plural, tidyCase } from '@/lib/format';
-import { groupByVisit, type Visit, visitTypeLabel } from '@/lib/record';
+import { activityNoun, activityPhrase, groupByVisit, type Visit, visitTypeLabel } from '@/lib/record';
 import { imageryAllowed } from '@/lib/imagery';
 import { placeAddress } from '@/lib/maps';
 import { buildTourQuestions } from '@/lib/tour';
@@ -178,9 +178,14 @@ export function PlacePage({
   });
   const visits = useMemo(() => groupByVisit(record).filter((v) => v.date >= cutoff), [record, cutoff]);
   const problems = useMemo(() => record.findings.filter((f) => f.date !== null && f.date >= cutoff), [record.findings, cutoff]);
-  const top = useMemo(() => [...problems].sort(byWeight).slice(0, 2), [problems]);
   const findingVisits = visits.filter((v) => v.status === 'findings');
   const last = visits[0];
+  // The card's rows belong to the activity its headline names; only when that one was clean do earlier problems
+  // show, labelled as earlier.
+  const top = useMemo(
+    () => [...(last && last.findings.length > 0 ? last.findings : problems)].sort(byWeight).slice(0, 2),
+    [last, problems],
+  );
 
   // Three facts a parent decides on (DESIGN.md §9). The rest sits in "More details".
   const facts: { icon: GlyphName; label: string; a11y: string }[] = [];
@@ -388,7 +393,7 @@ export function PlacePage({
                         {formatDate(v.date)}
                       </Text>
                       <Text variant="callout" tone="secondary">
-                        {`${visitTypeLabel(v.type)} · ${plural(v.findings.length, 'problem')}`}
+                        {`${visitTypeLabel(v.type, v.selfReport)} · ${plural(v.findings.length, 'problem')}`}
                       </Text>
                     </View>
                     {shown.map((f) => (
@@ -524,8 +529,9 @@ export function PlacePage({
 }
 
 /**
- * The page's one answer (hierarchy rule 1): what the state found at its most recent visit, as a sentence,
- * and one grey line on where the fixes stand.
+ * The page's one answer (hierarchy rule 1): what the state found at its most recent activity, as a sentence,
+ * and one grey line on where the fixes stand. Only an inspection is a "visit": a report (a complaint the state looked
+ * into, or one the daycare filed about itself) and an assessment are named as what they are.
  */
 export function visitAnswer(last: Visit | undefined, today: string): { headline: string; sub: string | null } {
   // Non-breaking spaces keep "Oct 5" on one line when the sentence wraps.
@@ -534,10 +540,10 @@ export function visitAnswer(last: Visit | undefined, today: string): { headline:
   const headline = !last
     ? 'No state visits in the past 2 years'
     : last.status === 'pending'
-      ? `Results from the ${when} visit aren’t posted yet`
+      ? `Results from the ${when} ${activityNoun(last) === 'own report' ? 'report' : activityNoun(last)} aren’t posted yet`
       : n > 0
-        ? `${plural(n, 'problem')} found at the ${when} visit`
-        : `No problems cited at the ${when} visit`;
+        ? `${plural(n, 'problem')} found ${activityPhrase(last, when)}`
+        : `No problems cited ${activityPhrase(last, when)}`;
   let sub: string | null = null;
   if (last && n > 0) {
     const open = latestOpen(last.findings);

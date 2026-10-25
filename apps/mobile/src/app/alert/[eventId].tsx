@@ -12,7 +12,7 @@ import { PlaceSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useAlertDetail, useDaycareRecord } from '@/lib/api';
 import { formatDate, formatLocalDay, plural, tidyCase, todayIso } from '@/lib/format';
-import { type Change, whatChanged } from '@/lib/record';
+import { type ActivityNoun, activityNoun, type Change, whatChanged } from '@/lib/record';
 import { lawCovers } from '@/lib/rights';
 import type { AlertDetail, Finding } from '@/lib/types';
 import { elevation, radius, riskRank, space, useColors } from '@/theme';
@@ -58,7 +58,7 @@ export default function AlertScreen() {
   const a = alert.data;
   const change = record.data && a.finding ? whatChanged(record.data, a.finding.activity_id) : null;
   const visit = a.finding?.date ?? a.source_date;
-  const when = [visit ? `Visit ${formatDate(visit)}` : null, `posted by ${formatLocalDay(a.detected_at)}`]
+  const when = [visit ? `${change?.visit ? ACTIVITY_LABEL[activityNoun(change.visit)] : 'Dated'} ${formatDate(visit)}` : null, `posted by ${formatLocalDay(a.detected_at)}`]
     .filter(Boolean)
     .join(' · ');
   // A new finding answers like the place page: what the state found at that visit, and where the fixes stand.
@@ -145,6 +145,14 @@ export default function AlertScreen() {
   );
 }
 
+// Only an inspection is a visit (lib/record activityNoun).
+const ACTIVITY_LABEL: Record<ActivityNoun, string> = {
+  visit: 'Visit',
+  report: 'Report',
+  'own report': 'Daycare’s own report',
+  assessment: 'Assessment',
+};
+
 /** This visit against the one before it, in counts and dates only. */
 function WhatChanged({ change }: { change: Change }) {
   const c = useColors();
@@ -152,16 +160,16 @@ function WhatChanged({ change }: { change: Change }) {
   if (!visit) return null;
   const high = visit.findings.filter((f) => f.risk_level === 'High').length;
   const lines = [
-    `This visit: ${plural(visit.findings.length, 'problem')} found${high > 0 ? `, ${high} serious` : ''}`,
+    `This ${ACTIVITY_LABEL[activityNoun(visit)].toLowerCase()}: ${plural(visit.findings.length, 'problem')} found${high > 0 ? `, ${high} serious` : ''}`,
     previous
-      ? `Visit before, ${formatDate(previous.date)}: ${
+      ? `${ACTIVITY_LABEL[activityNoun(previous)]} before, ${formatDate(previous.date)}: ${
           previous.status === 'findings'
             ? `${plural(previous.findings.length, 'problem')} found`
             : previous.status === 'pending'
               ? 'results not posted yet'
               : 'no problems cited'
         }`
-      : 'No earlier visit in the state record',
+      : 'Nothing earlier in the state record',
     ...repeats.slice(0, 2).map((r) => `Rule ${r.rule} was also cited ${formatDate(r.lastCited)}`),
   ];
   return (

@@ -9,6 +9,8 @@ export type Visit = {
   type: string;
   status: 'findings' | 'none' | 'pending';
   findings: Finding[];
+  /** The daycare reported this itself (a REPORT the state did not start). Never call it a visit. */
+  selfReport: boolean;
 };
 
 function monthsAgo(iso: string, months: number, now: Date): boolean {
@@ -31,7 +33,7 @@ export function groupByVisit(record: Pick<DaycareRecord, 'findings' | 'inspectio
     byActivity.delete(i.activity_id);
     const status: Visit['status'] =
       findings.length > 0 ? 'findings' : i.violation_found === 'Pending' ? 'pending' : 'none';
-    return { activity_id: i.activity_id, date: i.date, type: i.type, status, findings };
+    return { activity_id: i.activity_id, date: i.date, type: i.type, status, findings, selfReport: i.self_report };
   });
   // Findings whose visit row is missing still show, dated by the finding itself.
   for (const [activity_id, findings] of byActivity) {
@@ -43,18 +45,45 @@ export function groupByVisit(record: Pick<DaycareRecord, 'findings' | 'inspectio
       type: first.via_investigation ? 'REPORT' : 'INSPECTION',
       status: 'findings',
       findings,
+      selfReport: false,
     });
   }
   visits.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.activity_id - a.activity_id));
   return visits;
 }
 
-export function visitTypeLabel(type: string): string {
+/**
+ * What the activity was, as a noun for a sentence ("found at the Oct 5 visit"). Only an inspection is a visit.
+ * A REPORT is a complaint the state looked into, or one the daycare filed about itself.
+ */
+export type ActivityNoun = 'visit' | 'report' | 'own report' | 'assessment';
+
+export function activityNoun(v: Pick<Visit, 'type' | 'selfReport'>): ActivityNoun {
+  if (v.type === 'REPORT') return v.selfReport ? 'own report' : 'report';
+  if (v.type === 'ASSESSMENT') return 'assessment';
+  return 'visit';
+}
+
+/** "at the Oct 5 visit", "in the Oct 5 report", "in the daycare's own Oct 5 report". `when` is already formatted. */
+export function activityPhrase(v: Pick<Visit, 'type' | 'selfReport'>, when: string): string {
+  switch (activityNoun(v)) {
+    case 'own report':
+      return `in the daycare’s own ${when} report`;
+    case 'report':
+      return `in the ${when} report`;
+    case 'assessment':
+      return `at the ${when} assessment`;
+    case 'visit':
+      return `at the ${when} visit`;
+  }
+}
+
+export function visitTypeLabel(type: string, selfReport = false): string {
   switch (type) {
     case 'INSPECTION':
       return 'Inspection';
     case 'REPORT':
-      return 'Investigation of a report';
+      return selfReport ? 'Report the daycare filed' : 'Investigation of a report';
     case 'ASSESSMENT':
       return 'Assessment';
     default:

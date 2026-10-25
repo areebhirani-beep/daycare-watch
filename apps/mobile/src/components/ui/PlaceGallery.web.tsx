@@ -60,6 +60,7 @@ export function PlaceGallery({
       ) : (
         <MapSnapshot lat={lat} lng={lng} zoom={17} watched={watched} attributionInset={bottomInset} style={{ height }} />
       )}
+      <View pointerEvents="none" style={styles.topScrim} />
       <View pointerEvents="none" style={[styles.caption, { bottom: bottomInset + space.sm }]}>
         <Text variant="caption" style={styles.captionText} maxFontSizeMultiplier={1.2} numberOfLines={1}>
           {caption}
@@ -70,6 +71,16 @@ export function PlaceGallery({
 }
 
 const styles = StyleSheet.create({
+  // Under the status bar the app draws in white: 30% at the top edge, clear by 96 pt, as on native.
+  topScrim: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 96,
+    // slopcheck: black scrim
+    backgroundImage: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.2) 33%, rgba(0,0,0,0.08) 67%, rgba(0,0,0,0) 100%)',
+  },
   caption: {
     position: 'absolute',
     left: space.sm,

@@ -190,12 +190,12 @@ Every daycare gets the same white pin, so the map never ranks anyone. Pin color 
 
 | Rule | Spec |
 |---|---|
-| Order | Up to **2 verified street photos of the building**, then **one** overhead view. Never more than one overhead page |
-| Photo sources | 1st: Apple Look Around snapshot, only when Apple's map item matched the daycare by name and sits within 60 m of our point. 2nd: Mapillary photos with `verified = true` (a person looked at it and it shows this building), newest first, from a different sequence than any other shown. Two photos max |
+| Order | Up to **2 street pictures**, then **one** overhead view: (1) verified pictures of the building first, (2) if fewer than two, the street at the state's address, (3) the overhead. Never more than one overhead page, never two pictures of the same spot |
+| Photo sources | 1st: Apple Look Around snapshot, only when Apple's map item matched the daycare by name and sits within 60 m of our point. 2nd: Mapillary photos with `verified = true` (a person looked at it and it shows this building), newest first, from a different sequence than any other shown. **Second tier, centers only, never homes, hand-checked only:** when Apple has no same-name match, the Look Around scene nearest the state's address point, aimed at that point, shown only for centers on the checked list. The check passes only when the building is the clear subject: centred or in the foreground, at least about a quarter of the frame, not hidden by trees, and no other business's sign in the picture. A road, a lawn or a far-off building fails, even when the label would be true. In a 20-center sample, 5 of 12 raw scenes showed a field, an intersection or another business, and a parent reads any picture on a daycare page as the daycare. It is the street at the address, never claimed as the daycare. Two pictures max |
 | Overhead | iOS and `flyoverAllowed`: the 3D flyover with our pin. Everywhere else: the aerial at z17 with our pin. Never both |
 | Counts | 0 photos → the overhead alone, no dots. 1 photo → 2 pages. 2 photos → 3 pages. No "no photo" placeholder, ever |
 | Photo page | Full bleed, `cover`, focal point centre. No pin on a photo (a pin on a street scene says nothing). Same height as today: 0.62 × width (phone), 260 pt in the desktop panel |
-| Credit chip | Bottom-left, on a 30% black pill (same pill as the dots), `caption2` white, one line, AX cap 1.3×. Look Around: "Look Around · Apple Maps · date unknown" (Apple gives no capture date, and a sign in its picture can be a previous tenant's, so the chip never implies the picture is current; VoiceOver adds "Apple does not say when this picture was taken"). Mapillary: "Photo · Mapillary · Jun 2024" (capture month, always shown, so an older photo says it is older). Overhead: "3D view · Apple Maps" or "Imagery © Esri, Maxar" |
+| Credit chip | Bottom-left, on a 30% black pill (same pill as the dots), `caption2` white, one line, AX cap 1.3×. Look Around: "Look Around · Apple Maps · date unknown" (Apple gives no capture date, and a sign in its picture can be a previous tenant's, so the chip never implies the picture is current; VoiceOver adds "Apple does not say when this picture was taken"). Street at the address: "Street at this address · Apple Look Around" (VoiceOver: "The street at the state's address for this daycare, from Apple Look Around. Apple does not say when it was taken, and it may not show this daycare."; the viewer repeats that second sentence under the picture). Mapillary: "Photo · Mapillary · Jun 2024" (capture month, always shown, so an older photo says it is older). Overhead: "3D view · Apple Maps" or "Imagery © Esri, Maxar" |
 | License line | Mapillary photos are CC BY-SA: the full-screen viewer shows "© <creator> · CC BY-SA 4.0 · Mapillary" under the photo. The chip stays short |
 | Dots | Bottom-right, 6 pt dots, 6 gap, 30% black pill; current dot is a 16 × 6 capsule. Hidden with one page |
 | Scrim | One native `linear-gradient` per edge (never stacked slices: they band and leave 1 px seams). Photos: bottom 28%, 0 → 35% black, so the chip pill clears on bright sidewalks. Overhead: bottom 35%, 0 → 45%. Every page: top 96 pt, 30% → 0, for the status bar and the round buttons, with no hard edge |
@@ -267,38 +267,33 @@ Past 2 years
 | 4 | `alerts.tsx` | "Turn on alerts." + "Only for daycares you watch, and only when the state posts something new." A lock-screen panel (flyover wallpaper, live time) with the banner arriving. Then the OS prompt on "Turn on alerts"; "Not now" always works |
 | 5 | `done.tsx` | The check draws once: "You're watching <name>." and one line on what happens next |
 
-### Web (the judges' link): one app, three widths
+### Web (the judges' link): the real app in a real iPhone
 
-Phone web is the app. From 768 px wide it becomes a map with a panel, the Google Maps / Zillow pattern. One breakpoint hook (`useLayout()` → `{ mode: 'phone' | 'split', panel: number }`) decides; screens are not duplicated, they render inside the panel.
+From 768 px wide, the web shows the live app inside a drawn iPhone, not a desktop re-layout. The app runs in an `<iframe>` of the same URL at exactly 393 × 852, so every screen lays out as it does on a phone, with no per-screen web work. Below 768 px (a real phone), the app is full screen with no frame.
 
 ```
-≥ 1024 px                                                     768–1023 px: same, panel 360
-┌──────────────────────┬──────────────────────────────────────────────┐
-│ ◎ Daycare Watch      │                                    [+]      │
-│ (Find|Watching|Rights)│              live map, pins,               [−]      │
-│ [ Search daycares… ] │              clusters                       [◎]      │
-│ [Centers][Homes][TX-04]                                                    │
-│ Daycares near you    │        ● ● (2)    ◉ selected pin                     │
-│ ┌───┐ Name           │                                                     │
-│ │img│ Center · 0.3 mi│                                                     │
-│ └───┘ No problems…   │                                                     │
-│ …panel scrolls…      │                      © OpenStreetMap · OpenFreeMap  │
-└──────────────────────┴──────────────────────────────────────────────┘
-   panel 420, full height                 map fills the rest
+≥ 1024 px: column + frame, one centred group (column ≤ 420, gap 96)      768–1023: frame only, centred
+                                         ╭───────────────────────╮
+ [icon 64]                              │ 9:41   ▬▬▬▬▬   ▂▄▆ ◠ ▭│ ← drawn by the app inside
+ Daycare Watch                         ▕│                       │▏ ← side buttons, 3 px slabs
+ Know what Texas inspectors            ▕│     the live app,     │
+ found before you pick a daycare.       │     393 × 852 iframe, │
+ • Real Texas state data, synced daily  │     scaled to fit     │
+ ┌──────┐                              ▕│                       │
+ │  QR  │ Open on your phone             │        ▬▬▬▬           │ ← home indicator
+ └──────┘                                ╰───────────────────────╯
+ GitHub                                  titanium ring 4 · bezel 12 · screen r55 · island 126×37
 ```
 
 | Rule | Spec |
 |---|---|
-| Breakpoints | < 768: phone web, exactly the app (full width, no black column). 768–1023: split, panel 360. ≥ 1024: split, panel 420. No layout change above 1024; the map just grows |
-| Panel | Full height, left edge, `surface` (dark: `#1C1C1E`), hairline right border + `float` shadow on the map side. Scrolls on its own; the map never scrolls with it. Content keeps the phone type scale (no upscaling) with 16 pt gutters |
-| Panel head (sticky) | Brand row: `AppMark` 28 + "Daycare Watch" `headline`, 56 tall. Then a segmented control Find · Watching · Your rights (36 tall, `sunken` track, white selected thumb, `subhead`). Then the search pill (the phone's, not floating). On Find, the filter chips sit under it |
-| Find list | `PlaceRow`s (56 pt aerial thumb, name, meta, record line), not the horizontal cards. Header "Daycares near you" + "Closest first" detail. Hovering a row selects its pin on the map (selected pin, zIndex 10); hovering a pin highlights its row (`sunken` background) and scrolls it into view only if it is off screen |
-| Map | maplibre-gl. Light: OpenFreeMap positron. Dark: Esri World Dark Gray Canvas. Our `MapPin` / `AreaPin` / `ClusterBubble` exactly as on the phone, same zIndex layering. Controls bottom-right: zoom +/−, locate, 40 pt round, `float` elevation, 8 pt apart, 16 from the edges. Attribution bottom-right under the controls. Scroll-wheel zoom on; the map fits the visible results on first load |
-| Place page | Clicking a row or a pin opens the place page **in the panel** (slide 24 pt + fade, 200 ms), URL becomes `/daycare/<id>`, the map eases to the pin (zoom ≥ 16, 400 ms) and keeps it selected. Panel head becomes a back arrow + the name (`headline`, one line); back (arrow, browser back, Esc) returns to the list at its scroll position. Carousel 420 × 260 (§9) with hover arrows. The Watch bar is sticky at the panel bottom, panel width, not page width |
-| Other routes | `/rights`, `/watching`, `/search?q=` render in the panel with the map still live. `/daycare/<id>` opened cold opens the place directly, **no onboarding** |
-| Onboarding ≥ 768 | Full-bleed aerial of the example center as the page background, 20% black over it, and the onboarding step in a centred card: 480 wide, up to 860 tall (window − 64), radius 28, the page background, `float` elevation; each step renders inside it at its phone padding, progress bar on top, the same chunky buttons. Step 1's hero fills the card. The phone's full-screen hero is never stretched to a desktop |
-| Hover and focus | Rows and cards: `sunken` background on hover, pointer cursor. Every control shows a 2 pt `text`-colour focus ring, 2 pt offset, on keyboard focus only. `/` focuses search. Tab order: panel head → list → map controls |
-| Never | A phone-width column on a black page; text wider than the panel; a second scrollbar on the page itself; horizontal page scroll at any width |
+| Breakpoints | < 768: the app, full screen, no frame. 768–1023: the frame alone, centred. ≥ 1024: the column and the frame as one centred group |
+| Frame | Titanium ring 4 px, flat two tones with no gradient: light `#8E8A84` with a 1 px `#5E5B57` inner line; dark scheme `#3A3A3C` / `#1C1C1E`. Black bezel 12. Screen radius 55. Dynamic Island 126 × 37 pill at top 11. Side buttons as 3 px slabs in the ring colour, measured from the frame top: left action 122 (h 34), volume 190 and 268 (h 64); right side button 230 (h 104). Shadow `0 30px 80px rgba(0,0,0,.18)`. Scale `min(1, (window h − 80) / 884)`, centred vertically |
+| Screen | `<iframe title="Daycare Watch app">` of the current path at 393 × 852, `transform: scale(s)`. On load the page gives the app iPhone insets (top 59, bottom 34) through the safe-area provider's measured element, then fires `resize`. The app draws its own 9:41 status bar (white over the place hero and onboarding step 1, ink elsewhere, white in dark) and a home indicator 134 × 5 |
+| Column | App icon 64, radius 14. "Daycare Watch" 20/700 as the page's one `h1`. The line "Know what Texas inspectors found before you pick a daycare." 40/44, weight 800, tracking −0.8. "Real Texas state data, synced daily" 17 `textSecondary` after an 8 pt ink dot. QR 128 on a white card (padding 12, radius 16), caption "Open on your phone" 13. Links as text, 17 semibold: GitHub, and the video only once its real URL exists |
+| Deep links | The page URL is the app's URL: `/daycare/<id>` opens that place inside the frame with no onboarding. When the app navigates, the page URL follows (`replaceState`) and the QR re-encodes it, so a scan opens the same page on a phone |
+| Page | Background is the theme `bg` (light `#F2F2F7`, dark `#000`). One `<main>` landmark. Lighthouse accessibility ≥ 90 |
+| Never | A floating box or a fake phone screenshot; a re-laid-out desktop version of a screen; gloss or gradient on the frame; a second scrollbar on the page; horizontal page scroll at any width |
 
 ## 12. Rules and anti-patterns
 
@@ -327,6 +322,7 @@ Phone web is the app. From 768 px wide it becomes a map with a panel, the Google
 | Date | Change | Why |
 |---|---|---|
 | Oct 25 12:29 | Web ≥ 768 px is a map with a 420 px panel (360 on tablets); onboarding becomes a centred card | Owner: desktop must not be a phone column; judges open the link on laptops |
+| Oct 25 13:02 | Replaces 12:29: web ≥ 768 px is the live app in a real iPhone frame (iframe at 393 × 852), with a calm left column from 1024 px; the split layout and the onboarding card are retired | Owner change: judges should see the real app on a real-looking phone, not a desktop re-layout |
 | Oct 25 12:28 | Carousel = up to 2 verified street photos of the building, then ONE overhead; Street View tile cut | Owner: "2 pics of the building itself, then the satellite view", not three satellite angles |
 | Oct 25 06:20 | At ≥1.6× text, a history row stacks the date over its status | Dates truncated to "J…" at the largest size |
 | Oct 25 05:45 | The Home map is one VoiceOver element pointing to the list | The maps library reads every custom pin as "Map pin"; the list carries the same daycares with their records |

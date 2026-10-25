@@ -14,9 +14,11 @@ import { useDaycareRecord } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
 import { enter, fade, space } from '@/theme';
 
-// A stepped scrim (no gradient library): darker toward the bottom so white type clears AA on any roof.
-const SCRIM = [0, 0.05, 0.12, 0.22, 0.34, 0.47, 0.6, 0.7, 0.77, 0.8];
-const TOP = [0.42, 0.3, 0.18, 0.08, 0];
+// Darker toward the bottom so white type clears AA on any roof; one native gradient each (stacked slices banded).
+// slopcheck: black scrim
+const SCRIM = 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.22) 33%, rgba(0,0,0,0.6) 67%, rgba(0,0,0,0.8) 100%)';
+// slopcheck: black scrim
+const TOP = 'linear-gradient(to bottom, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.18) 50%, rgba(0,0,0,0) 100%)';
 
 const rise = enter;
 
@@ -28,28 +30,26 @@ export default function HookScreen() {
   const insets = useSafeAreaInsets();
   const record = useDaycareRecord(EXAMPLE_OPERATION_ID);
   const d = record.data?.daycare;
-  // At large text the headline climbs to mid-screen, so the building is lifted into the clear top part
-  // (pin near 17% down, Apple's legal mark near 30%, both above the lockup).
+  // At large text, or on a short screen (iPhone SE), the lockup climbs to mid-screen, so the map is padded from
+  // the bottom: the building, its pin and Apple's logo all sit in the clear top part, above the wordmark.
   const { height, fontScale } = useWindowDimensions();
+  const lift = fontScale >= 1.35 ? 0.66 : height < 760 ? 0.55 : 0;
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
       <Animated.View entering={fade(300)} style={StyleSheet.absoluteFill}>
-        <FlyoverHero lat={d?.lat} lng={d?.lng} legalTop={insets.top + 56} bottomInset={fontScale >= 1.35 ? Math.round(height * 0.66) : undefined} />
+        <FlyoverHero lat={d?.lat} lng={d?.lng} legalTop={insets.top + 56} bottomInset={lift ? Math.round(height * lift) : undefined} />
       </Animated.View>
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.12)' }]} />
-      <View pointerEvents="none" style={styles.scrim}>
-        {SCRIM.map((a, i) => (
-          <View key={i} style={{ flex: 1, backgroundColor: `rgba(0,0,0,${a})` }} />
-        ))}
-      </View>
-
-      <View pointerEvents="none" style={[styles.top, { height: insets.top + 96 }]}>
-        {TOP.map((a, i) => (
-          <View key={i} style={{ flex: 1, backgroundColor: `rgba(0,0,0,${a})` }} />
-        ))}
-      </View>
+      <View
+        pointerEvents="none"
+        style={[styles.scrim, { backgroundImage: SCRIM }]}
+      />
+      <View
+        pointerEvents="none"
+        style={[styles.top, { height: insets.top + 96, backgroundImage: TOP }]}
+      />
 
       <View style={{ paddingTop: insets.top + space.xs }}>
         <OnboardingTop step={1} onImage />

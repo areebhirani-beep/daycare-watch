@@ -52,6 +52,8 @@ type Props = {
   attribution?: boolean | 'short';
   /** Lifts the credit above anything that overlaps the bottom of the image (the place page's head card). */
   attributionInset?: number;
+  /** Puts the credit at the top-left this far down instead (a full-screen hero whose bottom holds buttons). */
+  attributionTop?: number;
   /** A private residence: street map, zoom capped at 14, area circle, no pin. */
   privateHome?: boolean;
   style?: ViewStyle;
@@ -67,6 +69,7 @@ export function MapSnapshot({
   smallPin = false,
   attribution = true,
   attributionInset = 0,
+  attributionTop,
   privateHome = false,
   style,
 }: Props) {
@@ -152,7 +155,13 @@ export function MapSnapshot({
         </View>
       ) : null}
       {has && attribution && loaded ? (
-        <View style={[attribution === 'short' ? styles.attrShort : styles.attr, { bottom: (attribution === 'short' ? 3 : 6) + attributionInset }]}>
+        <View
+          style={
+            attributionTop != null
+              ? [styles.attrTop, { top: attributionTop }]
+              : [attribution === 'short' ? styles.attrShort : styles.attr, { bottom: (attribution === 'short' ? 3 : 6) + attributionInset }]
+          }
+        >
           <Text
             variant="caption"
             style={attribution === 'short' ? { fontSize: 7, lineHeight: 9, color: '#FFFFFF' } : { fontSize: 9, lineHeight: 12, color: '#FFFFFF' }}
@@ -172,5 +181,6 @@ const styles = StyleSheet.create({
   area: { position: 'absolute', borderWidth: 2, opacity: 0.55 },
   pin: { position: 'absolute', width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   attr: { position: 'absolute', right: 6, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: 'rgba(0,0,0,0.55)' },
+  attrTop: { position: 'absolute', left: 16, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: 'rgba(0,0,0,0.55)' },
   attrShort: { position: 'absolute', right: 3, paddingHorizontal: 3, borderRadius: 3, backgroundColor: 'rgba(0,0,0,0.55)' },
 });

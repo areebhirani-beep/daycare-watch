@@ -18,6 +18,7 @@ export function markOnboarded(): void {
  */
 export const EXAMPLE_OPERATION_ID = 1459611;
 
+
 /** Where the "near you" cards start before the parent shares a location: Frisco, inside TX-04. */
 export const ONBOARDING_AREA = { lat: 33.1507, lng: -96.8236, label: 'Near Frisco' } as const;
 

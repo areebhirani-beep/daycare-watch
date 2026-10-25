@@ -8,12 +8,14 @@ export { flyoverAllowed } from './flyover';
 export function FlyoverHero({
   lat,
   lng,
+  legalTop,
   pin = true,
   watched,
   style,
 }: {
   lat: number | null | undefined;
   lng: number | null | undefined;
+  /** Where the credit goes, as on native: top-left, clear of the buttons at the bottom and the screen's corners. */
   legalTop?: number;
   /** Native only: the still aerial has nothing to re-centre. */
   bottomInset?: number;
@@ -22,5 +24,5 @@ export function FlyoverHero({
   style?: ViewStyle;
 }) {
   if (lat == null || lng == null) return <View style={[StyleSheet.absoluteFill, { backgroundColor: '#0B0B0C' }, style]} />;
-  return <MapSnapshot lat={lat} lng={lng} zoom={17} showPin={pin} watched={watched} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, ...style }} />;
+  return <MapSnapshot lat={lat} lng={lng} zoom={17} showPin={pin} watched={watched} attributionTop={legalTop} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, ...style }} />;
 }

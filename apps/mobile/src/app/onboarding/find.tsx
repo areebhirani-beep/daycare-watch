@@ -50,10 +50,10 @@ function Lift({ selected, children }: { selected: boolean; children: ReactNode }
  * The pre-filled cards are centers only: home daycares appear when a parent searches for one.
  */
 export default function FindScreen() {
-  const { fontScale } = useWindowDimensions();
+  const screen = useWindowDimensions();
   const width = useAppWidth();
-  // Large text: a wider, shorter picture so the name and the record stay in the first view.
-  const heroRatio = fontScale > 1.3 ? 2.2 : 1.2;
+  // Large text, or a short screen (iPhone SE): a wider, shorter picture so the name and the record stay above the buttons.
+  const heroRatio = screen.fontScale > 1.3 ? 2.2 : screen.height < 760 ? 2 : 1.2;
   const [query, setQuery] = useState('');
   const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);

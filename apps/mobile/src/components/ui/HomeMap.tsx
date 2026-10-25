@@ -519,7 +519,8 @@ const styles = StyleSheet.create({
   },
   carousel: { paddingHorizontal: space.lg, gap: 12 },
   carouselLoading: { flexDirection: 'row', gap: 12, paddingHorizontal: space.lg },
-  groupRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  // Wraps at large text sizes so 'Show all' drops to its own line instead of running off the edge.
+  groupRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: space.md },
   showAll: { minHeight: 44, minWidth: 44, justifyContent: 'center' },
   sep: { height: StyleSheet.hairlineWidth, marginLeft: space.lg + 64 + space.md },
 });

@@ -7,7 +7,7 @@ appId: com.areebhirani.daycare-watch
     commands:
       - tapOn: "Open"
 - extendedWaitUntil:
-    visible: "State record"
+    visible: "Watch this daycare|Watching.*"
     timeout: 20000
 - takeScreenshot: e2e/out/watch-0-record
 - tapOn: "Watch this daycare"

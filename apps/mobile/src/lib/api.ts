@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 
 import { forgetPosition } from './location';
 import { isWeb } from './runtime';
-import { storage } from './storage';
+import { storage, visitStorage } from './storage';
 import { configError, ensureSession, resetSession, supabase } from './supabase';
 import type {
   AlertDetail,
@@ -163,7 +163,7 @@ export async function startOver(): Promise<void> {
   await Promise.all(watched.map((d) => rpc<void>('unwatch', { p_operation_id: d.operation_id })));
   await resetSession();
   // Key owned by components/ui/onboarding.ts.
-  storage.remove('onboarded.v1');
+  visitStorage.remove('onboarded.v1');
   storage.remove('push-registered');
   forgetPosition();
 }

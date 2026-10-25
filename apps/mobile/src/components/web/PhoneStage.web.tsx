@@ -49,6 +49,9 @@ function QrCode({ url, size }: { url: string; size: number }) {
   );
 }
 
+// The phone's iframe, by name, so a plain link can open a page inside it.
+const APP_FRAME = 'app';
+
 export function PhoneStage() {
   const c = useColors();
   const isDark = useIsDark();
@@ -99,9 +102,12 @@ export function PhoneStage() {
             <h1 style={{ margin: 0, font: `700 20px/25px ${FONT}` }}>Daycare Watch</h1>
           </div>
           <p style={{ margin: 0, font: `800 40px/44px ${FONT}`, letterSpacing: -0.8 }}>
-            Know what Texas inspectors found before you pick a daycare.
+            Find the right daycare for your family.
           </p>
-          <p style={{ margin: 0, font: `400 17px/24px ${FONT}`, color: c.textSecondary }}>
+          <p style={{ margin: 0, font: `400 19px/26px ${FONT}`, color: c.textSecondary }}>
+            See what Texas inspectors found at any daycare, and get a heads-up when they post something new.
+          </p>
+          <p style={{ margin: 0, font: `400 15px/20px ${FONT}`, color: c.textSecondary }}>
             Checked against data.texas.gov every day. Built for the 2026 Congressional App Challenge, TX-04.
           </p>
           <figure style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -110,20 +116,22 @@ export function PhoneStage() {
             </div>
             <figcaption style={{ font: `400 13px/18px ${FONT}`, color: c.textSecondary }}>Open on your phone</figcaption>
           </figure>
-          {REPO_URL || VIDEO_URL ? (
-            <nav aria-label="About this project" style={{ display: 'flex', gap: 24 }}>
-              {REPO_URL ? (
-                <a href={REPO_URL} target="_blank" rel="noreferrer" style={{ font: `600 17px/22px ${FONT}`, color: c.text, padding: '11px 0' }}>
-                  GitHub
-                </a>
-              ) : null}
-              {VIDEO_URL ? (
-                <a href={VIDEO_URL} target="_blank" rel="noreferrer" style={{ font: `600 17px/22px ${FONT}`, color: c.text, padding: '11px 0' }}>
-                  Watch the video
-                </a>
-              ) : null}
-            </nav>
-          ) : null}
+          <nav aria-label="About this project" style={{ display: 'flex', flexWrap: 'wrap', columnGap: 24 }}>
+            {/* Opens onboarding in the phone, from the start, whether or not this browser has been through it. */}
+            <a href="/onboarding" target={APP_FRAME} style={{ font: `600 17px/22px ${FONT}`, color: c.text, padding: '11px 0' }}>
+              Watch the intro
+            </a>
+            {REPO_URL ? (
+              <a href={REPO_URL} target="_blank" rel="noreferrer" style={{ font: `600 17px/22px ${FONT}`, color: c.text, padding: '11px 0' }}>
+                GitHub
+              </a>
+            ) : null}
+            {VIDEO_URL ? (
+              <a href={VIDEO_URL} target="_blank" rel="noreferrer" style={{ font: `600 17px/22px ${FONT}`, color: c.text, padding: '11px 0' }}>
+                Watch the video
+              </a>
+            ) : null}
+          </nav>
         </section>
       ) : (
         <h1 style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', margin: 0 }}>Daycare Watch</h1>
@@ -165,6 +173,7 @@ export function PhoneStage() {
           >
             <iframe
               ref={frame}
+              name={APP_FRAME}
               src={src}
               title="Daycare Watch app"
               width={FRAME_SCREEN.width}

@@ -14,35 +14,49 @@ function local(): Storage | undefined {
   }
 }
 
-function read(key: string): string | undefined {
+function session(): Storage | undefined {
   try {
-    return local()?.getItem(key) ?? undefined;
+    return typeof window === 'undefined' ? undefined : window.sessionStorage;
   } catch {
     return undefined;
   }
 }
 
-export const storage: KeyValue = {
-  getString: read,
-  getBoolean: (key) => {
-    const v = read(key);
-    return v === undefined ? undefined : v === 'true';
-  },
-  set: (key, value) => {
+function store(area: () => Storage | undefined): KeyValue {
+  const read = (key: string): string | undefined => {
     try {
-      local()?.setItem(key, String(value));
+      return area()?.getItem(key) ?? undefined;
     } catch {
-      // Storage full or blocked: the web build only keeps conveniences here.
+      return undefined;
     }
-  },
-  remove: (key) => {
-    try {
-      local()?.removeItem(key);
-    } catch {
-      // see above
-    }
-  },
-};
+  };
+  return {
+    getString: read,
+    getBoolean: (key) => {
+      const v = read(key);
+      return v === undefined ? undefined : v === 'true';
+    },
+    set: (key, value) => {
+      try {
+        area()?.setItem(key, String(value));
+      } catch {
+        // Storage full or blocked: the web build only keeps conveniences here.
+      }
+    },
+    remove: (key) => {
+      try {
+        area()?.removeItem(key);
+      } catch {
+        // see above
+      }
+    },
+  };
+}
+
+export const storage: KeyValue = store(local);
+
+/** This visit only (sessionStorage): what a new visit should start over, like the intro. If it fails, nothing is kept. */
+export const visitStorage: KeyValue = store(session);
 
 /** Adapter for supabase-js auth persistence. */
 export const authStorage = {

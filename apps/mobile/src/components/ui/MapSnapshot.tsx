@@ -56,6 +56,8 @@ type Props = {
   attributionTop?: number;
   /** A private residence: street map, zoom capped at 14, area circle, no pin. */
   privateHome?: boolean;
+  /** The first picture on a screen (a hero): fetch its tiles at once. Others wait until near the viewport (web). */
+  eager?: boolean;
   style?: ViewStyle;
 };
 
@@ -71,6 +73,7 @@ export function MapSnapshot({
   attributionInset = 0,
   attributionTop,
   privateHome = false,
+  eager = false,
   style,
 }: Props) {
   const c = useColors();
@@ -127,6 +130,7 @@ export function MapSnapshot({
           key={t.key}
           source={{ uri: t.uri }}
           cachePolicy="memory-disk"
+          loading={eager ? 'eager' : 'lazy'}
           // Decorative: the map's meaning is in the label and the credit. On web expo-image writes this as alt="" on
           // the <img> (its `alt` prop reaches only the placeholder), which passes Lighthouse's image-alt audit.
           accessibilityLabel=""

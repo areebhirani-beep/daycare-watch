@@ -118,7 +118,7 @@ export function FlyoverHero({
   }, [still, drift, lat, lng]);
 
   if (lat == null || lng == null) return <View style={[StyleSheet.absoluteFill, { backgroundColor: PICTURE_BG }, style]} />;
-  if (still) return <MapSnapshot lat={lat} lng={lng} zoom={17} showPin={pin} watched={watched} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, ...style }} />;
+  if (still) return <MapSnapshot lat={lat} lng={lng} zoom={17} showPin={pin} watched={watched} eager style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, ...style }} />;
 
   return (
     <View
@@ -136,6 +136,7 @@ export function FlyoverHero({
         zoom={17}
         showPin={pin}
         watched={watched}
+        eager
         pinY={h > 0 && bottomInset ? (h - bottomInset) / 2 / h : 0.5}
         attribution={stillCredit}
         attributionTop={legalTop}

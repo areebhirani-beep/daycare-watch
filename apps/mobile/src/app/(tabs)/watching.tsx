@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, FlatList, Linking, RefreshControl, StyleSheet, View } from 'react-native';
@@ -13,7 +14,8 @@ import { RowSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { startOver, useMyWatches, usePrefetchRecords } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
-import { getPermission, type PermissionState, useAlertsOn } from '@/lib/notifications';
+import { enableAlerts, getPermission, type PermissionState, useAlertsOn } from '@/lib/notifications';
+import { isWeb } from '@/lib/runtime';
 import { radius, space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
 
 function confirmStartOver() {
@@ -36,6 +38,21 @@ export default function WatchingScreen() {
   const alertsOn = useAlertsOn();
   // Spin only for a pull, not for background refetches on focus.
   const [pulling, setPulling] = useState(false);
+  const queryClient = useQueryClient();
+  const [turning, setTurning] = useState(false);
+  // Set when the OS allowed alerts but this phone couldn't be registered, so the button doesn't just do nothing.
+  const [unregistered, setUnregistered] = useState(false);
+  const turnOn = async () => {
+    setTurning(true);
+    try {
+      const r = await enableAlerts();
+      setPermission(r.permission);
+      setUnregistered(r.permission === 'granted' && !r.registered);
+      await queryClient.invalidateQueries({ queryKey: ['alerts-on'] });
+    } finally {
+      setTurning(false);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -110,12 +127,13 @@ export default function WatchingScreen() {
         ) : undefined
       }
       ListEmptyComponent={
-        watches.isPending ? (
+        // The web never signs in, so it has no watches to load (useMyWatches is off there): say where alerts live.
+        !isWeb && watches.isPending ? (
           <View style={{ paddingTop: space.xl }}>
             <RowSkeleton />
             <RowSkeleton />
           </View>
-        ) : watches.isError ? (
+        ) : !isWeb && watches.isError ? (
           <LoadError style={{ paddingTop: space.xl }} onRetry={() => void watches.refetch()} />
         ) : (
           <View style={styles.empty}>
@@ -123,10 +141,12 @@ export default function WatchingScreen() {
               <Glyph name="bellFill" size={28} color={c.onSignal} />
             </View>
             <Text variant="title" align="center" accessibilityRole="header">
-              Watch a daycare
+              {isWeb ? 'Watching works in the iPhone app' : 'Watch a daycare'}
             </Text>
             <Text variant="callout" tone="secondary" align="center">
-              You get an alert when the state posts something new about it.
+              {isWeb
+                ? 'On the web, open any daycare to see its record.'
+                : 'You get an alert when the state posts something new about it.'}
             </Text>
             <Button
               label="Find a daycare"
@@ -145,6 +165,17 @@ export default function WatchingScreen() {
                 ? 'You’ll get an alert when the state posts something new about a daycare you watch.'
                 : 'New state records show here. Alerts aren’t on for this phone yet.'}
             </Text>
+            {/* Denied is handled at the top (Open Settings); otherwise one tap asks, then registers this phone. */}
+            {!alertsOn && !isWeb && permission !== 'denied' ? (
+              <>
+                <Button label="Turn on alerts" kind="primary" icon="bellFill" disabled={turning} onPress={() => void turnOn()} />
+                {unregistered ? (
+                  <Text variant="footnote" tone="secondary">
+                    This phone couldn’t be set up for alerts. Try again later.
+                  </Text>
+                ) : null}
+              </>
+            ) : null}
             <LastChecked />
           </View>
         ) : undefined

@@ -54,14 +54,15 @@ export function PlaceGallery({
   return (
     <View style={{ height }}>
       {!imagery ? (
-        <MapSnapshot lat={lat} lng={lng} zoom={14} privateHome attributionInset={bottomInset} style={{ height }} />
+        <MapSnapshot lat={lat} lng={lng} zoom={14} privateHome eager attributionInset={bottomInset} style={{ height }} />
       ) : quality === 'non_exact' ? (
-        <MapSnapshot lat={lat} lng={lng} zoom={15} watched={watched} smallPin attributionInset={bottomInset} style={{ height }} />
+        <MapSnapshot lat={lat} lng={lng} zoom={15} watched={watched} smallPin eager attributionInset={bottomInset} style={{ height }} />
       ) : (
-        <MapSnapshot lat={lat} lng={lng} zoom={17} watched={watched} attributionInset={bottomInset} style={{ height }} />
+        <MapSnapshot lat={lat} lng={lng} zoom={17} watched={watched} eager attributionInset={bottomInset} style={{ height }} />
       )}
       <View pointerEvents="none" style={styles.topScrim} />
-      <View pointerEvents="none" style={[styles.caption, { bottom: bottomInset + space.sm }]}>
+      {/* Above Esri's credit (bottom right, MapSnapshot), never beside it: on a narrow phone the two would overlap. */}
+      <View pointerEvents="none" style={[styles.caption, { bottom: bottomInset + CREDIT_CLEARANCE }]}>
         <Text variant="caption" style={styles.captionText} maxFontSizeMultiplier={1.2} numberOfLines={1}>
           {caption}
         </Text>
@@ -69,6 +70,9 @@ export function PlaceGallery({
     </View>
   );
 }
+
+// The credit's line (6 pt up, 16 pt tall) plus a 6 pt gap.
+const CREDIT_CLEARANCE = 28;
 
 const styles = StyleSheet.create({
   // Under the status bar the app draws in white: 30% at the top edge, clear by 96 pt, as on native.
@@ -83,7 +87,7 @@ const styles = StyleSheet.create({
   caption: {
     position: 'absolute',
     left: space.sm,
-    maxWidth: '58%',
+    maxWidth: '90%',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,

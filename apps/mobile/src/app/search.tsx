@@ -1,4 +1,4 @@
-import { router, Stack } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,7 +16,13 @@ import { minTap, space, useColors } from '@/theme';
 export default function SearchScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
-  const [q, setQ] = useState('');
+  // The query lives in the address (?q=), so a shared or reloaded search link opens with its results.
+  const params = useLocalSearchParams<{ q?: string }>();
+  const [q, setQ] = useState(typeof params.q === 'string' ? params.q : '');
+  const type = (text: string) => {
+    setQ(text);
+    router.setParams({ q: text || undefined });
+  };
   const search = useDaycareSearch(q);
   const watches = useMyWatches();
   const watchedIds = useMemo(() => new Set(watches.data?.map((d) => d.operation_id)), [watches.data]);
@@ -27,7 +33,7 @@ export default function SearchScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingBottom: space.sm }}>
         <View style={{ flex: 1 }}>
-          <SearchPill floating={false} input={{ value: q, onChangeText: setQ, autoFocus: true }} />
+          <SearchPill floating={false} input={{ value: q, onChangeText: type, autoFocus: true }} />
         </View>
         <Pressable
           accessibilityRole="button"

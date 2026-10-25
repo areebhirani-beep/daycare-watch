@@ -33,6 +33,9 @@ function mmkvStore(): KeyValue {
 
 export const storage: KeyValue = isExpoGo ? sqliteStore() : mmkvStore();
 
+/** Kept for good on a phone. (On the web it lasts one visit: storage.web.ts.) */
+export const visitStorage: KeyValue = storage;
+
 /** Adapter for supabase-js auth persistence. */
 export const authStorage = {
   getItem: (key: string) => storage.getString(key) ?? null,

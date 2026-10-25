@@ -30,8 +30,9 @@ appId: com.areebhirani.daycare-watch
 - hideKeyboard
 - takeScreenshot: e2e/out/journey-0-search
 - tapOn: "Viva World School\\. .*"
+# The record has loaded once its watch bar is up (pinned at the bottom, so always on screen).
 - extendedWaitUntil:
-    visible: "State record"
+    visible: "Watch this daycare|Watching.*"
     timeout: 20000
 - takeScreenshot: e2e/out/journey-1-record
 # A device that already watches this daycare shows "Watching"; otherwise walk the watch flow.

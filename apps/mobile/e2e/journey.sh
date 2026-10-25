@@ -46,8 +46,13 @@ json.dump({"Simulator Target Bundle": bundle, "aps": {"alert": {"title": m["titl
 [ "${PAYLOAD_ONLY:-}" = 1 ] && { cat "$payload"; echo; exit 0; }
 
 maestro test e2e/journey-find-watch.yaml
-# Fire the push once Maestro is up, so it taps the live banner (Notification Center taps don't open the app in the iOS 26 simulator).
-(sleep 12 && xcrun simctl push "$DEVICE" "$BUNDLE" "$payload" && rm -f "$payload") &
-maestro test e2e/alert-tap.yaml
-wait
+# Fire the push while Maestro is up, so it taps the live banner (Notification Center taps don't open the app in the iOS 26
+# simulator). Maestro's start-up time varies, so the push repeats every 8 s until the flow ends; repeats group, which the
+# flow handles.
+(sleep 10; while :; do xcrun simctl push "$DEVICE" "$BUNDLE" "$payload" >/dev/null; sleep 8; done) &
+pusher=$!
+status=0
+maestro test e2e/alert-tap.yaml || status=$?
+kill "$pusher" 2>/dev/null; wait "$pusher" 2>/dev/null || true; rm -f "$payload"
+[ "$status" = 0 ] || exit "$status"
 echo "journey: find -> record -> watch -> alert COMPLETED"

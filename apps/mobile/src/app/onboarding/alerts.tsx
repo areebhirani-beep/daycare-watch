@@ -10,10 +10,17 @@ import { OnboardingFrame } from '@/components/ui/OnboardingFrame';
 import { Block } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useDaycareRecord } from '@/lib/api';
-import { tidyCase } from '@/lib/format';
+import { tidyCase, todayIso } from '@/lib/format';
 import { enableAlerts } from '@/lib/notifications';
 import { groupByVisit } from '@/lib/record';
 import { radius, space } from '@/theme';
+
+// Within about six months: recent enough that an alert about it reads as news.
+const RECENT_DAYS = 183;
+function recent(day: string | null): boolean {
+  if (!day) return false;
+  return (Date.parse(todayIso()) - Date.parse(day)) / 86_400_000 <= RECENT_DAYS;
+}
 
 // The lock screen is an illustration, so it shows Apple's 9:41 with today's date.
 function useClock() {
@@ -32,6 +39,9 @@ export default function AlertsScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const watchedId = params.id ? Number(params.id) : null;
   const record = useDaycareRecord(watchedId ?? EXAMPLE_OPERATION_ID);
+  // A watched daycare whose latest problems are old would make a "new" alert out of a years-old visit, so the
+  // example falls back to the reference center's latest visit (a real one, labelled as an example).
+  const fallback = useDaycareRecord(EXAMPLE_OPERATION_ID);
   const clock = useClock();
   const { height } = useWindowDimensions();
   const [denied, setDenied] = useState(false);
@@ -39,14 +49,15 @@ export default function AlertsScreen() {
 
   const d = record.data?.daycare;
   const example = useMemo(() => {
-    if (!record.data) return null;
-    const visit = groupByVisit(record.data).find((v) => v.findings.length > 0);
-    if (!visit) return null;
-    return {
-      title: watchedId ? tidyCase(record.data.daycare.name) : `A licensed center in ${tidyCase(record.data.daycare.city)}`,
-      body: pushBody(visit.findings.length, visit.date),
-    };
-  }, [record.data, watchedId]);
+    const own = record.data ? groupByVisit(record.data).find((v) => v.findings.length > 0) : undefined;
+    if (watchedId && record.data && own && recent(own.date)) {
+      return { title: tidyCase(record.data.daycare.name), body: pushBody(own.findings.length, own.date) };
+    }
+    const ref = fallback.data;
+    const visit = ref ? groupByVisit(ref).find((v) => v.findings.length > 0) : undefined;
+    if (!ref || !visit) return null;
+    return { title: `A center in ${tidyCase(ref.daycare.city)}`, body: pushBody(visit.findings.length, visit.date) };
+  }, [record.data, fallback.data, watchedId]);
 
   const finish = () => router.replace({ pathname: '/onboarding/done', params: watchedId ? { id: String(watchedId) } : {} });
 
@@ -103,7 +114,7 @@ export default function AlertsScreen() {
         <View style={styles.bannerSlot}>
           {example ? (
             <AlertBanner title={example.title} body={example.body} tag="Example" delay={400} maxScale={1.3} />
-          ) : record.isPending ? (
+          ) : record.isPending || fallback.isPending ? (
             <Block style={{ height: 96, borderRadius: 24 }} />
           ) : null}
         </View>

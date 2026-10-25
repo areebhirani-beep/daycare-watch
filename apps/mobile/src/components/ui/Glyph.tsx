@@ -2,6 +2,8 @@ import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 
 import { useColors } from '@/theme';
 
+import './iconFont';
+
 // Meaning → platform symbol: SF Symbols on iOS, Material Symbols on Android.
 const GLYPHS = {
   search: { ios: 'magnifyingglass', android: 'search' },

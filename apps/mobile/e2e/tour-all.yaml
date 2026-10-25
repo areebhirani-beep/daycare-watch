@@ -31,7 +31,7 @@ appId: com.areebhirani.daycare-watch
 - takeScreenshot: e2e/out/${MODE}-rights
 - openLink: daycarewatch://daycare/1459611
 - extendedWaitUntil:
-    visible: "State record"
+    visible: "Watch this daycare|Watching.*"
     timeout: 20000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/out/${MODE}-record-1

@@ -1,14 +1,15 @@
-import { storage } from '@/lib/storage';
+import { visitStorage } from '@/lib/storage';
 
 const KEY = 'onboarded.v1';
 
 /** True once the parent has finished or skipped onboarding on this device. */
+// On a phone this is kept for good; on the web for one visit, so every new visit to the site opens with the intro.
 export function hasOnboarded(): boolean {
-  return storage.getBoolean(KEY) === true;
+  return visitStorage.getBoolean(KEY) === true;
 }
 
 export function markOnboarded(): void {
-  storage.set(KEY, true);
+  visitStorage.set(KEY, true);
 }
 
 /**

@@ -6,6 +6,8 @@ from datetime import date
 from typing import Any
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from pipeline.models import (
     TEXAS,
@@ -13,6 +15,7 @@ from pipeline.models import (
     ContractError,
     Operation,
     Violation,
+    restore_lost_chars,
     validate_rows,
 )
 
@@ -109,3 +112,24 @@ def test_error_carries_examples(viols_raw: list[dict[str, str]]) -> None:
     assert err.value.total == 30
     assert len(err.value.failures) == 20
     assert "standard_risk_level" in str(err.value)
+
+
+@pytest.mark.parametrize(("state_name", "shown"), [
+    # Real names from the state's file, where a non-ASCII character arrives as "?"
+    ("AlphaBEST @ Allen ? Frisco", "AlphaBEST @ Allen - Frisco"),
+    ("Montessori Children?s House & School", "Montessori Children's House & School"),
+    ("HONESTY KID?S ACADEMY", "HONESTY KID'S ACADEMY"),
+    ("AlphaBEST @ O?Dell - Celina", "AlphaBEST @ O'Dell - Celina"),
+    ("Los Peque?os Exploradores", "Los Pequeños Exploradores"),
+    ("Peque?as Estrellas Spanish Immersion Home Daycare", "Pequeñas Estrellas Spanish Immersion Home Daycare"),
+    ("Claudia Iveth Trevi?o Sanchez", "Claudia Iveth Treviño Sanchez"),
+    # The lost character is not certain here, so the state's spelling stays
+    ("T?aikabede Jose Sierra Sr Youth Learning Center", "T?aikabede Jose Sierra Sr Youth Learning Center"),
+])
+def test_names_restore_only_certain_lost_characters(state_name: str, shown: str) -> None:
+    assert restore_lost_chars(state_name) == shown
+
+
+@given(st.text().filter(lambda t: "?" not in t))
+def test_a_name_without_a_question_mark_is_never_changed(name: str) -> None:
+    assert restore_lost_chars(name) == name

@@ -6,6 +6,7 @@ import json
 import os
 import uuid
 from datetime import date
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -68,6 +69,9 @@ def test_message_payload_matches_contract() -> None:
     assert m["title"] == "Tuck Street Early Education Center"
     assert m["data"] == {"event_id": 1, "operation_id": 1206518, "kind": "new_violation", "is_replay": False,
                          "activity_id": 904}
+    # Must match the channel the app creates, or Android files it under a default-importance channel.
+    app = (Path(__file__).parents[3] / "apps/mobile/src/lib/notifications.ts").read_text()
+    assert m["channelId"] == "state-records" and f"setNotificationChannelAsync('{m['channelId']}'" in app
 
 
 def test_display_name_and_date() -> None:

@@ -47,6 +47,8 @@ STATUS_COPY = {"N": "The state now lists this daycare's permit as inactive.",
                "Y": "The state now lists this daycare's permit as active again."}
 CAPACITY = "The state changed licensed capacity from {before} to {after}."
 REPLAY_PREFIX = "Replay of a real state record from {date}: "
+# The Android channel the app creates (apps/mobile/src/lib/notifications.ts), high importance.
+ANDROID_CHANNEL = "state-records"
 
 
 def fmt_date(d: date) -> str:
@@ -102,7 +104,7 @@ class Group:
         if self.activity_id is not None:
             data["activity_id"] = self.activity_id
         return [{"to": t, "title": display_name(self.name), "body": self.body(), "data": data,
-                 "sound": "default", "priority": "high", "channelId": "default"} for t in self.tokens]
+                 "sound": "default", "priority": "high", "channelId": ANDROID_CHANNEL} for t in self.tokens]
 
 
 PENDING_SQL = """

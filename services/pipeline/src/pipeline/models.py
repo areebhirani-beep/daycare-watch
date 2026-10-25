@@ -7,11 +7,12 @@ Source timestamps are floating Texas local times; they are pinned to America/Chi
 
 from __future__ import annotations
 
+import re
 from datetime import date, datetime
 from typing import Annotated, Any, Literal
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, ValidationError, field_validator
+from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict, Field, ValidationError, field_validator
 
 TEXAS = ZoneInfo("America/Chicago")
 
@@ -77,6 +78,26 @@ IntOpt = Annotated[int | None, BeforeValidator(_int_or_none)]
 StrOpt = Annotated[str | None, BeforeValidator(_blank_to_none)]
 ReqStr = Annotated[str, Field(min_length=1)]
 
+# The state's file has a literal "?" where a non-ASCII character was lost in about 70 daycare
+# names. Only patterns where the lost character is certain are restored; anything else (one name
+# today) is left exactly as the state wrote it. The raw row in staging.operations is untouched.
+_LOST_CHARS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r" \? "), " - "),                          # "AlphaBEST @ Allen ? Frisco": a dash
+    (re.compile(r"\bO\?(?=[A-Z])"), "O'"),                # "O?Dell"
+    (re.compile(r"(?<=[A-Za-z])\?(?=[sS]\b)"), "'"),       # "Children?s", "KID?S"
+    (re.compile(r"\b(Peque)\?(?=(?:o|a|os|as)\b)"), r"\1ñ"),  # Spanish: Pequeño, Pequeñas
+    (re.compile(r"\b(Trevi)\?(?=o\b)"), r"\1ñ"),          # Treviño
+]
+
+
+def restore_lost_chars(name: str) -> str:
+    for pattern, repl in _LOST_CHARS:
+        name = pattern.sub(repl, name)
+    return name
+
+
+Name = Annotated[str, Field(min_length=1), AfterValidator(restore_lost_chars)]
+
 
 class _Row(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True, str_strip_whitespace=True)
@@ -119,7 +140,7 @@ class Violation(_Row):
 class Operation(_Row):
     operation_id: int
     operation_number: StrOpt = None
-    operation_name: ReqStr
+    operation_name: Name
     operation_type: ReqStr
     location_address: StrOpt = None
     address_line: StrOpt = None

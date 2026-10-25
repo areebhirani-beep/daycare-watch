@@ -72,6 +72,9 @@ export type Inspection = {
   date: string;
   type: 'INSPECTION' | 'REPORT' | 'ASSESSMENT';
   violation_found: 'Yes' | 'No' | 'Pending';
+  findings_count: number; // findings cited at this visit
+  high_count: number; // of those, risk level High
+  open_count: number; // of those, neither corrected at the inspection nor verified by the state
 };
 
 export type DaycareRecord = {

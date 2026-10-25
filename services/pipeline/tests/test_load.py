@@ -168,3 +168,16 @@ def test_census_quality_survives_reload_and_clears_on_address_change(
     assert reload(same) == ("census", "non_exact", True)
     moved = [(o.model_copy(update={"address_line": "1 NEW ST"}), h + "x") for o, h in same]
     assert reload(moved) == (None, None, False)
+
+
+def test_resync_leaves_district_alone(conn: psycopg.Connection[Any], ops_raw: list[dict[str, Any]]) -> None:
+    """A no-change night: neither the point check nor the county fallback rewrites any row."""
+    (parsed, _, _) = _parsed(ops_raw, [], [])
+    for _ in range(2):
+        load.load_daycares(conn, uuid.uuid4(), parsed, False)
+        conn.execute("drop table t_daycares")
+        counts = load.assign_district(conn)
+    no_point = conn.execute("select count(*) from core.daycares where operation_id = any(%s) and geom is null",
+                            ([o.operation_id for o, _ in parsed],)).fetchone()
+    assert no_point and no_point[0] > 0, "fixtures need a daycare without a point"
+    assert (counts["district_changed_point"], counts["district_changed_county"]) == (0, 0)

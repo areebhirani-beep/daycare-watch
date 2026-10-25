@@ -188,6 +188,8 @@ on conflict (operation_id) do update set
     when excluded.geocode_source is null and d.geocode_source = 'census'
       and d.geocode_address is not distinct from excluded.geocode_address
       then d.district_basis
+    -- still no point: keep the county fallback (ASSIGN_COUNTY re-checks it if the county changed)
+    when excluded.geocode_source is null and d.geom is null then d.district_basis
   end,
   capacity = excluded.capacity, ages = excluded.ages, hours = excluded.hours, days = excluded.days,
   programs = excluded.programs, accepts_subsidies = excluded.accepts_subsidies,

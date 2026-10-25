@@ -173,7 +173,7 @@ Every daycare gets the same white pin, so the map never ranks anyone. Pin color 
 | Licensed Center, approximate address | Plain muted map with an area, no aerial, no flyover | Aerial | "Approximate location (address matched with corrections)" |
 | Any home type, or unknown type | Grey street canvas, zoom ≤ 14, ~400 m area circle on a 0.005° grid point, **no pin, no photo, no flyover**. City + ZIP only | Same canvas | "Neighborhood only · private home" |
 
-`lib/imagery.ts` (`imageryAllowed`) is the single test, and `FlyoverHero.flyoverAllowed` adds the exact-address check. Credit shows on every image ("Imagery © Esri, Maxar", "Map © Esri, HERE, Garmin, OSM", "© Esri" on thumbs, "Mapillary contributors" on street photos). An aerial never claims to show the building.
+`lib/imagery.ts` (`imageryAllowed`) is the single test, and `FlyoverHero.flyoverAllowed` adds the exact-address check. Credit shows on every image ("Imagery © Esri, Maxar", "Map © Esri, HERE, Garmin, OSM", "© Esri" on thumbs, "© Mapillary contributors · CC BY-SA" on street photos). An aerial never claims to show the building.
 
 ## 9. Place hero carousel (`PlaceGallery`)
 
@@ -185,7 +185,7 @@ Every daycare gets the same white pin, so the map never ranks anyone. Pin color 
 │                                        │
 │ ┌ Mar 2024 ┐                           │  capture-date chip (photos only)
 │ Street view near the address  ● ○ ○ ○  │  caption left · page dots right
-│ Mapillary contributors                 │  credit, caption 12
+│ © Mapillary contributors · CC BY-SA    │  credit, caption 12
 └────────────────────────────────────────┘
 ```
 
@@ -195,7 +195,7 @@ Every daycare gets the same white pin, so the map never ranks anyone. Pin color 
 | Dots | 6 pt dots, 6 gap, white on a 30% black pill; the current dot is a 16 × 6 capsule |
 | Date chip | Photos only: capture month and year ("Mar 2024") in `caption` on a 50% black pill, top-left of the caption row |
 | Caption | Photo: "Street view near the address". Flyover: "3D view · Apple Maps". Aerial: the §8 caption |
-| Credit | Photo: "Mapillary contributors". Aerial: "Imagery © Esri, Maxar". Always visible, never under the head card |
+| Credit | Photo: "© Mapillary contributors · CC BY-SA" (the imagery license, named on the hero and in the viewer). Aerial: "Imagery © Esri, Maxar". Always visible, never under the head card |
 | Scrim | Bottom 35% stepped black scrim (0 → 45%) so white text clears 4.5:1 on any photo |
 | Tap | Opens a full-screen black viewer: pinch-zoom, swipe between the same pages, the caption, date and credit in the bottom bar, close top-left |
 | No photo | **The default case** (most centers have no street photo): the flyover is page 1 and must look finished on its own: no dots when there is one page, caption + credit only |
@@ -285,4 +285,6 @@ Past 2 years
 ### Change log after the freeze
 | Date | Change | Why |
 |---|---|---|
-| | | |
+| Oct 25 02:25 | Carousel page 1 = 3D view, photos second | Street photos are dashcam frames near the address; the flyover is the strongest real picture |
+| Oct 25 02:24 | Answer line keeps "on record" ("no state check on record yet"), tail held with non-breaking spaces | The state may have checked without posting it; the tail wraps as one unit |
+| Oct 25 02:12 | Serious tag rides the meta line in top problems | The tag column squeezed the finding text at large sizes |

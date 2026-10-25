@@ -1,0 +1,58 @@
+# QA U14, U24-U27 on real records:
+#   228100  Stonebriar Preschool Pals: visits on record, 0 findings in the window (U14)
+#   1459611 Viva World School: share, tour questions, rights requests, state's site from a finding
+appId: host.exp.Exponent
+---
+- runFlow: _open.yaml
+# U14: zero findings reads as "no problems cited", never as a verdict.
+- openLink: ${METRO}/--/daycare/228100
+- extendedWaitUntil:
+    visible: "Stonebriar Preschool Pals.*"
+    timeout: 20000
+- assertVisible: ".*No problems cited.*"
+- takeScreenshot: ../../harness/state/qa/u14-zero-0
+# U24: share opens the iOS share sheet.
+- openLink: ${METRO}/--/daycare/1459611
+- extendedWaitUntil:
+    visible: "Viva World School.*"
+    timeout: 20000
+- tapOn: "Share"
+- extendedWaitUntil:
+    visible: "(Copy|AirDrop|Messages)"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/qa/u24-share-sheet
+- swipe:
+    start: 50%, 40%
+    end: 50%, 95%
+- waitForAnimationToEnd
+# U26: tour questions built from this daycare's findings.
+- scrollUntilVisible:
+    element: "All tour questions"
+    direction: DOWN
+    timeout: 20000
+- takeScreenshot: ../../harness/state/qa/u26-tour-card
+- tapOn: "All tour questions"
+- extendedWaitUntil:
+    visible: "Share these questions"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/qa/u26-tour
+- back
+# U25: rights request -> generated note in the share sheet.
+- extendedWaitUntil:
+    visible: "Viva World School.*"
+    timeout: 10000
+- scrollUntilVisible:
+    element: "Your rights"
+    direction: UP
+    timeout: 10000
+- tapOn: "Your rights"
+- scrollUntilVisible:
+    element: "Request records"
+    direction: DOWN
+    timeout: 15000
+- takeScreenshot: ../../harness/state/qa/u25-rights-tab
+- tapOn: "Request records"
+- extendedWaitUntil:
+    visible: "(Copy|AirDrop|Messages|Mail)"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/qa/u25-request-sheet

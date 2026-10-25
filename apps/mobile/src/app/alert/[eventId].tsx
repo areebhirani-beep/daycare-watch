@@ -86,11 +86,10 @@ export default function AlertScreen() {
               {answer.sub}
             </Text>
           ) : null}
+          <Text variant="footnote" tone="secondary" tabular style={{ marginTop: space.xxs }}>
+            {when}
+          </Text>
         </View>
-
-        <Text variant="footnote" tone="secondary" tabular>
-          {when}
-        </Text>
 
         {change?.visit ? <WhatChanged change={change} /> : null}
 
@@ -209,5 +208,5 @@ const styles = StyleSheet.create({
   content: { padding: space.lg, gap: space.lg, paddingBottom: space.section },
   replay: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  changed: { borderRadius: radius.card, padding: space.lg, gap: space.xs },
+  changed: { borderRadius: radius.card, paddingHorizontal: space.lg, paddingVertical: space.md, gap: space.xxs },
 });

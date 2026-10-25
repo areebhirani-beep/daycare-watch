@@ -47,7 +47,7 @@ type Page =
   | { key: 'area'; kind: 'area' }
   | { key: 'approx'; kind: 'approx' };
 
-const PHOTO_CREDIT = 'Mapillary contributors';
+const PHOTO_CREDIT = '© Mapillary contributors · CC BY-SA';
 const ESRI_CREDIT = 'Imagery © Esri, Maxar';
 
 function caption(p: Page, quality: GeocodeQuality | null | undefined): { text: string; credit?: string; date?: string } {

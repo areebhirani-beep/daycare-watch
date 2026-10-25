@@ -76,6 +76,13 @@ type Cluster = { key: string; lat: number; lng: number; rows: DaycareRow[] };
 const CLUSTER_PT = 52;
 
 /** Screen-grid clustering in points: cheap, stable, fine for the rows daycares_near returns. */
+/** Map layering: translucent home/approximate areas under solid pins, watched above, clusters above, the picked one on top. */
+function markerZ(r: DaycareRow, selected: boolean, watched: boolean): number {
+  if (selected) return 10;
+  if (watched) return 2;
+  return imageryAllowed(r.operation_type) && r.geocode_quality !== 'non_exact' ? 1 : 0;
+}
+
 function cluster(rows: DaycareRow[], region: Region, width: number, height: number): Cluster[] {
   const latCell = (region.latitudeDelta * CLUSTER_PT) / height;
   const lngCell = (region.longitudeDelta * CLUSTER_PT) / width;
@@ -321,7 +328,7 @@ export function HomeMap({
               coordinate={{ latitude: k.lat, longitude: k.lng }}
               onPress={() => pick(k.rows[0]!)}
               tracksViewChanges={false}
-              zIndex={selected === k.rows[0]!.operation_id ? 10 : 1}
+              zIndex={markerZ(k.rows[0]!, selected === k.rows[0]!.operation_id, watchedIds.has(k.rows[0]!.operation_id))}
             >
               {/* iOS ignores a Marker's own label when it draws a custom view, so the view carries it. */}
               <View
@@ -347,7 +354,7 @@ export function HomeMap({
               </View>
             </Marker>
           ) : (
-            <Marker key={k.key} coordinate={{ latitude: k.lat, longitude: k.lng }} onPress={() => zoomInto(k)} tracksViewChanges={false}>
+            <Marker key={k.key} coordinate={{ latitude: k.lat, longitude: k.lng }} onPress={() => zoomInto(k)} tracksViewChanges={false} zIndex={3}>
               <View accessible accessibilityRole="button" accessibilityLabel={`${k.rows.length} daycares here. Zooms in.`}>
                 <ClusterBubble count={k.rows.length} />
               </View>

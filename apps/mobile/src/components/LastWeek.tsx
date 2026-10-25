@@ -70,11 +70,14 @@ export function VisitRow({
   first,
   today,
   onOpen,
+  lines = 2,
 }: {
   visit: DistrictRecentVisit;
   first: boolean;
   today: string;
   onOpen: (operationId: number) => void;
+  /** Name lines: two in the Home feed; the full week list passes 0 (no limit) so names stay whole. */
+  lines?: number;
 }) {
   const c = useColors();
   const lead = leadCategory(v.categories);
@@ -95,7 +98,7 @@ export function VisitRow({
         </View>
       )}
       <View style={{ flex: 1, gap: 2 }}>
-        <Text variant="headline" numberOfLines={2}>
+        <Text variant="headline" numberOfLines={lines}>
           {visitName(v)}
         </Text>
         <Text variant="footnote" tone="secondary" tabular>

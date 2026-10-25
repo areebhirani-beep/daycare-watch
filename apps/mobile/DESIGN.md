@@ -163,7 +163,7 @@ No green and no red in the set; the safety-hazards orange and health pink sit at
 | `AreaPin` | Any approximate location, and **every home daycare, always** | Translucent ink area (52, selected 72) with a 1.5 pt edge and a small white core carrying the type glyph. Watched = yellow area. Never a point on a family's house |
 | `ClusterBubble` | Nearby daycares grouped | Ink circle 38 / 44 / 52 with a 3 pt white ring and a heavy tabular count ("1.2k" past 999) |
 
-Every daycare gets the same white pin, so the map never ranks anyone. Pin color never encodes the record.
+Every daycare gets the same white pin, so the map never ranks anyone. Pin color never encodes the record. **Layering:** areas 0 · pins 1 · watched 2 · clusters 3 · selected 10, so an area never covers a pin.
 
 ## 8. Location imagery
 

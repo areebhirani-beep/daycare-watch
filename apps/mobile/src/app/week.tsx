@@ -41,7 +41,14 @@ export default function WeekScreen() {
       ) : (
         <>
           {rows.map((v, i) => (
-            <VisitRow key={v.activity_id} visit={v} first={i === 0} today={today} onOpen={(id) => router.push(`/daycare/${id}`)} />
+            <VisitRow
+              key={v.activity_id}
+              visit={v}
+              first={i === 0}
+              today={today}
+              lines={0}
+              onOpen={(id) => router.push(`/daycare/${id}`)}
+            />
           ))}
           {pulse.data && rows.length < pulse.data.visits ? (
             <Text variant="footnote" tone="secondary" style={{ padding: space.lg }}>

@@ -72,7 +72,12 @@ function longMonth(p: Pick<Photo, 'captured_at'>): string {
 function caption(p: Page, name: string): Caption {
   switch (p.kind) {
     case 'lookaround':
-      return { chip: 'Look Around · Apple Maps', label: `Street photo of ${name}, Apple Look Around` };
+      // Apple's imagery can predate the daycare (one TX-04 center shows the previous tenant's sign), and Apple gives
+      // no capture date, so the page says so instead of implying the picture is current.
+      return {
+        chip: 'Look Around · Apple Maps · date unknown',
+        label: `Street photo of ${name}, Apple Look Around. Apple does not say when this picture was taken.`,
+      };
     case 'photo':
       return {
         chip: `Photo · Mapillary · ${photoMonth(p.photo)}`,
@@ -298,7 +303,7 @@ export function PlaceGallery({
 
       {onPicture ? (
         <>
-          <View pointerEvents="none" style={styles.topScrim} />
+          <Scrim height={TOP_SCRIM_H} steps={TOP_SCRIM} edge="top" />
           {street ? <Scrim height={height * 0.28} steps={PHOTO_SCRIM} /> : <Scrim height={height * 0.35} steps={ABOVE_SCRIM} />}
         </>
       ) : null}
@@ -334,7 +339,10 @@ export function PlaceGallery({
 
 // Street pictures get a lighter scrim (bottom 28%, up to 35% black) than the views from above (35%, up to 45%).
 const PHOTO_SCRIM = [0, 0.12, 0.24, 0.35];
-const ABOVE_SCRIM = [0.08, 0.18, 0.3, 0.45];
+const ABOVE_SCRIM = [0, 0.14, 0.3, 0.45];
+// Under the status bar: clear at 96 pt, darkest at the top edge, so the clock reads without a hard line.
+const TOP_SCRIM = [0, 0.08, 0.2, 0.3];
+const TOP_SCRIM_H = 96;
 
 function PageBody({
   page,
@@ -416,14 +424,21 @@ function PageBody({
   }
 }
 
-/** The bottom of the hero, stepped toward black, so white type reads on any picture. */
-function Scrim({ height, steps }: { height: number; steps: readonly number[] }) {
+/**
+ * The bottom of the hero, darkening toward black, so white type reads on any picture. One native gradient:
+ * stacked slices left 1 px seams where their fractional heights rounded.
+ */
+function Scrim({ height, steps, edge = 'bottom' }: { height: number; steps: readonly number[]; edge?: 'top' | 'bottom' }) {
+  const stops = steps.map((o, i) => `rgba(0,0,0,${o}) ${Math.round((i / (steps.length - 1)) * 100)}%`).join(', ');
   return (
-    <View pointerEvents="none" style={[styles.scrim, { height }]}>
-      {steps.map((o) => (
-        <View key={o} style={{ flex: 1, backgroundColor: `rgba(0,0,0,${o})` }} />
-      ))}
-    </View>
+    <View
+      pointerEvents="none"
+      style={[
+        styles.scrim,
+        edge === 'top' ? { top: 0, bottom: undefined } : null,
+        { height, backgroundImage: `linear-gradient(${edge === 'top' ? 'to top' : 'to bottom'}, ${stops})` },
+      ]}
+    />
   );
 }
 
@@ -559,7 +574,6 @@ const styles = StyleSheet.create({
   credit: { opacity: 0.85 },
   scrim: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   // Keeps the status bar readable over a bright sky.
-  topScrim: { position: 'absolute', left: 0, right: 0, top: 0, height: 64, backgroundColor: 'rgba(0,0,0,0.22)' },
   dots: {
     flexDirection: 'row',
     gap: 6,

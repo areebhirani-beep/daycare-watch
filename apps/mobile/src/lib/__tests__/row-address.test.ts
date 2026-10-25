@@ -14,14 +14,15 @@ jest.mock('react-native-reanimated', () => {
   return stub;
 });
 
-// daycare_search('78626') row for operation 175268, a Listed Family Home, as returned Oct 24 2026.
+// daycare_search('78626') row for operation 175268, a Listed Family Home (Oct 24 2026): street withheld, ZIP5,
+// point rounded to 2 decimals, as repo fixtures carry homes.
 const row = {
   operation_id: 175268,
-  name: 'Felicia Reynolds',
+  name: 'withheld for privacy',
   operation_type: 'Listed Family Home',
-  address: 'withheld for privacy  GEORGETOWN TX- 78626 ####',
+  address: 'withheld for privacy',
   city: 'GEORGETOWN',
-  zip: '78626 ####',
+  zip: '78626',
   county: 'WILLIAMSON',
   lat: 30.63,
   lng: -97.65,
@@ -40,6 +41,6 @@ describe('a list row for a home daycare', () => {
   it('renders no street address anywhere in the row text', () => {
     const text = [rowMeta(row, '2026-10-24'), rowFallback(row), placeAddress(row)].join(' | ');
     expect(text).toBe('Listed home · Georgetown | No state visits posted in 2 years | Georgetown, TX 78626');
-    expect(text).not.toMatch(/2309|caprock/i);
+    expect(text).not.toMatch(/withheld/i);
   });
 });

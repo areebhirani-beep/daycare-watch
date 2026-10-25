@@ -1,12 +1,19 @@
 import { tidyCase } from './format';
-import { isResidence } from './imagery';
 import type { DaycareHeader } from './types';
+
+const CENTER = 'Licensed Center';
 
 /**
  * The state's one-line address, tidied for a maps search: "5853 HORIZON RD  ROCKWALL TX- 75032 7788" becomes
  * "5853 HORIZON RD, ROCKWALL, TX 75032-7788". Directions use the address, never our geocoded point.
+ * Anything but a licensed center may be a private residence: whatever the record carries, it prints city and
+ * 5-digit ZIP only. Called without a type (a center's own record), it prints the full line.
  */
-export function addressLine(d: Pick<DaycareHeader, 'address' | 'city' | 'zip'>): string {
+export function addressLine(d: Pick<DaycareHeader, 'address' | 'city' | 'zip'> & { operation_type?: string | null }): string {
+  if (d.operation_type !== undefined && d.operation_type !== CENTER) {
+    const zip5 = (d.zip ?? '').trim().slice(0, 5);
+    return [tidyCase(d.city), ['TX', zip5].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  }
   const raw = (d.address ?? '').trim();
   const city = (d.city ?? '').trim();
   const line = raw
@@ -34,12 +41,10 @@ type Place = Pick<DaycareHeader, 'address' | 'city' | 'zip' | 'operation_type'>;
  * ("Georgetown, TX 78626"). Centers get the full state address line.
  */
 export function placeAddress(d: Place): string {
-  if (!isResidence(d.operation_type)) return addressLine(d);
-  const zip5 = (d.zip ?? '').trim().slice(0, 5);
-  return [tidyCase(d.city), ['TX', zip5].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  return addressLine(d);
 }
 
 /** Where directions may point, or null for a home daycare: no turn-by-turn route to a private house. */
 export function directionsAddress(d: Place): string | null {
-  return isResidence(d.operation_type) ? null : addressLine(d);
+  return d.operation_type === CENTER ? addressLine(d) : null;
 }

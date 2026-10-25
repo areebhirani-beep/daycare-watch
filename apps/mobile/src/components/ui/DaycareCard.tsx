@@ -162,7 +162,7 @@ const shadow = {
 } as const;
 
 const styles = StyleSheet.create({
-  hero: { aspectRatio: 1.8, borderRadius: radius.thumb, overflow: 'hidden' },
+  hero: { aspectRatio: 2, borderRadius: radius.thumb, overflow: 'hidden' },
   heroToggle: { position: 'absolute', top: 10, right: 10 },
   body: { paddingTop: space.sm + 2, gap: 2 },
   strip: { marginTop: space.sm, minHeight: 20, justifyContent: 'flex-end' },

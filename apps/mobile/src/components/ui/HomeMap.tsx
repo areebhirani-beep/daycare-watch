@@ -1,6 +1,6 @@
 import BottomSheet, { BottomSheetFlatList, type BottomSheetFlatListMethods } from '@gorhom/bottom-sheet';
 import { useMemo, useRef, useState } from 'react';
-import { FlatList, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { FlatList, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import MapView, { Marker, type Region } from 'react-native-maps';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -180,9 +180,9 @@ export function HomeMap({
         <IconButton icon="search" label="Search daycares" onPress={onSearch} size={40} />
       </View>
       <ChipRow style={{ paddingBottom: space.lg }}>
-        <Chip label="Centers" selected={filters.has('centers')} onPress={() => toggle('centers')} />
-        <Chip label="Home daycares" selected={filters.has('homes')} onPress={() => toggle('homes')} />
-        <Chip label="In TX-04" selected={filters.has('district')} onPress={() => toggle('district')} />
+        <Chip label="Centers" icon="center" selected={filters.has('centers')} onPress={() => toggle('centers')} />
+        <Chip label="Home daycares" icon="home" selected={filters.has('homes')} onPress={() => toggle('homes')} />
+        <Chip label="In TX-04" icon="district" selected={filters.has('district')} onPress={() => toggle('district')} />
       </ChipRow>
       <SectionHeader title="Closest to you" onMore={() => sheetRef.current?.snapToIndex(2)} />
       {loading && rows.length === 0 ? (
@@ -235,6 +235,8 @@ export function HomeMap({
         showsPointsOfInterests={false}
         showsBuildings={false}
         userInterfaceStyle={isDark ? 'dark' : 'light'}
+        // Apple's muted base (light grey / graphite): the map recedes so the pins and the yellow carry.
+        mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
         mapPadding={{ top: insets.top + 64, bottom: 0, left: 0, right: 0 }}
         onPress={() => setSelected(null)}
       >

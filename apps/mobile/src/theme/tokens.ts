@@ -187,7 +187,7 @@ export const spring = {
 } as const;
 
 // Bottom sheet detents for the map home (Apple Maps). Peek is in points above the bottom inset.
-export const sheet = { peek: 156, half: '60%', grabber: { width: 36, height: 5, top: 6 } } as const;
+export const sheet = { peek: 156, half: '64%', grabber: { width: 36, height: 5, top: 6 } } as const;
 
 // 3D button edge depth (Duolingo).
 export const buttonEdge = 4;

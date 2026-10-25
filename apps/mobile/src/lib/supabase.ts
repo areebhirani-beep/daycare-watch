@@ -1,4 +1,5 @@
 import { createClient, isAuthApiError } from '@supabase/supabase-js';
+import * as Device from 'expo-device';
 import { AppState } from 'react-native';
 
 import { authStorage } from './storage';
@@ -10,7 +11,27 @@ if (!url || !anonKey) {
   throw new Error('Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in apps/mobile/.env.local');
 }
 
+/**
+ * Set when the app can't reach the API by design: on a real phone, 127.0.0.1 / localhost is the phone itself.
+ * Screens show it instead of loading forever.
+ */
+export const configError: string | null =
+  Device.isDevice && /\/\/(127\.0\.0\.1|localhost)[:/]/.test(url)
+    ? `This build points at ${url}, which on a phone is the phone itself. Use the computer's LAN address.`
+    : null;
+
+const REQUEST_TIMEOUT_MS = 10_000;
+
+/** Every API call gives up after 10 s, so an unreachable server shows an error instead of an endless skeleton. */
+function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  init?.signal?.addEventListener('abort', () => controller.abort());
+  return fetch(input, { ...init, signal: controller.signal }).finally(() => clearTimeout(timer));
+}
+
 export const supabase = createClient(url, anonKey, {
+  global: { fetch: fetchWithTimeout },
   auth: {
     storage: authStorage,
     autoRefreshToken: true,

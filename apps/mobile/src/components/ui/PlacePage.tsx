@@ -24,7 +24,7 @@ import {
   tidyCase,
 } from '@/lib/format';
 import { groupByVisit, summarize, visibleVisits, visitTypeLabel } from '@/lib/record';
-import { REQUEST_CARDS, type RequestKind } from '@/lib/rights';
+import { lawCovers, NOT_COVERED, REQUEST_CARDS, type RequestKind } from '@/lib/rights';
 import type { AreaCompare, DaycareRecord } from '@/lib/types';
 import { radius, space, useColors } from '@/theme';
 
@@ -234,9 +234,18 @@ export function PlacePage({
 
           {tab === 'rights' ? (
             <View>
-              {REQUEST_CARDS.map((r) => (
-                <RightCard key={r.kind} icon={r.icon} title={r.title} detail={r.detail} onPress={() => onRequest(r.kind)} />
-              ))}
+              {lawCovers(daycare.operation_type) ? (
+                REQUEST_CARDS.map((r) => (
+                  <RightCard key={r.kind} icon={r.icon} title={r.title} detail={r.detail} onPress={() => onRequest(r.kind)} />
+                ))
+              ) : (
+                <View style={[styles.empty, { backgroundColor: c.sunken }]}>
+                  <Text variant="headline">{NOT_COVERED}</Text>
+                  <Text variant="callout" tone="secondary">
+                    You can still read every inspection the state posts here.
+                  </Text>
+                </View>
+              )}
               <Text variant="footnote" tone="tertiary" style={{ marginTop: space.lg }}>
                 {lawCite}
               </Text>

@@ -91,21 +91,15 @@ export default function WatchScreen() {
 
       <View style={styles.points}>
         <Point title="What you'll get">
-          One alert when Texas posts a new inspection finding, a permit status change, corrective or adverse action, or a temporary closure at this daycare.
-        </Point>
-        <Point title="How often">
-          The state visits each daycare every 2 to 8 months, so most families get only a few alerts a year.
+          One alert when Texas posts a new finding, a permit change, corrective or adverse action, or a closure here.
         </Point>
         <Point title="When">
-          After the state posts it, usually a week or more after the visit. We can&rsquo;t alert you when an investigation opens, only once the state publishes what it found.
-        </Point>
-        <Point title="What we keep">
-          No account, name, or location. Just which daycares this phone watches.
+          Once the state publishes what it found. Not when an investigation opens.
         </Point>
       </View>
 
       <T variant="footnote" tone="secondary">
-        Next, your phone will ask to allow notifications. Choose Allow so alerts can reach you.
+        Next, your phone asks about notifications. Tap Allow so alerts reach you.
       </T>
       {error ? (
         <T variant="callout" color={c.risk.High} accessibilityLiveRegion="assertive">

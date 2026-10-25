@@ -209,7 +209,14 @@ export function RecordStrip({
                 ) : null}
               </Animated.View>
             );
-            if (!onPressVisit || !isFull) return <View key={String(v.id)} style={StyleSheet.absoluteFill}>{column(v.x)}</View>;
+            // A selected visit is underlined whether or not the strip is tappable (the alert highlights its visit).
+            if (!onPressVisit || !isFull)
+              return (
+                <View key={String(v.id)} style={StyleSheet.absoluteFill} pointerEvents="none">
+                  {column(v.x)}
+                  {selected ? <View style={[styles.selected, { left: v.x, width: col, backgroundColor: c.accent }]} /> : null}
+                </View>
+              );
             return (
               <Pressable
                 key={String(v.id)}

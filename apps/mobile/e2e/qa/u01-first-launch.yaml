@@ -10,13 +10,13 @@ appId: host.exp.Exponent
 - extendedWaitUntil:
     visible: "Get started"
     timeout: 60000
-- takeScreenshot: ../../harness/state/qa/u01-0-welcome
+- takeScreenshot: e2e/out/qa/u01-0-welcome
 - tapOn: "Get started"
 # Step 2: how it works, three beats on a real record.
 - extendedWaitUntil:
     visible: "Inspectors write down what they find.*"
     timeout: 15000
-- takeScreenshot: ../../harness/state/qa/u01-0b-how
+- takeScreenshot: e2e/out/qa/u01-0b-how
 - tapOn: "Next"
 - extendedWaitUntil:
     visible: "We put it in plain words.*"
@@ -25,7 +25,7 @@ appId: host.exp.Exponent
 - extendedWaitUntil:
     visible: "Find your daycare"
     timeout: 5000
-- takeScreenshot: ../../harness/state/qa/u01-0c-how-last
+- takeScreenshot: e2e/out/qa/u01-0c-how-last
 - tapOn: "Find your daycare"
 # Step 3: find yours.
 - tapOn: "Use my location"
@@ -37,24 +37,24 @@ appId: host.exp.Exponent
 - extendedWaitUntil:
     visible: ".*Center, [0-9.]+ mi.*"
     timeout: 20000
-- takeScreenshot: ../../harness/state/qa/u01-1-pick
+- takeScreenshot: e2e/out/qa/u01-1-pick
 - tapOn: ".*Center, [0-9.]+ mi.*"
 - tapOn: "Watch this daycare"
 - extendedWaitUntil:
     visible: "Turn on alerts"
     timeout: 10000
-- takeScreenshot: ../../harness/state/qa/u01-2-alerts
+- takeScreenshot: e2e/out/qa/u01-2-alerts
 # Step 4 (alerts) must wait for the parent’s choice.
 - assertVisible: "Not now"
 - tapOn: "Not now"
 - extendedWaitUntil:
     visible: "You’re watching.*"
     timeout: 10000
-- takeScreenshot: ../../harness/state/qa/u01-3-done
+- takeScreenshot: e2e/out/qa/u01-3-done
 - tapOn: "Explore the map"
 # The sheet header, not the search pill: with the half sheet full, the XCUITest snapshot can drop the map layer.
 - extendedWaitUntil:
     visible: "Daycares near you"
     timeout: 20000
 - assertNotVisible: "Location is off"
-- takeScreenshot: ../../harness/state/qa/u01-4-home
+- takeScreenshot: e2e/out/qa/u01-4-home

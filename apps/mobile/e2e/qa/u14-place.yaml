@@ -14,14 +14,14 @@ appId: host.exp.Exponent
     visible: "Amarillo Wesley.*"
     timeout: 20000
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/qa/u15-many-0
+- takeScreenshot: e2e/out/qa/u15-many-0
 - runFlow:
     when:
       visible: "See all.*"
     commands:
       - tapOn: "See all.*"
       - waitForAnimationToEnd
-      - takeScreenshot: ../../harness/state/qa/u15-many-1-all
+      - takeScreenshot: e2e/out/qa/u15-many-1-all
       - back
 
 # U13 home daycare
@@ -31,21 +31,21 @@ appId: host.exp.Exponent
     timeout: 20000
 - assertNotVisible: "Imagery.*"
 - assertNotVisible: "Placed from the street address"
-- takeScreenshot: ../../harness/state/qa/u13-home-0
+- takeScreenshot: e2e/out/qa/u13-home-0
 
 # U16 approximate geocode
 - openLink: ${METRO}/--/daycare/98685
 - extendedWaitUntil:
     visible: "Play House.*"
     timeout: 20000
-- takeScreenshot: ../../harness/state/qa/u16-approx-0
+- takeScreenshot: e2e/out/qa/u16-approx-0
 
 # no map point at all
 - openLink: ${METRO}/--/daycare/1120831
 - extendedWaitUntil:
     visible: "Clarice Roe.*"
     timeout: 20000
-- takeScreenshot: ../../harness/state/qa/u16-nopoint-0
+- takeScreenshot: e2e/out/qa/u16-nopoint-0
 
 # U17 fix-status wording: the Oct 5 findings have a future corrected_date (Oct 30), a due date.
 - openLink: ${METRO}/--/daycare/1459611
@@ -54,6 +54,6 @@ appId: host.exp.Exponent
     timeout: 20000
 - assertVisible: ".*Fix due Oct 30.*"
 - assertNotVisible: "Fixed.*Oct 30.*"
-- takeScreenshot: ../../harness/state/qa/u17-viva-0
+- takeScreenshot: e2e/out/qa/u17-viva-0
 # U27: one tap to the state's own page
 - assertVisible: "State record"

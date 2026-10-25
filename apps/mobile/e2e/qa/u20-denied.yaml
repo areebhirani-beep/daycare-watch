@@ -11,5 +11,5 @@ appId: host.exp.Exponent
 - extendedWaitUntil:
     visible: "Amarillo Wesley.*"
     timeout: 20000
-- takeScreenshot: ../../harness/state/qa/u20-0-place-denied
+- takeScreenshot: e2e/out/qa/u20-0-place-denied
 - assertNotVisible: "Watching · alerts on"

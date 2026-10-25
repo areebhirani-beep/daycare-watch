@@ -1,143 +1,153 @@
-# QA matrix
+# Test report
 
-Every user case, how it is tested, and the result. Owner: platform (QA lead).
-Rows are tested cold, by someone who did not write the UI.
+What we tested, how, and what happened, Oct 24 to 25 2026. Each case was run by a teammate who did not build that screen.
 
-**Status:** PASS · FAIL (filed to the owner) · PENDING (not run yet) · CUT (out of scope by a team decision; reason in the row)
-**Where:** UI rows run on the iPhone 17 Pro Max simulator in Expo Go against the local stack (same data as cloud). Flows are in `apps/mobile/e2e/qa/`, screenshots (small JPEGs) in [`docs/qa/`](qa/).
+**Result:** PASS · FAIL (listed under Problems found, with its fix) · PENDING (not run yet) · ON DEVICE (needs a real iPhone) · CUT (out of scope, reason in the row)
+**Where:** app cases ran on iOS simulators against a local copy of the database (same records as the cloud). Flows are in `apps/mobile/e2e/qa/`; screenshots are in [`docs/qa/`](qa/).
 
 ## Backend and data
 
-| # | Case | Method | Status | Evidence | Owner if it fails |
+| # | Case | Method | Result | Evidence |
+|---|---|---|---|---|
+| B1 | Schema, row-level security (every allow and every deny), RPC shapes, views, photo rules, recent visits | pgTAP | PASS | `supabase test db` → Files=12, Tests=195, PASS (Oct 25) |
+| B2 | The app's API path: public reads, anonymous sign-in, watch / unwatch / re-watch, internal tables unreachable | `supabase/snippets/api_smoke.sh` | PASS | local 21/21, cloud 21/21 (Oct 25) |
+| B3 | The nightly sync on a night with no changes creates no events | `python -m pipeline sync --dry-run --no-notify` | PASS | events_new_violation 0, events_daycare 0, inspections_new 0, join_rate 1.0 ([log](qa/resync-dryrun.log)) |
+| B4 | An alert for a daycare you no longer watch is not shown | `EVENT_ID=43 EVENT_OP=1304920 supabase/snippets/api_smoke.sh` | PASS | hidden before watching, shown while watching (is_replay=true), hidden after unwatch; 24/24 |
+| B5 | RPC latency p95 under 100 ms | `supabase/snippets/bench_rpc.sql` | PASS | search p50 3.3 / p95 24.6 ms, near 6.5 ms, record 1.9 ms (60 runs each, as the anon role, on a busy laptop) |
+| B6 | A push reaches a real iPhone | replay → Expo ticket → receipt → banner | PASS | event 43, ticket 01a17151-582b-75bd-89b2-ccba6e7ae980, receipt `delivered_to_provider`, banner shown on the phone 11:31 pm Oct 24 |
+| B7 | Push on Android | | CUT | Expo Go on Android has no remote push |
+| B8 | "In TX-04" is shown only when the map point is inside the district | pgTAP + SQL + source | PASS | 379 by point, 23 by county only; every app check is `in_district && district_basis === 'point'` (HomeMap.tsx:66, HomeMap.web.tsx:52, PlacePage.tsx:190); `district_pulse_weekly` and `district_recent_visits` filter on the point basis (pgTAP 004, 008) |
+| B9 | Replays are labelled as replays | push body + alert screen | PASS | push body starts `Replay of a real state record from {date}:` (notify.py:49); the alert screen shows "Replay of a real state record" when `is_replay` (alert/[eventId].tsx:69); on screen in U21 |
+| B10 | A fresh clone builds and passes from zero | second stack: `supabase start` → `supabase test db` → `uv run python -m pipeline backfill` → `pytest` | PASS | start 33 s; pgTAP passed on the seed alone (the tests load the real rows in `supabase/tests/fixtures/real_rows.psql` and roll them back); cold backfill 259.9 s, 14,310 daycares, 379 in TX-04 by point, the same as the loaded database. Run 4:33 am Oct 25 with 180 tests; the suite has 195 now |
+
+## Every endpoint, cloud and local
+
+`supabase/snippets/api_endpoints.sh` calls each of the 12 RPCs plus the REST, auth and storage paths with good, empty, bad, huge (20,000 characters), unicode, emoji and SQL-like input, signed out, with a forged or `alg: none` token, and as two signed-in users. Any 5xx fails. Full tables: [local](qa/endpoints-local.md), [cloud](qa/endpoints-cloud.md). Latest: local 96/96, cloud 94/94 (1:44 pm Oct 25). Two device-registration cases run on local only, so no test token reaches the cloud push list.
+
+| # | Case | Method | Result | Evidence |
+|---|---|---|---|---|
+| E1 | Public reads: `daycare_search`, `daycares_near`, `daycare_record`, `area_compare`, `district_pulse`, `district_recent_visits`, `last_sync` | 51 cases | PASS | local and cloud 51/51: empty, blank or null → `[]`; huge input capped at 50 rows (search) and 200 (near); bad number or date → 400; unknown id → `null`; `'; drop table …` and `' or '1'='1` return plain results; `%` and `_` match nothing; `Pequenos` finds "Los Pequeños Exploradores"; the iPhone's curly apostrophe works like a straight one |
+| E2 | Privacy holds through the API | jq on every row | PASS | no home from search or near has a street or a ZIP longer than 5 digits; `district_recent_visits` never names a home; at most 2 photos |
+| E3 | Signed out: no writes, no private reads | 8 cases | PASS | `watch`, `unwatch`, `my_watches`, `alert_detail`, `register_device` → 401; garbage, forged (`role: service_role`, bad signature) and `alg: none` tokens → 401 |
+| E4 | Nothing else is reachable | 16 cases | PASS | `core`, `app`, `geo`, `ops`, `staging`, `auth`, `storage`, `vault` → 406; no public tables (404); internal functions → 404; auth admin → 403; storage has no buckets |
+| E5 | Signed in: your own data only | 16 local / 14 cloud | PASS | user B sees none of A's watches, and B's unwatch leaves A's alone; watch is idempotent; unknown event → `null`; unknown daycare → 404, not 500 (D25) |
+| E6 | 50 parallel calls | `xargs -P 50` | PASS | local 50/50 200, p95 58 ms; cloud 50/50 200, p95 1,106 ms (one burst from one laptop, free tier) |
+| E7 | Cloud latency, warm (12 runs each, from Frisco, about 125 ms of network round trip included) | curl | PASS | p50: record 136, area 126, pulse 135, search 151 (typo 242), near 206, recent visits 261 ms. The first call after idle took 2.6 s |
+
+## Street pictures
+
+| # | Case | Method | Result | Evidence |
+|---|---|---|---|---|
+| P1 | A Mapillary photo shows only after a person checked that it shows that daycare; at most 2; never a home or an approximate point | pgTAP 009, 011 | PASS | an unchecked newer photo is never returned; a checked photo taken before the current permit is shown; the 6-year limit holds. Cloud, Oct 25: 1509829 Dallas Torah Center Preschool returns its 2 checked photos with the photographer credit |
+| P2 | Apple Look Around matched by the same name shows the right building | MapKit probe with the app's rules, every snapshot looked at | PASS with a note | 3 of 20 random TX-04 centers and 2 of the 40 nearest Frisco centers get one; all 5 show the right building. Rise Academy (1433122): "301" matches the address but the gable still reads "Rainbow End" (Look Around gives no capture date) |
+| P3 | "The street at this address" shows only where a person saw that the building is the clear subject | probe + eye check → `core.street_view_checks` | PASS | of 37 street views checked, 3 pass; 34 show trees, roads, fields, an intersection or another business (a massage sign, a loft storefront). `daycare_record().daycare.street_view_checked` is true only for the 3 (pgTAP 012), on the cloud too (144589, 1194568, 1238089) |
+| P4 | 0, 1 and 2 photo states, the overhead page once, a load failure drops the page | Release build | PENDING | `e2e/qa/photos.sh` |
+
+## App (iOS simulator)
+
+| # | Case | Method | Result | Evidence |
+|---|---|---|---|---|
+| U1 | First launch: onboarding, then home | Maestro | PASS | Get started → how it works → Find your daycare → Use my location → pick → Watch → Not now → "You’re watching …" → home ([welcome](qa/u01-0-welcome.jpg), [how](qa/u01-0b-how.jpg), [done](qa/u01-3-done.jpg), [home](qa/u01-4-home.jpg)) |
+| U2 | Location allowed | Maestro + simctl location | PASS | map centered on the blue dot in Plano, "Closest to you" from the same point, no "Location is off" ([home](qa/u01-4-home.jpg)). D1, D2 fixed |
+| U3 | Location denied | Maestro + simctl privacy revoke | PASS | "Daycares near you · Near your last location", map and list agree ([u03](qa/u03-denied-0.jpg)) |
+| U4 | Location outside Texas | Maestro + simctl location | PASS | Oklahoma City: "Daycares near Frisco · No Texas daycares near you" ([u04](qa/u04-outside-0.jpg)) |
+| U5 | Offline | airplane mode | ON DEVICE | a simulator shares the Mac's network. Expect the cached record and an offline notice, never a blank screen or an endless spinner |
+| U6 | Slow network | Network Link Conditioner, "Very Bad Network" | ON DEVICE | expect skeletons, then content or "We couldn’t reach the state record" with Try again |
+| U7 | Search: name | Maestro | PASS | "Viva World" → Viva World School ([u07](qa/u07-name.jpg)) |
+| U8 | Search: no match | Maestro | PASS | "zzqxv" → no rows, no crash ([u08](qa/u08-no-hit.jpg)) |
+| U9 | Search: ZIP | Maestro | PASS | "75087" → Rockwall daycares ([u09](qa/u09-zip.jpg)) |
+| U10 | Search: city | Maestro | PASS | "Sherman" → Sherman daycares ([u10](qa/u10-city.jpg)) |
+| U11 | Search: typo | Maestro | PASS | "Lionhart" → Lionheart Children’s Academy ([u11](qa/u11-typo.jpg); pgTAP 010) |
+| U12 | Center: aerial imagery shown with its credit | Maestro | PASS | the aerial page shows the pin and "Imagery © Esri, Maxar"; the 3D page shows a pin (D17) |
+| U13 | Home daycare: no street address, no imagery, no house pin | Maestro | PASS | 1490119: no imagery, no street line; the database returns no address and a rounded point (pgTAP 011) ([u13](qa/u13-home-0.jpg)) |
+| U14 | Place with no findings | Maestro | PASS | 228100 Stonebriar Preschool Pals: "No problems cited at the May 13 visit", no verdict words ([u14](qa/u14-zero-0.jpg)) |
+| U15 | Place with many findings | Maestro | PASS | 97587 (220 findings) renders and "See all" works ([u15](qa/u15-many-0.jpg)) |
+| U16 | Place with an approximate location | Maestro | PASS | 98685: "Approximate location" clear of the map's Legal mark, area circle, no pin ([u16](qa/u16-approx-0.jpg)); 1120831 with no point renders. D4 fixed |
+| U16b | A home daycare never shows photos | pgTAP 009 + Maestro | PASS | 1462404: "Neighborhood only · private home", no photo, no 3D view ([home](qa/u16b-home.jpg)) |
+| U16c | An approximate location never shows photos | pgTAP 009 + Maestro | PASS | 98685: "Approximate location", no photo ([approx](qa/u16c-approx.jpg)) |
+| U16d | Photo credit (Mapillary, CC BY-SA) and month visible | Maestro | PASS | "© Mapillary contributors · CC BY-SA" with the month (D16 fixed) |
+| U17 | Fix status comes from the state's own fields, never "Fixed" from a due date | Maestro + text search | PASS | 1459611 shows "Fix due Oct 30", never "Fixed … Oct 30" ([u17](qa/u17-viva-0.jpg)) |
+| U18 | Watch, unwatch, re-watch | Maestro | PASS | 97587: watch → sheet → "You’re watching" → "Watching ·" → "Stop watching" → re-watch; the row is in `app.watches` ([stop sheet](qa/u18-2b-stop-sheet.jpg)). D10 fixed |
+| U19 | Notifications allowed | Maestro | PASS | "Turn on alerts" → iOS prompt → Allow → done. A simulator never gets a push token, so the page reads "alerts off"; "alerts on" is shown on a real iPhone (B6) |
+| U20 | Notifications denied | Maestro | PASS | after "Don’t Allow" the place button no longer says "alerts on" ([u20](qa/u20-0-place-denied.jpg)); the sheet says notifications are off and offers Settings. D9 fixed |
+| U21 | Tap a push with the app closed | Release build + `simctl push` + Maestro (`e2e/qa/push-tap.sh`) | PASS | the real replay message for Viva World School (3 findings, Oct 5 visit) arrives as a banner; the tap opens that alert: "Replay of a real state record", "3 problems found at the Oct 5 visit", the inspector's words, Open full record ([alert](qa/r21-1-alert.jpg)) |
+| U22 | Tap a push with the app open | Maestro | PASS | the route a tap opens (`/alert/43?operationId=1304920`, a real event, watched) shows the replay label, the finding and the inspector's words ([alert](qa/u22-warm-alert.jpg)) |
+| U23 | Tap a push with the app in the background | Release build + `simctl push` + Maestro | PASS | same banner, the tap opens the alert ([alert](qa/r23-1-alert.jpg)) |
+| U24 | Share | Maestro | PASS | opens the iOS share sheet ([sheet](qa/u24-share-sheet.jpg)) |
+| U25 | Rights request letter | Maestro | PASS | Request records / Drop in without notice / Ask to inspect video with "Texas Human Resources Code §42.04271"; "Request records" opens the share sheet with the letter ([tab](qa/u25-rights-tab.jpg), [sheet](qa/u25-request-sheet.jpg)) |
+| U26 | Tour questions | Maestro | PASS | questions come from the daycare's own findings (6 safety, 2 paperwork, 1 health = 9, matching "Problems 9") ([card](qa/u26-tour-card.jpg), [tour](qa/u26-tour.jpg)) |
+| U27 | "View on the state's site" from a finding and from the place page | Maestro | PASS | place page "State record"; finding card link on the alert screen ([alert](qa/u22-warm-alert.jpg)) |
+| U28 | Dark mode | Maestro + simctl appearance | PASS | place, home daycare, search ([place](qa/u28-dark-0-place.jpg), [home](qa/u28-dark-2-home.jpg), [search](qa/u28-dark-3-search.jpg)) |
+| U29 | Largest accessibility text size | Maestro + simctl content_size | PASS | wraps with no clipping ([place](qa/u29-xxxl-0-place.jpg), [home](qa/u29-xxxl-2-home.jpg)) |
+| U30 | VoiceOver label on every control | accessibility tree | PASS | home sheet, chips, cards and list reachable (D11); pins read "<name>, Center" or "N daycares here. Zooms in." (D12); findings read "Serious. <finding>. <date>. Fixed · state checked."; tabs report which one is open; each rights action is one element |
+| U31 | Wording: never safe, unsafe, score, grade or rank | text search of source | PASS | only code names, "never a score" comments, and the state's own rule title "Report Unsafe Facility Occurrence" (verbatim) |
+
+## Every screen on four devices
+
+`apps/mobile/e2e/qa/matrix.sh` installs the Release build on each simulator, clears it, and takes the same 12 screens: welcome, how it works, find, alerts, done, home, two place pages (two screens each), Your rights, Watching. Light, dark, and the largest accessibility text size.
+
+| # | Device | Light | Dark | Largest text |
+|---|---|---|---|---|
+| X1 | iPhone SE (3rd gen), 667 pt | PASS with D27, D28 ([sheet](qa/matrix-ios-SE3-light.jpg)) | PASS ([sheet](qa/matrix-ios-SE3-dark.jpg)) | FAIL → D28: the find card's name sits under the buttons, so the pick misses ([shot](qa/D28-se-xxxl-name-under-buttons.jpg)) |
+| X2 | iPhone 17 | PASS ([sheet](qa/matrix-ios-17-light.jpg)) | PASS ([sheet](qa/matrix-ios-17-dark.jpg)) | PASS with D29 ([sheet](qa/matrix-ios-17-xxxl.jpg)) |
+| X3 | iPhone 17 Pro Max | PASS with D30 ([sheet](qa/matrix-ios-ProMax-light.jpg)) | PASS ([sheet](qa/matrix-ios-ProMax-dark.jpg)) | PASS ([sheet](qa/matrix-ios-ProMax-xxxl.jpg)) |
+| X4 | iPad (app runs in its iPhone window) | welcome renders ([shot](qa/ipad-letterbox-welcome.jpg)); the 12-screen tour can't be automated there, because Maestro gets no element tree from an iPhone app on iPad | | |
+
+## Motion (150 to 250 ms, no overshoot, press 0.98, first-load stagger only, Reduce Motion respected)
+
+| # | Case | Method | Result | Evidence |
+|---|---|---|---|---|
+| M1 | No overshoot or bounce | source search of spring configs | PASS | springs clamp overshoot; D6, D7 fixed |
+| M2 | Durations 150 to 250 ms (sheet excepted); press is 0.98 scale and 0.9 opacity | source search of durations | PASS | D8 fixed; AlertBanner 250 ms |
+| M3 | Lists animate only on first load | source | PASS | the home carousel fades once outside its list (`HomeMap.tsx:260`); rows keyed by `operation_id`, visit dots by `v.id` (`RecordStrip.tsx:245-251`), so a refetch never remounts them |
+| M4 | Reduce Motion on: movement becomes fades | simctl Reduce Motion + pixel check | PASS | with Reduce Motion on, 0 of 924,000 hero pixels change in 8 s; with it off, 683,981 change (the slow drift) ([m04](qa/m04-place.jpg)). D19 fixed |
+| M5 | Done screen: one check draw of 400 ms or less plus a success haptic, nothing else | source | PASS | `Celebration.tsx`: badge fade 200 ms, check wipe 350 ms, success haptic |
+| M6 | Never two things moving for attention on one screen | source | PASS | one entrance per screen; the 3D view keeps a slow 9 s drift while the page is open and stops under Reduce Motion |
+
+## Web link (https://daycare-watch.vercel.app)
+
+| # | Case | Method | Result | Evidence |
+|---|---|---|---|---|
+| W1 | Search at 1440 px | Chrome | PASS (local build) | "Lionhart" → Lionheart centers; rows show type · city · last visit |
+| W2 | Place page at 1440 px | Chrome | PASS (local build) | `/daycare/1279336`: Esri image, pin and credit, real findings with fix status, "Alerts need the app" |
+| W3 | Rights at 1440 px | Chrome | PASS (local build) | 3 actions and §42.04271; "Request records" builds the letter with the daycare's name |
+| W4 | Search, place and rights at 390 px | Chrome | PASS (local build) | no sideways scroll on all three; "75034" returns Frisco rows |
+| W5 | No anonymous sign-in on the web | Resource Timing + storage | PASS (local build) | 0 of 70 requests hit `/auth/v1`; no session keys stored |
+| W6 | The web bundle has no street-photo code or keys | search of the web export | PASS | 0 hits for the Mapillary token, `graph.mapillary.com` and `service_role`; the API URL found once as a control |
+| W7 | Every route answers on a cold open or refresh | `apps/mobile/e2e/qa/web-routes.sh` (20 routes + assets) | FAIL → D24 | 1:44 pm Oct 25: only `/` is 200; deep links are 404 until the fix is deployed |
+| W8 | Lighthouse 90 or higher, mobile and desktop | `LIGHTHOUSE=1 apps/mobile/e2e/qa/web-routes.sh` | FAIL → D26 | `/` mobile: performance 82, accessibility 94, best practices 100, SEO 91; desktop 99 / 94 / 100 / 91 |
+
+## Problems found
+
+| # | Case | Found | Screenshot | What we saw | Status |
 |---|---|---|---|---|---|
-| B1 | Schema, RLS allow + deny, RPC shapes, views, photos rule, recent visits | pgTAP | PASS | `supabase test db` → Files=12, Tests=195, PASS (13:04 Oct 25; adds verified photos only and max 2, a verified photo shown even before the permit, 4xx instead of 500 for bad watch/device input, `self_report` on each activity, `street_view_checked`). 180/180 on a fresh clone at 04:33 | platform |
-| B2 | App API path: public reads, anonymous sign-in, watch / unwatch / re-watch idempotent, `core`/`app`/`ops` tables unreachable | `supabase/snippets/api_smoke.sh` | PASS | local 21/21; cloud `yqrrfawmsvhxgffgrmse` 21/21 after the owner's db push of 080000–110000 (12:20 Oct 25) | platform |
-| B3 | Daily sync on a no-change night creates no events | `python -m pipeline sync --dry-run --no-notify` | PASS | run 658fef1c: events_new_violation 0, events_daycare 0, inspections_new 0, join_rate 1.0 ([log](qa/resync-dryrun.log)) | pipeline |
-| B4 | Alert for a daycare no longer watched is not shown | `EVENT_ID=43 EVENT_OP=1304920 supabase/snippets/api_smoke.sh` | PASS | hidden before watching → shown while watching (is_replay=true) → hidden after unwatch; 24/24 | platform |
-| B5 | RPC latency p95 < 100 ms | `supabase/snippets/bench_rpc.sql` | PASS | search p50 3.3 / p95 24.6 ms, near 6.5 ms, record 1.9 ms (60 runs each, role anon, load avg 7.7 from other terminals) | platform |
-| B6 | Push reaches a real iPhone | replay → Expo ticket → receipt → banner | PASS | event 43, ticket 01a17151-582b-75bd-89b2-ccba6e7ae980, receipt delivered_to_provider, owner saw banner 23:31 Oct 24 | pipeline |
-| B7 | Push on Android | | CUT | Expo Go on Android has no remote push (decided 11:00 pm Oct 24) | |
-| B8 | "In TX-04" only on point basis | pgTAP + SQL + source review | PASS | 379 point / 23 county-only in district; every app check is `in_district && district_basis === 'point'` (HomeMap.tsx:66, HomeMap.web.tsx:52, PlacePage.tsx:190); `district_pulse_weekly` and `district_recent_visits` filter `district_basis = 'point'` (pgTAP 004, 008) | platform |
-| B9 | Replays are labelled as replays | push body + alert screen | PASS (source) | push body prefix `Replay of a real state record from {date}:` (notify.py:49); alert screen shows "Replay of a real state record" when `is_replay` (alert/[eventId].tsx:69); on-screen check in U21 | pipeline / mobile |
-| B10 | A fresh clone builds and passes from zero | isolated second stack: `supabase start` → `supabase test db` → `uv run python -m pipeline backfill` → pipeline `pytest` | PASS | start 33 s (15 migrations + seed); pgTAP 180/180 on the seed alone (re-run 04:33 with migration 110000 and the redacted seed) (before the fix: 9 asserts failed because they named rows only a full load has; tests now include real rows from `supabase/tests/fixtures/real_rows.psql` and roll them back); cold backfill 259.9 s, 14,310 daycares, 379 in TX-04 by point (same as the loaded DB); pytest 270 pass, 1 skip | platform |
-
-## Every endpoint (cloud and local)
-
-`supabase/snippets/api_endpoints.sh` calls each of the 12 RPCs plus the REST, auth and storage paths with good, empty, bad, huge (20,000 chars), unicode, emoji and SQL-like input, signed out, with a forged or `alg: none` token, and as two signed-in users; any 5xx fails. Full tables: [local](qa/endpoints-local.md), [cloud](qa/endpoints-cloud.md). Latest: local 96/96, cloud 94/94 (13:02 Oct 25; 2 device-registration cases run on local only so no test token reaches the cloud push list).
-
-| # | Case | Method | Status | Evidence | Owner if it fails |
-|---|---|---|---|---|---|
-| E1 | Public reads: `daycare_search`, `daycares_near`, `daycare_record`, `area_compare`, `district_pulse`, `district_recent_visits`, `last_sync` | 51 cases | PASS | local and cloud 51/51: empty/blank/null → `[]`, huge input capped at 50 rows (search) and 200 (near), bad number or date → 400, unknown id → `null`, `'; drop table …` and `' or '1'='1` return plain results, `%` and `_` match nothing, `Pequenos` finds "Los Pequeños Exploradores", iPhone curly apostrophe same as straight | platform |
-| E2 | Privacy holds through the API | jq on every row | PASS | no home row from search or near has a street or a ZIP longer than 5; `district_recent_visits` never names a home; photos ≤ 2 | platform |
-| E3 | Signed out: no writes, no private reads | 8 cases | PASS | `watch`, `unwatch`, `my_watches`, `alert_detail`, `register_device` → 401; garbage, forged (`role: service_role`, bad signature) and `alg: none` tokens → 401 | platform |
-| E4 | Nothing else is reachable | 16 cases | PASS | `core`, `app`, `geo`, `ops`, `staging`, `auth`, `storage`, `vault` profiles → 406; no public tables (404); internal `refresh_aggregates`, `today` → 404; auth admin → 403; storage has no buckets | platform |
-| E5 | Signed in: own data only, cross-user RLS | 16 local / 14 cloud | PASS (cloud 94/94 at 13:02 after the owner pushed 120000–150000) | user B sees none of A's watches and B's unwatch leaves A's alone; watch idempotent; unknown event → `null`. **D25:** before migration 130000, `watch(-1)` was a 500 and a 20,000-char token was stored; local fixed, cloud needs the push of `120000` + `130000` | platform |
-| E6 | 50 parallel calls | `xargs -P 50` | PASS | local 50/50 200, p95 58 ms; cloud 50/50 200, p95 1,106 ms (one burst from one laptop on the free tier) | platform |
-| E7 | Cloud latency, warm (12 runs each, from Frisco, ~125 ms network round trip included) | curl | PASS | p50: record 136, area 126, pulse 135, search 151 (typo 242), near 206, recent visits 261 ms. The first call after idle took 2.6 s (cold cache) | platform |
-
-## Street pictures (photos brief, Oct 25)
-
-| # | Case | Method | Status | Evidence | Owner if it fails |
-|---|---|---|---|---|---|
-| P1 | A Mapillary photo shows only after a person checked it shows that daycare; at most 2; never a home or an approximate point | pgTAP 009, 011 | PASS | unverified newest never returned; verified photo before the permit is shown; 6-year limit holds | platform |
-| P2 | Same-name Apple Look Around (tier 1) shows the right building | MapKit probe, same rules as the app, every snapshot looked at | PASS with a note | 3/20 random TX-04 centers + 2/40 nearest Frisco; all 5 the right building. Rise Academy (1433122): "301" matches the address but the gable still reads "Rainbow End" (Look Around has no capture date) | mobile |
-| P3 | "The street at this address" (tier 2) shows only where a person saw a building that could be the daycare | probe + eye check → `core.street_view_checks` | PASS (list) | of 37 tier-2 views checked against the design bar (building the clear subject), 3 pass, 34 show trees, roads, fields, an intersection or another business (a MASSAGE sign, a LOFT storefront); `daycare_record().daycare.street_view_checked` is true only for passed rows (pgTAP 012). Coverage: 6/20 sampled, 2/40 nearest Frisco get a street picture | platform / pipeline |
-| P4 | 0/1/2-photo carousel states, overhead page once, load failure drops the page | Release sim | PENDING | runs on the tier-2 Release build (`e2e/qa/photos.sh`) | mobile |
-
-## App (iOS simulator, Expo Go)
-
-| # | Case | Method | Status | Evidence | Owner if it fails |
-|---|---|---|---|---|---|
-| U1 | First launch: onboarding, then home | Maestro | PASS | `u01-first-launch.yaml` on the rebuilt onboarding: Get started → how it works (3 beats) → Find your daycare → Use my location → pick → Watch → Not now → "You’re watching …" → home ([welcome](qa/u01-0-welcome.jpg), [how](qa/u01-0b-how.jpg), [done](qa/u01-3-done.jpg), [home](qa/u01-4-home.jpg)), 02:16 | mobile / design |
-| U2 | Location allowed | Maestro + simctl location | PASS | map centered on the parent’s blue dot in Plano, "Closest to you" list from the same point, no "Location is off" ([home](qa/u01-4-home.jpg)). D1 + D2 fixed | mobile |
-| U3 | Location denied | Maestro + simctl privacy revoke | PASS | `u03-location-denied.yaml` (simctl revoke): "Daycares near you · Near your last location", map and list agree ([u03](qa/u03-denied-0.jpg)) | mobile |
-| U4 | Location outside Texas | Maestro + simctl location | PASS | `u04-outside-texas.yaml` (Oklahoma City): "Daycares near Frisco · No Texas daycares near you" ([u04](qa/u04-outside-0.jpg)) | mobile |
-| U5 | Offline | manual sim (network off) | OWNER PHONE | a simulator shares the Mac’s network, so this runs on the iPhone: airplane mode → open the app → open a watched daycare → expect the cached record and an offline notice, never a blank screen or endless spinner | mobile |
-| U6 | Slow network | manual sim | OWNER PHONE | iPhone Settings → Developer → Network Link Conditioner → "Very Bad Network" → cold-open the app → expect skeletons, then content or "We couldn’t reach the state record" + Try again | mobile |
-| U7 | Search: name hit | Maestro | PASS | "Viva World" → Viva World School ([u07-name](qa/u07-name.jpg)) | mobile |
-| U8 | Search: no hit | Maestro | PASS | "zzqxv" → no rows, no crash ([u08-no-hit](qa/u08-no-hit.jpg)) | mobile |
-| U9 | Search: ZIP | Maestro | PASS | "75087" → Rockwall daycares ([u09-zip](qa/u09-zip.jpg)) | mobile |
-| U10 | Search: city | Maestro | PASS | "Sherman" → Sherman daycares ([u10-city](qa/u10-city.jpg)) | mobile |
-| U11 | Search: typo | Maestro | PASS | "Lionhart" → Lionheart Children’s Academy ([u11-typo](qa/u11-typo.jpg); pgTAP 010) | mobile |
-| U12 | Center: aerial imagery shown with attribution | Maestro | PASS | aerial page shows the pin and "Imagery © Esri, Maxar" (u18/u20 on 97587); 3D page "3D view · Apple Maps" has no pin (D17) | design |
-| U13 | Home daycare: no street address, no imagery, no house pin | Maestro | PASS | 1490119: no "Imagery", no "Placed from the street address", no street line; DB returns address null + 2-decimal point (pgTAP 011) ([u13-home-0](qa/u13-home-0.jpg)) | design / mobile |
-| U14 | Place with 0 findings | Maestro | PASS | 228100 Stonebriar Preschool Pals: "No problems cited at the May 13 visit", past-2-years rows say "No problems cited", no verdict words ([u14](qa/u14-zero-0.jpg)) | mobile |
-| U15 | Place with many findings | Maestro | PASS | 97587 (220 findings) renders, "See all" works ([u15-many-0](qa/u15-many-0.jpg)) | mobile |
-| U16 | Place with approximate geocode | Maestro | PASS | 98685: "Approximate location" caption clear of the map’s Legal mark, area circle, no pin ([u16-approx-0](qa/u16-approx-0.jpg)); no-point 1120831 renders. D4 fixed | mobile |
-| U16a | Place with 0 / 1 / 3 street photos | Maestro (after pipeline fills photos) | FEATURE OFF | street photos are collected but not shown for the submission (`lib/mapillary.ts` `SHOW_STREET_PHOTOS = false`, commit dcf1108: a hand check found most showed the wrong building). `u16-photos.yaml` swipes every gallery page on 1396589 (3 photo rows) and 136712 (2): no photo, no Mapillary credit | mobile |
-| U16b | Home daycare never shows photos | pgTAP 009 + Maestro | PASS | pgTAP 009 + 1462404: "Neighborhood only · private home", no photo, no 3D view ([home](qa/u16b-home.jpg)) | platform / mobile |
-| U16c | Approximate geocode never shows photos | pgTAP 009 + Maestro | PASS | pgTAP 009 + 98685: "Approximate location", no photo ([approx](qa/u16c-approx.jpg)) | platform / mobile |
-| U16d | Photo credit (Mapillary, CC BY-SA) and captured date visible | Maestro | FEATURE OFF | credit + month were verified while the feature was on (D16 fixed: "© Mapillary contributors · CC BY-SA"); not shown now | mobile / design |
-| U16e | The app sends no request to graph.mapillary.com while photos are off | `lsof` sampling of the simulator’s Expo Go sockets every 0.3 s during `u16-photos.yaml` | PASS | 2,229 socket samples: local API :55321 seen 372 times (control), Facebook/Mapillary ranges (157.240.*, 31.13.*, 2a03:2880::, graph.mapillary.com = 157.240.24.3) 0 times | mobile |
-| U17 | Fix-status strings key off the state’s own fields (fixed during the visit, or state-verified), never "Fixed <corrected_date>" | Maestro + text search | PASS | 1459611 shows "Fix due Oct 30", never "Fixed … Oct 30" ([u17-viva-0](qa/u17-viva-0.jpg)) | mobile / design |
-| U18 | Watch, unwatch, re-watch | Maestro | PASS | `u18-watch.yaml` on 97587: watch → sheet → "You’re watching" → place "Watching ·" → sheet → "Stop watching" → re-watch; `app.watches` row present ([u18 screens](qa/), [stop sheet](qa/u18-2b-stop-sheet.jpg)). D10 fixed 02:05 | mobile |
-| U19 | Notifications allowed | Maestro | PASS (sim) | `u19-allowed.yaml` on a fresh Expo Go: "Turn on alerts" → iOS prompt → Allow → done. Simulator never registers for push (`Device.isDevice`), so the page honestly reads "alerts off"; "alerts on" is proven on the owner’s phone (B6) | mobile |
-| U20 | Notifications denied | Maestro | PASS | `u20-denied.yaml`: after "Don’t Allow" the place button no longer says "alerts on" ([u20-0-place-denied](qa/u20-0-place-denied.jpg)); sheet says notifications are off + Open Settings. D9 fixed 02:05 | mobile |
-| U21 | Push tap, app cold | Release build + `simctl push` + Maestro (`e2e/qa/push-tap.sh`) | PASS (Release sim) | app terminated → pipeline's real replay message for Viva World School (3 findings, Oct 5 visit) as a banner → tap launches the app straight to that alert: "Replay of a real state record", "3 problems found at the Oct 5 visit", inspector's words, Open full record ([alert](qa/r21-1-alert.jpg)), 12:52 Oct 25. Still worth one tap on the owner's phone (real APNs) | mobile |
-| U22 | Push tap, app warm | simctl push + Maestro | PASS (route) | `u22-alert-route.yaml`: the exact route a tap opens (`/alert/43?operationId=1304920`, real event, watched) shows "Replay of a real state record", the finding, inspector’s words, "View on the state’s site" ([alert](qa/u22-warm-alert.jpg)); banner tap on a real phone | mobile |
-| U23 | Push tap, app in background | Release build + `simctl push` + Maestro (`e2e/qa/push-tap.sh`) | PASS (Release sim) | app in background → same banner → tap opens the alert ([alert](qa/r23-1-alert.jpg)), 12:46 Oct 25 | mobile |
-| U24 | Share | Maestro | PASS | "Share" opens the iOS share sheet ([sheet](qa/u24-share-sheet.jpg)) | mobile |
-| U25 | Rights request generation | Maestro | PASS | Your rights tab: Request records / Drop in without notice / Ask to inspect video + "Texas Human Resources Code §42.04271"; "Request records" opens the share sheet with the generated letter "Dear Director, …" ([tab](qa/u25-rights-tab.jpg), [sheet](qa/u25-request-sheet.jpg)) | mobile |
-| U26 | Tour questions | Maestro | PASS | tour card → "Ask Viva World School", questions from its own findings (6 safety + 2 paperwork + 1 health = 9, matches "Problems 9"), "Share these questions" ([card](qa/u26-tour-card.jpg), [tour](qa/u26-tour.jpg)) | mobile |
-| U27 | "View on the state's site" from a finding and from the place page | Maestro | PASS | place page "State record" (u14-place, u24 flow); finding card "View on the state’s site" on the alert screen ([alert](qa/u22-warm-alert.jpg)) | mobile |
-| U28 | Dark mode | Maestro + simctl appearance | PASS | `u28-dark.yaml`: place, home daycare, search in dark ([place](qa/u28-dark-0-place.jpg), [home](qa/u28-dark-2-home.jpg), [search](qa/u28-dark-3-search.jpg)) | design |
-| U29 | Dynamic Type XXXL | Maestro + simctl content_size | PASS | `u29-xxxl.yaml` (accessibility XXXL): wraps, no clipping ([place](qa/u29-xxxl-0-place.jpg), [home](qa/u29-xxxl-2-home.jpg)); Serious tag moved to the meta line so text keeps full width | design |
-| U30 | VoiceOver label on every control | accessibility tree audit | PASS | home: sheet contents, chips, cards, list reachable (D11 fixed); pins read "<name>, Center" / "N daycares here. Zooms in." (D12 fixed). Place (1279336): hero "3D view · Apple Maps. Opens full screen.", findings read "Serious. <finding>. <date>. Fixed · state checked.", Back / Watch this daycare / Share named; tabs report the open one as selected; Problems reads date → visit type → severity + category + finding → "inspector’s own words · Rule 746.1201(1)" → "View on the state’s site"; Rights: each action is one element with its purpose; watch sheet: every line and both buttons labeled | mobile |
-| U31 | Wording: never safe / unsafe / score / grade / rank | text search of screens and source | PASS (source) | grep of `apps/mobile/src` for safe/unsafe/score/grade/rank/rating: only code identifiers, "never a score" comments, and the state’s own standard title "Report Unsafe Facility Occurrence" (verbatim); on-screen pass pending | mobile / design |
-
-## Motion (team motion rules, Oct 25: 150–250 ms, no overshoot, press 0.98, first-load stagger only, Reduce Motion respected)
-
-| # | Case | Method | Status | Evidence | Owner if it fails |
-|---|---|---|---|---|---|
-| M1 | No overshoot or bounce anywhere (springs critically damped, overshootClamping) | source grep of `withSpring`/`spring` configs + screen recording | PASS (source) | springs overshootClamping; D6 (1.05 pop) and D7 (ZoomIn) fixed by design 01:57, verified by grep; recording pending | mobile / design |
-| M2 | Durations 150–250 ms (sheet excepted); press = 0.98 scale + 0.9 opacity only | source grep of `duration`/`withTiming` + recording | PASS (source) | D8 fixed (NumberCard `motion.slow`); AlertBanner 250 ms; press 0.98/0.9; recording pending | mobile / design |
-| M3 | Lists animate only on first load (max 3 staggered, 30 ms); no re-animation on refresh or scroll | Maestro pull-to-refresh + recording | PASS (source) | entrance animations only on mount: home carousel fades once outside its FlatList (`HomeMap.tsx:260`, "a refresh keeps them mounted"), list rows keyed by `operation_id`, visit dots keyed by `v.id` (`RecordStrip.tsx:245-251`), so a refetch never remounts them | mobile |
-| M4 | Reduce Motion on: movement replaced by fades | simctl Reduce Motion + recording | PASS | `m04-reduce-motion.yaml` + pixel check in `run.sh`: with Reduce Motion on, the place page keeps Apple’s 3D view and it holds still, 0 of 924,000 hero pixels change in 8 s; with it off, 683,981 change (the drift) ([m04](qa/m04-place.jpg)). D19 fixed 03:05 | mobile |
-| M5 | Done screen: one check draw ≤ 400 ms + success haptic, no confetti/particles/pulsing | source + recording | PASS (source) | `Celebration.tsx`: badge fade 200 ms + check wipe 350 ms + success haptic; no confetti/particles/pulse; recording pending | design |
-| M6 | Never two things animating for attention on one screen | recording of each screen | PASS (source) | each screen has one entrance (place: page fade; onboarding: one rise per beat; done: badge then check). Judgment call for the owner: the 3D view keeps a slow 9 s heading drift while the page is open (stops under Reduce Motion) | design |
-
-## Web link
-
-| # | Case | Method | Status | Evidence | Owner if it fails |
-|---|---|---|---|---|---|
-| W1 | Search, desktop width (1440 px) | Chrome | PASS (local build; deploy pending) | `/search` "Lionhart" → 10+ Lionheart centers (typo tolerance on web), rows show type · city · last visit | mobile |
-| W2 | Place page, desktop width | Chrome | PASS (local build; deploy pending) | `/daycare/1279336`: Esri still + pin + credit, real findings with fix status, web footer "Alerts need the app" | mobile |
-| W3 | Rights, desktop width | Chrome | PASS (local build; deploy pending) | Your rights tab: 3 actions + §42.04271; "Request records" builds the letter with the daycare’s name (`navigator.share` stubbed to capture the payload) | mobile |
-| W4 | Search, place, rights at phone width (390 px) | Chrome, 390×844 frame | PASS (local build; deploy pending) | scrollWidth 390 on all three (no sideways scroll); only map tiles clip inside the hero. "75034" search returns Frisco rows | mobile |
-| W5 | No anonymous sign-in on web | Resource Timing + storage | PASS (local build; deploy pending) | 0 of 70 requests hit `/auth/v1`; 0 `sb-` session keys; API calls are only `daycare_search`, `daycare_record`, `area_compare`, `last_sync` | pipeline |
-| W6 | Web bundle carries no street-photo code or keys | `grep` of the web export for `MLY\|`, the Mapillary env var, `graph.mapillary.com`, the token value, `service_role` | PASS | all 0; control: the API URL found 1× | mobile |
-| W7 | Every route answers on a cold open or refresh | `apps/mobile/e2e/qa/web-routes.sh` (20 routes + shell assets) | FAIL → D24 | 12:31 and 12:54 Oct 25 on the live link: only `/` is 200; 19 deep links are Vercel `NOT_FOUND`. Fix committed, waiting on deploy | mobile / integrator |
-| W8 | Lighthouse ≥ 90 on the live link, mobile + desktop | `LIGHTHOUSE=1 e2e/qa/web-routes.sh` | FAIL → D26 | `/` mobile: performance 82, accessibility 94, best practices 100, SEO 91; desktop 99 / 94 / 100 / 91. Place page and rights can't be scored until D24 is deployed | mobile |
-
-## Failures filed
-
-| # | Row | Filed to | When | Screenshot | Severity · lens · status |
-|---|---|---|---|---|---|
-| D1 | U2 | mobile | 01:34 Oct 25 | [D1-map-not-centered](qa/D1-map-not-centered.jpg) | High · parent lens · FIXED, re-tested PASS 02:16 (u01) |
-| D2 | U2 | mobile | 01:34 Oct 25 | [D2-location-off-label](qa/D2-location-off-label.jpg) | Med · bad-day lens · FIXED, re-tested PASS 02:16 (u01, u03) |
-| D3 | U13 | design | 01:46 Oct 25 | [D3-home-circle-centered](qa/D3-home-circle-centered.jpg) | WITHDRAWN: circle snaps to a 0.005° grid, 282 m off the house; DB now also rounds home points |
-| D4 | U16 | design | 01:46 Oct 25 | [D4-approx-caption](qa/D4-approx-caption.jpg) | Med · Apple-designer lens · FIXED, re-tested PASS 03:06 (u14-place) |
-| D5 | U12 | design | 01:46 Oct 25 | | Low · Apple-engineer lens: Esri credit shows over a blank hero before tiles load · FIXED 03:10 (credit renders after the first tile’s onLoad, `MapSnapshot.tsx:87-144`); on screen with tiles: credit shown (u03) |
-| D6 | M1 | mobile + design | 01:52 Oct 25 | `PlacePage.tsx:144` | Med · Apple-designer lens: Watch confirm pops to 1.05 · FIXED 01:57, verified in source |
-| D7 | M1, M2 | mobile + design | 01:52 Oct 25 | `RecordStrip.tsx:237` | Med · Apple-designer lens: ZoomIn over up to 20 dots (~960 ms) · FIXED 01:57, verified in source |
-| D8 | M2 | mobile + design | 01:52 Oct 25 | `NumberCard.tsx:78` | Low · Apple-designer lens: 700 ms ring fill · FIXED 01:57, verified in source |
-| D9 | U20 | mobile (+ design) | 01:56 Oct 25 | [u20-0-place-denied](qa/u20-0-place-denied.jpg) | High · CAC-judge + parent lens: "alerts on" with notifications denied · FIXED 02:05, re-tested PASS (u20-denied.yaml) |
-| D10 | U18 | mobile | 01:58 Oct 25 | [u18-2-place-watching](qa/u18-2-place-watching.jpg) → [u18-3-unwatched](qa/u18-3-unwatched.jpg) | Med · parent lens: one tap unwatches, no confirm or undo · FIXED 02:05, re-tested PASS (u18-watch.yaml) |
-| D11 | U30 | mobile | 02:04 Oct 25 | `maestro hierarchy`: one "Bottom Sheet" element, no children | High · Apple-engineer lens: home list unreachable by VoiceOver (gorhom default `accessible=true`) · FIXED 02:09, re-tested PASS (hierarchy + u03/u04) |
-| D12 | U30 | mobile | 02:04 Oct 25 | `maestro hierarchy`: 95 × "Map pin" | Low · Apple-engineer lens: map pins have no daycare name for VoiceOver · FIXED 02:09, re-tested PASS (hierarchy) |
-| D13 | U15 | mobile + design | 02:10 Oct 25 | [u28-dark-0-place](qa/u28-dark-0-place.jpg) | Low · parent lens: "3 problems at the Oct 5 visit" then "See all 9" · FIXED 02:11 by design ("See all 9 from the past 2 years"), re-tested PASS on screen 02:34 ("See all 4 from the past 2 years") |
-| D14 | U1 | mobile + design | 02:19 Oct 25 | [u01-3-done](qa/u01-3-done.jpg) | Med · CAC-judge + parent lens: done screen promised alerts after "Not now" · FIXED 02:19 by design (`useAlertsOn`), re-tested PASS 02:35 (u01 done screen) |
-| D15 | U16a | pipeline | 02:26 Oct 25 | [u16a-3-1-photo](qa/u16a-3-1-photo.jpg) | Med · CAC-judge + Apple-designer lens: forward dashcam frames (hood in shot) chosen for 241227 · FIXED 02:31 by pipeline (sideways rule + same-pass dedupe, 241227 now 0); feature then turned off for submission |
-| D16 | U16d | mobile + design | 02:26 Oct 25 | [u16d-viewer](qa/u16d-viewer.jpg) | Low · Apple-engineer lens: credit lacks the CC BY-SA license name · FIXED 02:33, re-tested on screen; feature now off |
-| D17 | U12, U14 | mobile + design | 02:31 Oct 25 | [u14-zero-0](qa/u14-zero-0.jpg) | Med · parent + CAC-judge lens: 3D view (page one) has no pin; can’t tell which building · FIXED 02:33 by design (pin on the 3D view), re-tested PASS (1396589, 1459611) |
-| D18 | U30 | mobile | 02:37 Oct 25 | `maestro hierarchy` | WITHDRAWN 02:38: search pill missing only from the XCUITest snapshot at the half sheet; present at peek and on mobile’s sim |
-| D19 | M4 | design + mobile | 03:02 Oct 25 | [D19](qa/D19-reduce-motion-caption.jpg) | Med · Apple-engineer lens: under Reduce Motion the Esri still is captioned "3D view · Apple Maps", uncredited · FIXED 03:05 (final: 3D view kept, drift stopped; mobile’s gallery gate removed), re-tested PASS with pixel check |
-| D20 | W1–W4 | design (mobile backup) | 03:13 Oct 25 | | High · CAC-judge lens: the web build is blank on every route. Console: `codegenNativeComponent is not a function` (react-native-maps). `FlyoverHero.tsx:3` imports react-native-maps and has no `.web` variant; onboarding and the place page import it · FIXED 03:15 by design (`FlyoverHero.web.tsx` + native-free `flyover.ts`), re-tested: rebuilt export has 0 `codegenNativeComponent`, W1–W5 PASS |
-| D21 | W4 | mobile | 03:18 Oct 25 | | Low · Apple-engineer lens: on web the place-page tabs have `role=tab` but no `aria-selected`, so a screen reader can’t tell which tab is open (iOS is fine via `accessibilityState`, `Tabs.tsx:35`) · FIXED 03:20 by mobile (`aria-selected`), re-tested on a rebuilt export: Your rights:true, others false |
-| D22 | U30 | mobile | 03:22 Oct 25 | | Low · parent + Apple-designer lens: the watch sheet always says "Next, your phone asks about notifications" (`watch.tsx:128`), but iOS asks only once, so on a second watch or with notifications denied no prompt appears (the done screen then recovers honestly) · FIXED 03:23 by mobile (line shown only while undetermined; denied gets a Settings line), re-tested on the QA sim with permission granted: no prompt line, no "Notifications are off" |
-| D23 | B1 | platform | 04:22 Oct 25 | | High · parent + CAC-judge lens: the API returned a home daycare's ZIP+4 (e.g. `75072 ####`, often one block face) from `daycare_search`, `daycares_near` and `daycare_record` (4,598 of 4,705 homes), undoing the ~1 km point rounding; a ZIP+4 search found the home · FIXED 04:30 by migration `20261025110000_home_zip5.sql` (homes return `left(zip, 5)`, match only on ZIP5) + 3 pgTAP asserts that failed before the fix; 180/180; search p95 19.6 ms. **Cloud verified 12:20 Oct 25** after the owner's db push (api_smoke 21/21) |
-| D24 | W7 | mobile | 12:31 Oct 25 | | High · CAC-judge lens: on https://daycare-watch.vercel.app every deep link (`/daycare/:id`, `/rights`, `/onboarding/*`, `/watching`, `/alert/:id`, `/search`) returned Vercel `NOT_FOUND` 404; only `/` loaded (`vercel.json` rewrote to `/index.html`, which `cleanUrls` 308s). Fix committed (eeb9382, rewrite to `/`); re-test on deploy |
-| D25 | E5 | platform | 12:34 Oct 25 | | Low · bad-day + Apple-engineer lens: `watch` on an unknown daycare returned HTTP 500 (P0002) and `register_device` stored a 20,000-character token · FIXED 12:34 by migration `20261025130000_rpc_http_errors.sql` (404 / 409 via `PTxyz`, token ≤ 200 chars with no spaces or brackets) + 2 pgTAP asserts; 185/185; local 96/96. Cloud needs the push |
-| D26 | W8 | mobile | 12:58 Oct 25 | | Med · CAC-judge + Apple-engineer lens: Lighthouse mobile performance 82 on `/` (LCP 4.8 s, 1,609 KiB, 331 KiB unused JS) and accessibility 94 / SEO 91 from one audit, `image-alt`: the aerial map tiles are `<img>` with no `alt` (decorative, so `alt=""`) |
-| D27 | iOS matrix | design / mobile | 13:20 Oct 25 | [pin on wordmark](qa/D27-se-pin-on-wordmark.jpg) | Med · Apple-designer + CAC-judge lens: iPhone SE (667 pt), welcome hero: the building pin sits on top of the "Daycare Watch" wordmark; the Apple Maps logo is half under Get started |
-| D28 | iOS matrix | design / mobile | 13:20 Oct 25 | [find card clipped](qa/D28-se-find-clipped.jpg) | Low · parent + Apple-designer lens: iPhone SE, onboarding Find: the card's third line is sliced in half by the pinned buttons |
+| D1 | U2 | Oct 25 | [D1](qa/D1-map-not-centered.jpg) | the map did not center on the parent's location | FIXED, re-tested |
+| D2 | U2 | Oct 25 | [D2](qa/D2-location-off-label.jpg) | "Location is off" shown with location allowed | FIXED, re-tested |
+| D3 | U13 | Oct 25 | [D3](qa/D3-home-circle-centered.jpg) | home circle looked centered on the house | WITHDRAWN: the circle snaps to a 0.005° grid, 282 m off; the database also rounds home points |
+| D4 | U16 | Oct 25 | [D4](qa/D4-approx-caption.jpg) | "Approximate location" caption collided with the map's Legal mark | FIXED, re-tested |
+| D5 | U12 | Oct 25 | | the Esri credit showed over a blank image before tiles loaded | FIXED (credit waits for the first tile, `MapSnapshot.tsx:87-144`) |
+| D6 | M1 | Oct 25 | `PlacePage.tsx:144` | the Watch confirm popped to 1.05 | FIXED |
+| D7 | M1, M2 | Oct 25 | `RecordStrip.tsx:237` | a zoom-in over up to 20 dots took about 960 ms | FIXED |
+| D8 | M2 | Oct 25 | `NumberCard.tsx:78` | a 700 ms ring fill | FIXED |
+| D9 | U20 | Oct 25 | [u20](qa/u20-0-place-denied.jpg) | the place page said "alerts on" with notifications denied | FIXED, re-tested |
+| D10 | U18 | Oct 25 | [before](qa/u18-2-place-watching.jpg) → [after](qa/u18-3-unwatched.jpg) | one tap unwatched with no confirm or undo | FIXED, re-tested |
+| D11 | U30 | Oct 25 | | the home list was one "Bottom Sheet" element, unreachable by VoiceOver | FIXED, re-tested |
+| D12 | U30 | Oct 25 | | 95 map pins read only "Map pin" | FIXED, re-tested |
+| D13 | U15 | Oct 25 | [u28](qa/u28-dark-0-place.jpg) | "3 problems at the Oct 5 visit" then "See all 9" with no context | FIXED ("See all 9 from the past 2 years"), re-tested |
+| D14 | U1 | Oct 25 | [u01](qa/u01-3-done.jpg) | the done screen promised alerts after "Not now" | FIXED, re-tested |
+| D15 | P1 | Oct 25 | [u16a](qa/u16a-3-1-photo.jpg) | forward dashcam frames (car hood in shot) chosen as photos | FIXED (sideways frames only, one per pass) |
+| D16 | U16d | Oct 25 | [u16d](qa/u16d-viewer.jpg) | the photo credit lacked the CC BY-SA license name | FIXED, re-tested |
+| D17 | U12, U14 | Oct 25 | [u14](qa/u14-zero-0.jpg) | the 3D view had no pin, so you couldn't tell which building | FIXED, re-tested |
+| D18 | U30 | Oct 25 | | search field missing from one accessibility snapshot | WITHDRAWN: present at every other sheet height |
+| D19 | M4 | Oct 25 | [D19](qa/D19-reduce-motion-caption.jpg) | under Reduce Motion the Esri image was captioned "3D view · Apple Maps" | FIXED, re-tested with the pixel check |
+| D20 | W1–W4 | Oct 25 | | the web build was blank on every route (`codegenNativeComponent is not a function` from react-native-maps) | FIXED (`FlyoverHero.web.tsx`), re-tested |
+| D21 | W4 | Oct 25 | | web tabs had `role=tab` but no `aria-selected` | FIXED, re-tested |
+| D22 | U30 | Oct 25 | | the watch sheet always said a notification prompt was next, but iOS asks only once | FIXED, re-tested |
+| D23 | B1 | Oct 25 | | the API returned a home daycare's ZIP+4 (often one block face) for 4,598 of 4,705 homes | FIXED by migration `20261025110000_home_zip5.sql` + 3 pgTAP asserts that failed before the fix; verified on the cloud |
+| D24 | W7 | Oct 25 | | every deep link on the web link returned 404; only `/` loaded (`vercel.json` rewrote to `/index.html`, which `cleanUrls` redirects) | FIX COMMITTED, waiting on deploy |
+| D25 | E5 | Oct 25 | | `watch` on an unknown daycare returned 500, and `register_device` stored a 20,000-character token | FIXED by migration `20261025130000_rpc_http_errors.sql` + pgTAP; verified on the cloud |
+| D26 | W8 | Oct 25 | | Lighthouse mobile performance 82 (LCP 4.8 s, 1,609 KiB, 331 KiB unused JS); accessibility and SEO lose points because the map tiles are `<img>` with no `alt` | OPEN |
+| D27 | X1 | Oct 25 | [D27](qa/D27-se-pin-on-wordmark.jpg) | iPhone SE welcome: the building pin sits on the "Daycare Watch" wordmark; the Apple Maps logo is half under Get started | FIX IN NEXT BUILD, re-test pending |
+| D28 | X1 | Oct 25 | [D28](qa/D28-se-find-clipped.jpg), [largest text](qa/D28-se-xxxl-name-under-buttons.jpg) | iPhone SE onboarding Find: the card's last line is cut by the pinned buttons; at the largest text size the whole name is under them | FIX IN NEXT BUILD, re-test pending |
+| D29 | X2 | Oct 25 | [D29](qa/D29-xxxl-done-clipped.jpg) | iPhone 17, largest text, "You’re watching …": the last line runs under "See its record" | OPEN |
+| D30 | X3 | Oct 25 | [D30](qa/D30-welcome-hero-blank.jpg) | iPhone 17 Pro Max, first launch: the welcome image was flat grey with only the pin while the caption said "3D view, Apple Maps" (it loaded on the other 8 runs) | OPEN |

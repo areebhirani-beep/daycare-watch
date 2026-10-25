@@ -2,7 +2,7 @@
 # QA flows on the QA simulator (iPhone 17 Pro Max) in Expo Go against the running Metro + local stack.
 #   e2e/qa/run.sh                 # every flow
 #   e2e/qa/run.sh u01-first-launch # one flow
-# Screenshots land in harness/state/qa/.
+# Screenshots land in e2e/out/qa/.
 set -uo pipefail
 cd "$(dirname "$0")/../.."
 
@@ -10,7 +10,7 @@ export JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk@17}
 export PATH="$JAVA_HOME/bin:$HOME/.maestro/bin:$PATH"
 DEVICE=${QA_DEVICE:-097582E0-1C3E-4179-81B5-45BD006D2B3A}
 METRO=${METRO:-exp://$(ipconfig getifaddr en0):8081}
-mkdir -p ../../harness/state/qa
+mkdir -p e2e/out/qa
 
 # A fixed spot in Plano (inside TX-04's metro area) so distances are repeatable.
 xcrun simctl location "$DEVICE" set 33.0198,-96.6989

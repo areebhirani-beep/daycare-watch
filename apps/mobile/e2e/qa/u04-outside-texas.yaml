@@ -8,4 +8,4 @@ appId: host.exp.Exponent
     visible: "No Texas daycares near you"
     timeout: 30000
 - assertVisible: "Daycares near Frisco"
-- takeScreenshot: ../../harness/state/qa/u04-outside-0
+- takeScreenshot: e2e/out/qa/u04-outside-0

@@ -9,4 +9,4 @@ appId: host.exp.Exponent
     timeout: 30000
 - assertNotVisible: "Finding your location…"
 - assertVisible: "Daycares near .*"
-- takeScreenshot: ../../harness/state/qa/u03-denied-0
+- takeScreenshot: e2e/out/qa/u03-denied-0

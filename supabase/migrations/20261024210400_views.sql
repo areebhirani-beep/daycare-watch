@@ -13,7 +13,7 @@ as $$ select array['Licensed Center', 'Licensed Child-Care Home', 'Listed Family
 
 revoke all on function core.in_scope_types() from public, anon, authenticated;
 
--- DaycareRow (CONTRACT 4.1) minus distance_km, which depends on the caller's location.
+-- DaycareRow (packages/db/index.ts) minus distance_km, which depends on the caller's location.
 -- last_inspection_date covers every state visit type (inspection, report, assessment).
 create or replace view core.daycare_rows with (security_invoker = true) as
 select

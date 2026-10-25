@@ -24,36 +24,36 @@ appId: host.exp.Exponent
 - extendedWaitUntil:
     visible: "Turn on alerts"
     timeout: 10000
-- takeScreenshot: ../../harness/state/qa/u18-0-sheet
+- takeScreenshot: e2e/out/qa/u18-0-sheet
 - tapOn: "Turn on alerts"
 # U19: the iOS permission prompt appears the first time; allow it.
 - runFlow:
     when:
       visible: "Allow"
     commands:
-      - takeScreenshot: ../../harness/state/qa/u19-0-os-prompt
+      - takeScreenshot: e2e/out/qa/u19-0-os-prompt
       - tapOn: "Allow"
 - extendedWaitUntil:
     visible: "You’re watching.*"
     timeout: 15000
-- takeScreenshot: ../../harness/state/qa/u18-1-watching
+- takeScreenshot: e2e/out/qa/u18-1-watching
 - tapOn: "Done"
 - extendedWaitUntil:
     visible: "Watching ·.*"
     timeout: 10000
-- takeScreenshot: ../../harness/state/qa/u18-2-place-watching
+- takeScreenshot: e2e/out/qa/u18-2-place-watching
 
 # Unwatch: the place button opens the watch sheet; "Stop watching" is the deliberate second tap (D10).
 - tapOn: "Watching ·.*"
 - extendedWaitUntil:
     visible: "Stop watching"
     timeout: 10000
-- takeScreenshot: ../../harness/state/qa/u18-2b-stop-sheet
+- takeScreenshot: e2e/out/qa/u18-2b-stop-sheet
 - tapOn: "Stop watching"
 - extendedWaitUntil:
     visible: "Watch this daycare"
     timeout: 10000
-- takeScreenshot: ../../harness/state/qa/u18-3-unwatched
+- takeScreenshot: e2e/out/qa/u18-3-unwatched
 
 # Re-watch
 - tapOn: "Watch this daycare"
@@ -68,4 +68,4 @@ appId: host.exp.Exponent
 - extendedWaitUntil:
     visible: "Watching ·.*"
     timeout: 10000
-- takeScreenshot: ../../harness/state/qa/u18-4-rewatched
+- takeScreenshot: e2e/out/qa/u18-4-rewatched

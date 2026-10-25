@@ -6,7 +6,7 @@
 #   WEB=http://localhost:5055 e2e/qa/web-routes.sh
 set -uo pipefail
 WEB=${WEB:-https://daycare-watch.vercel.app}
-OUT=${OUT:-$(cd "$(dirname "$0")/../../../.." && pwd)/harness/state/qa/web}
+OUT=${OUT:-$(cd "$(dirname "$0")/../.." && pwd)/e2e/out/web}
 mkdir -p "$OUT"
 
 routes=(/ /onboarding /onboarding/how /onboarding/find /onboarding/alerts /onboarding/done

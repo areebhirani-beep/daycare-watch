@@ -34,14 +34,14 @@ appId: host.exp.Exponent
     when:
       visible: "Allow"
     commands:
-      - takeScreenshot: ../../harness/state/qa/u19-0-os-prompt
+      - takeScreenshot: e2e/out/qa/u19-0-os-prompt
       - tapOn: "Allow"
 - extendedWaitUntil:
     visible: "You’re watching.*"
     timeout: 15000
-- takeScreenshot: ../../harness/state/qa/u19-1-done
+- takeScreenshot: e2e/out/qa/u19-1-done
 - tapOn: "See its record"
 - extendedWaitUntil:
     visible: "Watching · alerts (on|off)"
     timeout: 20000
-- takeScreenshot: ../../harness/state/qa/u19-2-place-alerts-on
+- takeScreenshot: e2e/out/qa/u19-2-place-alerts-on

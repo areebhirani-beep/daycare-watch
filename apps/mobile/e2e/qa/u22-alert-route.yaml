@@ -11,4 +11,4 @@ appId: host.exp.Exponent
     visible: ".*Replay of a real state record.*"
     timeout: 30000
 - assertNotVisible: "This alert isn’t on this phone."
-- takeScreenshot: ../../harness/state/qa/u22-warm-alert
+- takeScreenshot: e2e/out/qa/u22-warm-alert

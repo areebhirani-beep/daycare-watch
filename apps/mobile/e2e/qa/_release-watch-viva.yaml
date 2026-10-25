@@ -73,6 +73,6 @@ appId: com.areebhirani.daycare-watch
       - extendedWaitUntil:
           visible: "You’re watching Viva World School"
           timeout: 15000
-      - takeScreenshot: ../../harness/state/qa/r-push-0-sheet
+      - takeScreenshot: e2e/out/qa/r-push-0-sheet
       - tapOn: "Done"
-- takeScreenshot: ../../harness/state/qa/r-push-0-watching
+- takeScreenshot: e2e/out/qa/r-push-0-watching

@@ -8,14 +8,14 @@ appId: host.exp.Exponent
     visible: "Viva World School.*"
     timeout: 20000
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/qa/u28-dark-0-place
+- takeScreenshot: e2e/out/qa/u28-dark-0-place
 - scroll
-- takeScreenshot: ../../harness/state/qa/u28-dark-1-place-scrolled
+- takeScreenshot: e2e/out/qa/u28-dark-1-place-scrolled
 - openLink: ${METRO}/--/daycare/1490119
 - extendedWaitUntil:
     visible: ".*Baker.*"
     timeout: 20000
-- takeScreenshot: ../../harness/state/qa/u28-dark-2-home
+- takeScreenshot: e2e/out/qa/u28-dark-2-home
 - openLink: ${METRO}/--/search
 - waitForAnimationToEnd
-- takeScreenshot: ../../harness/state/qa/u28-dark-3-search
+- takeScreenshot: e2e/out/qa/u28-dark-3-search

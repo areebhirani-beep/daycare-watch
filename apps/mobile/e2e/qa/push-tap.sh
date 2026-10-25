@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # QA U21 + U23 on the Release build in the QA simulator: a replayed alert for Viva World School (1459611) is tapped
 # with the app (a) in the background and (b) not running, and must open that alert. The payload comes from
-# e2e/journey.sh, so it is pipeline's real message. Needs the local stack and the Release build (npx expo run:ios
+# e2e/journey.sh, so it is the sync's own message text. Needs the local stack and the Release build (npx expo run:ios
 # --configuration Release); no Metro.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
@@ -11,7 +11,7 @@ export PATH="$JAVA_HOME/bin:$HOME/.maestro/bin:$PATH"
 DEVICE=${QA_DEVICE:-097582E0-1C3E-4179-81B5-45BD006D2B3A}
 BUNDLE=com.areebhirani.daycare-watch
 APP=${APP:-$(ls -td ~/Library/Developer/Xcode/DerivedData/DaycareWatch-*/Build/Products/Release-iphonesimulator/DaycareWatch.app | head -1)}
-mkdir -p ../../harness/state/qa
+mkdir -p e2e/out/qa
 
 xcrun simctl boot "$DEVICE" 2>/dev/null; xcrun simctl bootstatus "$DEVICE" -b >/dev/null
 xcrun simctl location "$DEVICE" set 33.0198,-96.6989

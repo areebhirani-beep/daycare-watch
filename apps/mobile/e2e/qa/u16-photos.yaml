@@ -16,7 +16,7 @@ appId: host.exp.Exponent
       - swipe:
           start: 80%, 18%
           end: 15%, 18%
-- takeScreenshot: ../../harness/state/qa/u16-off-1396589
+- takeScreenshot: e2e/out/qa/u16-off-1396589
 - openLink: ${METRO}/--/daycare/136712
 - extendedWaitUntil:
     visible: "3D view · Apple Maps"
@@ -43,4 +43,4 @@ appId: host.exp.Exponent
     timeout: 20000
 - assertNotVisible: ".*Mapillary.*"
 - assertNotVisible: "3D view · Apple Maps"
-- takeScreenshot: ../../harness/state/qa/u16b-home
+- takeScreenshot: e2e/out/qa/u16b-home

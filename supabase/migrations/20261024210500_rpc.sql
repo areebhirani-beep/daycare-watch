@@ -1,8 +1,8 @@
--- Client API (CONTRACT 4.1). Every RPC is in public, security definer, search_path = ''.
+-- Client API (types in packages/db/index.ts). Every RPC is in public, security definer, search_path = ''.
 -- Reads are STABLE and granted to anon + authenticated. Writes and per-user reads need a
 -- signed-in user (anonymous sign-in counts) and are granted to authenticated only.
 
--- Finding (CONTRACT 4.1) as jsonb.
+-- Finding (packages/db/index.ts) as jsonb.
 create or replace function core.finding_json(v core.violations)
 returns jsonb
 language sql

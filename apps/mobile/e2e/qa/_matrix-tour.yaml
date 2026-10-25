@@ -63,9 +63,11 @@ appId: com.areebhirani.daycare-watch
 - takeScreenshot: ${SHOTS}/06-home
 - openLink: daycarewatch://daycare/1447992
 # iOS asks before an app opens its own link from outside.
-- tapOn:
-    text: "Open"
-    optional: true
+- runFlow:
+    when:
+      visible: "Open in .Daycare Watch.\\?"
+    commands:
+      - tapOn: "^Open$"
 - extendedWaitUntil:
     visible: "Castle Montessori of Frisco.*"
     timeout: 20000
@@ -75,9 +77,11 @@ appId: com.areebhirani.daycare-watch
 - takeScreenshot: ${SHOTS}/08-place-montessori-2
 - openLink: daycarewatch://daycare/1459611
 # iOS asks before an app opens its own link from outside.
-- tapOn:
-    text: "Open"
-    optional: true
+- runFlow:
+    when:
+      visible: "Open in .Daycare Watch.\\?"
+    commands:
+      - tapOn: "^Open$"
 - extendedWaitUntil:
     visible: "Viva World School.*"
     timeout: 20000
@@ -87,15 +91,19 @@ appId: com.areebhirani.daycare-watch
 - takeScreenshot: ${SHOTS}/10-place-viva-2
 - openLink: daycarewatch://rights
 # iOS asks before an app opens its own link from outside.
-- tapOn:
-    text: "Open"
-    optional: true
+- runFlow:
+    when:
+      visible: "Open in .Daycare Watch.\\?"
+    commands:
+      - tapOn: "^Open$"
 - waitForAnimationToEnd
 - takeScreenshot: ${SHOTS}/11-rights
 - openLink: daycarewatch://watching
 # iOS asks before an app opens its own link from outside.
-- tapOn:
-    text: "Open"
-    optional: true
+- runFlow:
+    when:
+      visible: "Open in .Daycare Watch.\\?"
+    commands:
+      - tapOn: "^Open$"
 - waitForAnimationToEnd
 - takeScreenshot: ${SHOTS}/12-watching

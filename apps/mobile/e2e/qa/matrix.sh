@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # iOS device matrix on the Release build: each device × light, dark and the largest accessibility text size runs
-# _matrix-tour.yaml; screenshots land in harness/state/screens/final/ios-<device>-<mode>/.
+# _matrix-tour.yaml; screenshots land in e2e/out/ios-<device>-<mode>/ (OUT= to change).
 #   e2e/qa/matrix.sh                     # every device and mode
 #   DEVICES="SE3" MODES="light" e2e/qa/matrix.sh
 set -uo pipefail
@@ -9,7 +9,7 @@ cd "$(dirname "$0")/../.."
 export JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk@17}
 export PATH="$JAVA_HOME/bin:$HOME/.maestro/bin:$PATH"
 APP=${APP:-$(ls -td ~/Library/Developer/Xcode/DerivedData/DaycareWatch-*/Build/Products/Release-iphonesimulator/DaycareWatch.app | head -1)}
-# The QA team's own simulators (never another terminal's): name → "DW QA <name>".
+# Dedicated simulators named "DW QA <name>", so no other simulator is touched.
 DEVICES=${DEVICES:-"SE3 17 ProMax iPad"}
 MODES=${MODES:-"light dark xxxl"}
 udid() {
@@ -30,7 +30,7 @@ for dev in $DEVICES; do
   for mode in $MODES; do
     xcrun simctl ui "$id" appearance "$([ "$mode" = dark ] && echo dark || echo light)"
     xcrun simctl ui "$id" content_size "$([ "$mode" = xxxl ] && echo accessibility-extra-extra-extra-large || echo large)"
-    shots="../../harness/state/screens/final/ios-$dev-$mode"
+    shots="${OUT:-e2e/out}/ios-$dev-$mode"
     mkdir -p "$shots"
     if maestro --device "$id" test -e SHOTS="$shots" e2e/qa/_matrix-tour.yaml >"$shots/maestro.log" 2>&1; then
       pass=$((pass + 1)); echo "  ok   $dev $mode"

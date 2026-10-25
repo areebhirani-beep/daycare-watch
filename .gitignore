@@ -29,3 +29,5 @@ supabase/.branches/
 supabase/.temp/
 google-services.json
 GoogleService-Info.plist
+# simulator screenshots from the QA flows
+apps/mobile/e2e/out/

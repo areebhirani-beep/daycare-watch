@@ -20,4 +20,4 @@ appId: com.areebhirani.daycare-watch
     visible: "Open full record"
     timeout: 20000
 - assertVisible: "Viva World School"
-- takeScreenshot: ../../harness/state/qa/r21-1-alert
+- takeScreenshot: e2e/out/qa/r21-1-alert

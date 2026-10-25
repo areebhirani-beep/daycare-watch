@@ -8,4 +8,4 @@ appId: host.exp.Exponent
     visible: "Viva World School.*"
     timeout: 20000
 - assertVisible: "3D view · Apple Maps"
-- takeScreenshot: ../../harness/state/qa/m04-place
+- takeScreenshot: e2e/out/qa/m04-place

@@ -31,7 +31,21 @@ for f in "${flows[@]}"; do
     xcrun simctl privacy "$DEVICE" grant location host.exp.Exponent
     xcrun simctl location "$DEVICE" set 35.4676,-97.5164
   fi
-  if maestro --device "$DEVICE" test -e METRO="$METRO" "e2e/qa/$f.yaml"; then
+  ok=1
+  maestro --device "$DEVICE" test -e METRO="$METRO" "e2e/qa/$f.yaml" || ok=0
+  # M4: with Reduce Motion on, the 3D hero must hold still. Two hero crops 8 s apart must match
+  # (the same check with Reduce Motion off changes ~680k of 924k pixels).
+  if [[ $ok == 1 && "$f" == m04-* ]]; then
+    tmp=$(mktemp -d); perl -e 'sleep 5'
+    xcrun simctl io "$DEVICE" screenshot "$tmp/a.png" >/dev/null 2>&1; perl -e 'sleep 8'
+    xcrun simctl io "$DEVICE" screenshot "$tmp/b.png" >/dev/null 2>&1
+    for x in a b; do ffmpeg -loglevel error -y -i "$tmp/$x.png" -vf "crop=1320:700:0:150" -f rawvideo -pix_fmt gray "$tmp/$x.raw"; done
+    moved=$(python3 -c "a=open('$tmp/a.raw','rb').read(); b=open('$tmp/b.raw','rb').read(); print(sum(1 for x,y in zip(a,b) if abs(x-y)>12))")
+    echo "m04: $moved hero pixels changed in 8 s (must be under 2000)"
+    [[ $moved -lt 2000 ]] || ok=0
+    rm -rf "$tmp"
+  fi
+  if [[ $ok == 1 ]]; then
     pass=$((pass + 1))
   else
     fail=$((fail + 1)); failed+=("$f")

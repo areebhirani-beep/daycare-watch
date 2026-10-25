@@ -47,20 +47,25 @@ export default function TourScreen() {
             accessible
             accessibilityLabel={`Question ${i + 1}: ${q.question} ${q.fact ?? ''} ${q.followUp ?? ''}`}
           >
-            <Text variant="caption" tone="tertiary" tabular>
-              {i + 1}
-            </Text>
-            <Text variant="headline">{q.question}</Text>
-            {q.fact ? (
-              <Text variant="footnote" tone="secondary">
-                {q.fact}
+            {/* The same numbered disc as the place page's tour card, so the two read as one list. */}
+            <View style={[styles.num, { backgroundColor: c.text }]}>
+              <Text variant="subhead" color={c.surface} tabular maxFontSizeMultiplier={1.2}>
+                {String(i + 1)}
               </Text>
-            ) : null}
-            {q.followUp ? (
-              <Text variant="callout" tone="secondary">
-                {q.followUp}
-              </Text>
-            ) : null}
+            </View>
+            <View style={{ flex: 1, gap: space.xs }}>
+              <Text variant="headline">{q.question}</Text>
+              {q.fact ? (
+                <Text variant="footnote" tone="secondary">
+                  {q.fact}
+                </Text>
+              ) : null}
+              {q.followUp ? (
+                <Text variant="callout" tone="secondary">
+                  {q.followUp}
+                </Text>
+              ) : null}
+            </View>
           </View>
         ))}
       </ScrollView>
@@ -84,5 +89,6 @@ export default function TourScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: space.lg, gap: 10, paddingBottom: space.section },
-  card: { borderRadius: radius.card, padding: space.lg, gap: space.xs },
+  card: { borderRadius: radius.card, padding: space.lg, gap: space.md, flexDirection: 'row', alignItems: 'flex-start' },
+  num: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
 });

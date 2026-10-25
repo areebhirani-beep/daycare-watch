@@ -33,6 +33,8 @@ export function Tabs<K extends string>({
             key={t.key}
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
+            // react-native-web drops accessibilityState; aria-selected carries it to the web build.
+            aria-selected={on}
             onLayout={(e: LayoutChangeEvent) => {
               const { x, width } = e.nativeEvent.layout;
               setBoxes((b) => (b[t.key]?.x === x && b[t.key]?.w === width ? b : { ...b, [t.key]: { x, w: width } }));

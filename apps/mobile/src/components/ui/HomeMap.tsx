@@ -212,7 +212,8 @@ export function HomeMap({
     setSelected(r.operation_id);
     const i = featured.findIndex((x) => x.operation_id === r.operation_id);
     sheetRef.current?.snapToIndex(1);
-    if (i >= 0) carousel.current?.scrollToIndex({ index: i, animated: true, viewPosition: 0 });
+    // On the snap grid, so the picked card keeps the 16 pt gutter (scrollToIndex would put it flush to the edge).
+    if (i >= 0) carousel.current?.scrollToOffset({ offset: i * (cardW + 12), animated: true });
     if (r.lat != null && r.lng != null)
       map.current?.animateToRegion(
         { ...region, latitude: r.lat - ((height / 2 - (view.top + view.bottom) / 2) / height) * region.latitudeDelta, longitude: r.lng },
@@ -267,7 +268,6 @@ export function HomeMap({
             snapToInterval={cardW + 12}
             decelerationRate="fast"
             contentContainerStyle={styles.carousel}
-            onScrollToIndexFailed={() => undefined}
             renderItem={({ item }) => (
               <DaycareCard
                 width={cardW}

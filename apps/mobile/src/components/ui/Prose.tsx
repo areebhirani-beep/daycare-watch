@@ -65,7 +65,7 @@ export function InspectorQuote({
   if (same) {
     return (
       <Text variant="callout" tone="tertiary">
-        {source ? `The line above is the inspector’s own words · ${source}` : 'The line above is the inspector’s own words'}
+        {source ? `Inspector’s words · ${source}` : 'Inspector’s words'}
       </Text>
     );
   }
@@ -134,6 +134,12 @@ export function InspectorQuote({
       ) : null}
     </Pressable>
   );
+}
+
+/** True when our plain summary is the inspector's sentence itself, so the card can credit it in place. */
+export function quotesPlain(text: string, plain: string | null | undefined): boolean {
+  if (!plain) return false;
+  return squash(text.replace(/([A-Za-z])\?(s|t|re|ll|ve|d)\b/g, '$1’$2')) === squash(plain);
 }
 
 function squash(s: string): string {

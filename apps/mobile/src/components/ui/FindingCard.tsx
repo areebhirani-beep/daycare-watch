@@ -6,7 +6,7 @@ import { elevation, radius, space, useColors } from '@/theme';
 
 import { CategoryIcon } from './CategoryIcon';
 import { Glyph } from './Glyph';
-import { InspectorQuote } from './Prose';
+import { InspectorQuote, quotesPlain } from './Prose';
 import { plainStatus } from './status';
 import { Text } from './Text';
 
@@ -49,6 +49,9 @@ export function FindingCard({
     ]
       .filter(Boolean)
       .join(' ') || null;
+  const words = f.narrative?.trim() || null;
+  // When the summary is the inspector's own sentence, the credit sits right under it, not at the card's foot.
+  const verbatim = words != null && quotesPlain(words, f.plain);
   const done = isFixed(f);
   // A finding under a High-risk rule carries the page's only tag ("Serious") and an ink outline.
   const high = f.risk_level === 'High';
@@ -66,7 +69,14 @@ export function FindingCard({
             {categoryLabel(f.category)}
           </Text>
         </View>
-        <Text variant="subhead">{summary}</Text>
+        <View style={{ gap: 2 }}>
+          <Text variant="subhead">{summary}</Text>
+          {verbatim ? (
+            <Text variant="footnote" tone="tertiary">
+              {rule ? `Inspector’s words · ${rule}` : 'Inspector’s words'}
+            </Text>
+          ) : null}
+        </View>
         <View style={styles.status}>
           <View style={styles.statusGlyph}>
             <Glyph name={done ? 'check' : 'clock'} size={13} color={done ? c.text : c.textSecondary} weight="bold" />
@@ -82,7 +92,12 @@ export function FindingCard({
           <Text variant="callout" tone="tertiary">{`${riskLabel(f.risk_level)} rule, per the state`}</Text>
         )}
       </View>
-      {f.narrative?.trim() ? <InspectorQuote text={f.narrative.trim()} plain={f.plain} source={rule} note={note} /> : null}
+      {words && !verbatim ? <InspectorQuote text={words} plain={f.plain} source={rule} note={note} /> : null}
+      {verbatim && note ? (
+        <Text variant="callout" tone="tertiary">
+          {note}
+        </Text>
+      ) : null}
       {onOfficial ? (
         <Pressable
           onPress={onOfficial}

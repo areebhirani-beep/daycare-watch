@@ -301,67 +301,75 @@ export function HomeMap({
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      <MapView
-        ref={map}
+      {/* react-native-maps can't name a custom pin for VoiceOver (each reads "Map pin"), so the map is one
+          element that points to the list, which holds the same daycares with their records. */}
+      <View
         style={StyleSheet.absoluteFill}
-        initialRegion={region}
-        onRegionChangeComplete={setRegion}
-        onMapReady={() => setReady(true)}
-        showsUserLocation
-        // The parent's own dot is the system blue everyone knows from Maps, never the ink of a cluster bubble.
-        tintColor={isDark ? '#0A84FF' : '#007AFF'}
-        showsMyLocationButton={false}
-        showsCompass={false}
-        showsPointsOfInterests={false}
-        userInterfaceStyle={isDark ? 'dark' : 'light'}
-        // Apple's standard map, as in Apple Maps: color, parks and water make the area recognizable.
-        mapType="standard"
-        showsBuildings
-        // Apple's Legal link stays visible above the half sheet.
-        legalLabelInsets={{ top: 0, left: space.lg, bottom: legalBottom, right: 0 }}
-        onPress={() => setSelected(null)}
+        accessible
+        accessibilityLabel="Map of daycares. The same daycares are listed below, with their records."
       >
-        {clusters.map((k) =>
-          k.rows.length === 1 ? (
-            <Marker
-              key={k.key}
-              coordinate={{ latitude: k.lat, longitude: k.lng }}
-              onPress={() => pick(k.rows[0]!)}
-              tracksViewChanges={false}
-              zIndex={markerZ(k.rows[0]!, selected === k.rows[0]!.operation_id, watchedIds.has(k.rows[0]!.operation_id))}
-            >
-              {/* iOS ignores a Marker's own label when it draws a custom view, so the view carries it. */}
-              <View
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel={`${tidyCase(k.rows[0]!.name)}, ${SHORT_TYPE[k.rows[0]!.operation_type] ?? k.rows[0]!.operation_type}`}
+        <MapView
+          ref={map}
+          style={StyleSheet.absoluteFill}
+          initialRegion={region}
+          onRegionChangeComplete={setRegion}
+          onMapReady={() => setReady(true)}
+          showsUserLocation
+          // The parent's own dot is the system blue everyone knows from Maps, never the ink of a cluster bubble.
+          tintColor={isDark ? '#0A84FF' : '#007AFF'}
+          showsMyLocationButton={false}
+          showsCompass={false}
+          showsPointsOfInterests={false}
+          userInterfaceStyle={isDark ? 'dark' : 'light'}
+          // Apple's standard map, as in Apple Maps: color, parks and water make the area recognizable.
+          mapType="standard"
+          showsBuildings
+          // Apple's Legal link stays visible above the half sheet.
+          legalLabelInsets={{ top: 0, left: space.lg, bottom: legalBottom, right: 0 }}
+          onPress={() => setSelected(null)}
+        >
+          {clusters.map((k) =>
+            k.rows.length === 1 ? (
+              <Marker
+                key={k.key}
+                coordinate={{ latitude: k.lat, longitude: k.lng }}
+                onPress={() => pick(k.rows[0]!)}
+                tracksViewChanges={false}
+                zIndex={markerZ(k.rows[0]!, selected === k.rows[0]!.operation_id, watchedIds.has(k.rows[0]!.operation_id))}
               >
-                {/* A solid pin only for a center with an exact point; homes (privacy) and approximate points get an area. */}
-                {imageryAllowed(k.rows[0]!.operation_type) && k.rows[0]!.geocode_quality !== 'non_exact' ? (
-                  <MapPin
-                    kind={pinKind(k.rows[0]!.operation_type)}
-                    watched={watchedIds.has(k.rows[0]!.operation_id)}
-                    selected={selected === k.rows[0]!.operation_id}
-                    label={selected === k.rows[0]!.operation_id ? tidyCase(k.rows[0]!.name) : undefined}
-                  />
-                ) : (
-                  <AreaPin
-                    kind={pinKind(k.rows[0]!.operation_type)}
-                    watched={watchedIds.has(k.rows[0]!.operation_id)}
-                    selected={selected === k.rows[0]!.operation_id}
-                  />
-                )}
-              </View>
-            </Marker>
-          ) : (
-            <Marker key={k.key} coordinate={{ latitude: k.lat, longitude: k.lng }} onPress={() => zoomInto(k)} tracksViewChanges={false} zIndex={3}>
-              <View accessible accessibilityRole="button" accessibilityLabel={`${k.rows.length} daycares here. Zooms in.`}>
-                <ClusterBubble count={k.rows.length} />
-              </View>
-            </Marker>
-          ),
-        )}
-      </MapView>
+                {/* iOS ignores a Marker's own label when it draws a custom view, so the view carries it. */}
+                <View
+                  accessible
+                  accessibilityRole="button"
+                  accessibilityLabel={`${tidyCase(k.rows[0]!.name)}, ${SHORT_TYPE[k.rows[0]!.operation_type] ?? k.rows[0]!.operation_type}`}
+                >
+                  {/* A solid pin only for a center with an exact point; homes (privacy) and approximate points get an area. */}
+                  {imageryAllowed(k.rows[0]!.operation_type) && k.rows[0]!.geocode_quality !== 'non_exact' ? (
+                    <MapPin
+                      kind={pinKind(k.rows[0]!.operation_type)}
+                      watched={watchedIds.has(k.rows[0]!.operation_id)}
+                      selected={selected === k.rows[0]!.operation_id}
+                      label={selected === k.rows[0]!.operation_id ? tidyCase(k.rows[0]!.name) : undefined}
+                    />
+                  ) : (
+                    <AreaPin
+                      kind={pinKind(k.rows[0]!.operation_type)}
+                      watched={watchedIds.has(k.rows[0]!.operation_id)}
+                      selected={selected === k.rows[0]!.operation_id}
+                    />
+                  )}
+                </View>
+              </Marker>
+            ) : (
+              <Marker key={k.key} coordinate={{ latitude: k.lat, longitude: k.lng }} onPress={() => zoomInto(k)} tracksViewChanges={false} zIndex={3}>
+                <View accessible accessibilityRole="button" accessibilityLabel={`${k.rows.length} daycares here. Zooms in.`}>
+                  <ClusterBubble count={k.rows.length} />
+                </View>
+              </Marker>
+            ),
+          )}
+        </MapView>
+      </View>
 
       <View style={[styles.top, { top: insets.top + space.sm }]} pointerEvents="box-none">
         <SearchPill onPress={onSearch} />

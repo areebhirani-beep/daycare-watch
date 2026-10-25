@@ -47,7 +47,7 @@ export function AlertBanner({
   return (
     <Animated.View
       accessible
-      accessibilityLabel={`Alert. ${title}. ${body}`}
+      accessibilityLabel={`${tag === 'now' ? 'Alert' : `${tag} alert`}. ${title}. ${body}`}
       style={[styles.banner, elevation.float, { backgroundColor: c.surface }, s, style]}
     >
       <Image source={icon} style={styles.icon} />

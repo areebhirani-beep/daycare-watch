@@ -217,6 +217,7 @@ export default function FindScreen() {
                       operationType={d.operation_type}
                       strip={rowStrip(d)}
                       fallback={rowFallback(d)}
+                      selected={picked?.operation_id === d.operation_id}
                       onPress={() => {
                         haptic.select();
                         setPicked(picked?.operation_id === d.operation_id ? null : d);

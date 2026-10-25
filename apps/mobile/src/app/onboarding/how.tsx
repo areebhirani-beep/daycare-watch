@@ -46,7 +46,12 @@ function Layer({ from = 16, depth = 0, children, style }: { from?: number; depth
   // Two cards in front wash it out completely: a silhouette, so no half-line peeks out under the banner.
   const wash = useAnimatedStyle(() => ({ opacity: back.value <= 1 ? back.value * 0.55 : 0.55 + (back.value - 1) * 0.45 }));
   return (
-    <Animated.View style={[s, style]}>
+    // A card that has stepped back is scenery: VoiceOver reads only the one in front.
+    <Animated.View
+      style={[s, style]}
+      accessibilityElementsHidden={depth > 0}
+      importantForAccessibility={depth > 0 ? 'no-hide-descendants' : 'auto'}
+    >
       {children}
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: c.bg, borderRadius: radius.card + 4 }, wash]} />
     </Animated.View>
@@ -120,7 +125,11 @@ export default function HowScreen() {
           <>
             {/* a. The state's own record of that visit, as dense as the state publishes it. */}
             <Layer depth={beat}>
-              <View style={[styles.card, elevation.card, { backgroundColor: c.surface }]}>
+              <View
+                accessible
+                accessibilityLabel={[`State record, ${ex.city}, inspection ${ex.date}`, ...ex.raw.map((r) => [r.rule ? `Rule ${r.rule.number}, ${r.rule.title}` : '', r.words ?? ''].filter(Boolean).join('. '))].join('. ')}
+                style={[styles.card, elevation.card, { backgroundColor: c.surface }]}
+              >
                 <View style={styles.row}>
                   <Glyph name="record" size={15} color={c.textSecondary} />
                   <Text maxFontSizeMultiplier={1.3} variant="footnote" tone="secondary" style={{ flex: 1 }} numberOfLines={1}>
@@ -148,7 +157,11 @@ export default function HowScreen() {
             {/* b. The same finding, the way the app shows it. */}
             {beat >= 1 ? (
               <Layer depth={beat > 1 ? 1 : 0} style={styles.plain}>
-                <View style={[styles.card, elevation.float, { backgroundColor: c.surface }]}>
+                <View
+                  accessible
+                  accessibilityLabel={`${categoryLabel(ex.f.category)}. ${ex.f.risk_level === 'High' ? 'Serious. ' : ''}${(ex.f.plain ?? ex.words ?? '').replace(/[.\s]+$/, '')}. ${shortStatus(ex.f)}.`}
+                  style={[styles.card, elevation.float, { backgroundColor: c.surface }]}
+                >
                   <View style={styles.row}>
                     <CategoryIcon category={ex.f.category} size={40} />
                     <Text maxFontSizeMultiplier={1.3} variant="callout" tone="secondary" style={{ flex: 1 }} numberOfLines={1}>

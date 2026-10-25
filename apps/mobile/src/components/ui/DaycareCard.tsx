@@ -96,8 +96,15 @@ export function DaycareCard({
   onToggleWatch,
   width = 280,
   heroRatio = 2,
+  selected,
   style,
-}: Common & { width?: number | `${number}%`; heroRatio?: number; style?: ViewStyle }) {
+}: Common & {
+  width?: number | `${number}%`;
+  heroRatio?: number;
+  /** Set when the card is one of a set to pick from (onboarding), so VoiceOver says which is picked. */
+  selected?: boolean;
+  style?: ViewStyle;
+}) {
   const c = useColors();
   const one = useLines(1);
   const two = useLines(2);
@@ -105,6 +112,7 @@ export function DaycareCard({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={spoken(name, meta, strip, fallback, watched)}
+      accessibilityState={selected === undefined ? undefined : { selected }}
       onPress={() => {
         haptic.press();
         onPress();

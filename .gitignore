@@ -19,8 +19,8 @@ __pycache__/
 .coverage
 # expo
 .expo/
-ios/
-android/
+apps/mobile/ios/
+apps/mobile/android/
 *.p8
 *.jks
 *.keystore

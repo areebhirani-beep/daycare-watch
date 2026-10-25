@@ -4,6 +4,9 @@
 
 **For Texas parents: see what state inspectors found at a daycare, in plain English, and get an alert when the state posts something new.**
 
+### [Try it: daycare-watch.vercel.app](https://daycare-watch.vercel.app)
+No sign-in. Real Texas state records. Works on any phone or computer.
+
 [![Pipeline CI](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml)
 [![Daily sync](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -23,11 +26,18 @@ Built for the **2026 Congressional App Challenge · Texas's 4th District**
 
 ---
 
+## Try it in 30 seconds
+
+1. Open **[daycare-watch.vercel.app](https://daycare-watch.vercel.app)** on any phone or computer.
+2. Search a name, city, or ZIP in TX-04, for example `Montessori`, `Rockwall`, or `75034`.
+3. Open a daycare: its latest state visit in plain English, each finding with the inspector's own words, and a link to the official state record.
+4. Open **Your rights** for the Kids' Law requests, ready to send.
+
 ## Contents
 
 - [Why](#why) · [How a parent uses it](#how-a-parent-uses-it) · [Screenshots](#screenshots)
 - [How it works](#how-it-works) · [The data](#the-data) · [Honesty and privacy](#honesty-and-privacy)
-- [Tests](#tests) · [Getting started](#getting-started) · [Project structure](#project-structure) · [Roadmap](#roadmap) · [Docs](#docs)
+- [Try it](#try-it-in-30-seconds) · [Tests](#tests) · [Getting started](#getting-started) · [Project structure](#project-structure) · [Roadmap](#roadmap) · [Docs](#docs)
 
 ## Why
 
@@ -43,7 +53,7 @@ Built for the **2026 Congressional App Challenge · Texas's 4th District**
 | **State records loaded** | 14,310 daycares · 157,358 state visits · 118,294 findings, about 5 years of history |
 | **Freshness** | Synced daily from data.texas.gov. Every data screen shows "Last checked with the state" |
 | **Proven end to end** | A real past state finding, replayed as a labelled alert, reached a real iPhone as a push (Expo receipt `delivered_to_provider`) and opened that daycare's record ([QA matrix B6](docs/QA_MATRIX.md)) |
-| **Platforms** | iPhone, tested on device. Android runs from the same code; Android push needs a standalone build |
+| **Platforms** | Web at [daycare-watch.vercel.app](https://daycare-watch.vercel.app) (no sign-in; alerts need the phone app). iPhone, tested on device. Android runs from the same code; Android push needs a standalone build |
 
 ## How a parent uses it
 

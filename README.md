@@ -2,7 +2,7 @@
 
 # Daycare Watch
 
-**See what Texas state inspectors found at a daycare, in plain English, and get an alert when the state posts something new.**
+**For Texas parents: see what state inspectors found at a daycare, in plain English, and get an alert when the state posts something new.**
 
 [![Pipeline CI](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml)
 [![Daily sync](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml)
@@ -14,6 +14,8 @@
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hero-dark.png">
   <img src="docs/screenshots/hero-light.png" alt="Daycare Watch: nearby daycares, a daycare's state record, and the alert for a new state finding" width="100%">
 </picture>
+
+Real state records from data.texas.gov only · **at least 379** daycares inside TX-04 · 118,294 findings loaded · push alert delivered to a real iPhone ([replay of a real finding](docs/QA_MATRIX.md))
 
 Built for the **2026 Congressional App Challenge · Texas's 4th District**
 

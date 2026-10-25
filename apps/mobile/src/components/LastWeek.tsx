@@ -1,16 +1,25 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { CategoryRow } from '@/components/ui/CategoryIcon';
+import { CATEGORY_ORDER, CategoryIcon, CategoryRow } from '@/components/ui/CategoryIcon';
 import { SectionHeader } from '@/components/ui/Chrome';
+import { Glyph } from '@/components/ui/Glyph';
+import { pinKind } from '@/components/ui/MapPin';
 import { Block } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { Icon } from '@/components/Icon';
 import { useDistrictPulse, useDistrictRecentVisits } from '@/lib/api';
 import { pulseLine, visitMeta, visitName, visitStatus } from '@/lib/feed';
 import { todayIso } from '@/lib/format';
-import { elevation, radius, space, useColors } from '@/theme';
+import type { Category } from '@/lib/types';
+import { space, useColors } from '@/theme';
 
 const ROWS = 3;
+const LEAD = 36;
+
+/** The first category in the app's fixed order, so the same visit always leads with the same picture. */
+function leadCategory(cats: (Category | null)[]): Category | null {
+  return (CATEGORY_ORDER.find((k) => cats.includes(k as Category)) as Category | undefined) ?? null;
+}
 
 /**
  * "In TX-04 last week": the state's newest visits in the district, so the app shows something new each week.
@@ -29,10 +38,12 @@ export function LastWeek({ onOpen }: { onOpen: (operationId: number) => void }) 
   return (
     <View style={{ gap: space.md }}>
       <SectionHeader title="In TX-04 last week" detail={pulse.data ? pulseLine(pulse.data) : ' '} />
-      <View style={[styles.card, elevation.card, { backgroundColor: c.surface }]}>
+      <View>
         {loading
           ? Array.from({ length: ROWS }, (_, i) => (
-              <View key={i} style={[styles.row, i > 0 && styles.divider, i > 0 && { borderTopColor: c.hairline }]}>
+              <View key={i} style={styles.row}>
+                {i > 0 ? <View style={[styles.divider, { backgroundColor: c.hairline }]} /> : null}
+                <Block style={{ width: LEAD, height: LEAD, borderRadius: LEAD / 2 }} />
                 <View style={{ flex: 1, gap: 6 }}>
                   <Block style={{ width: '60%', height: 16 }} />
                   <Block style={{ width: '40%', height: 12 }} />
@@ -46,13 +57,17 @@ export function LastWeek({ onOpen }: { onOpen: (operationId: number) => void }) 
                 onPress={() => onOpen(v.operation_id)}
                 accessibilityRole="button"
                 accessibilityLabel={`${visitName(v)}. ${visitMeta(v, today)}. ${visitStatus(v)}.`}
-                style={({ pressed }) => [
-                  styles.row,
-                  i > 0 && styles.divider,
-                  i > 0 && { borderTopColor: c.hairline },
-                  pressed && { backgroundColor: c.sunken },
-                ]}
+                style={({ pressed }) => [styles.row, pressed && { backgroundColor: c.sunken }]}
               >
+                {i > 0 ? <View style={[styles.divider, { backgroundColor: c.hairline }]} /> : null}
+                {/* What the state found, as a picture; before anything is posted, just what kind of place it is. */}
+                {leadCategory(v.categories) ? (
+                  <CategoryIcon category={leadCategory(v.categories)} size={LEAD} />
+                ) : (
+                  <View style={[styles.lead, { backgroundColor: c.sunken }]}>
+                    <Glyph name={pinKind(v.operation_type)} size={16} color={c.textSecondary} />
+                  </View>
+                )}
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text variant="headline" numberOfLines={2}>
                     {visitName(v)}
@@ -61,7 +76,7 @@ export function LastWeek({ onOpen }: { onOpen: (operationId: number) => void }) 
                     {visitMeta(v, today)}
                   </Text>
                   <View style={styles.status}>
-                    {v.categories.length > 0 ? <CategoryRow categories={v.categories} size={20} max={3} /> : null}
+                    {new Set(v.categories).size > 1 ? <CategoryRow categories={v.categories} size={20} max={3} /> : null}
                     <Text variant="footnote" tone={v.findings_posted_so_far > 0 ? 'primary' : 'secondary'}>
                       {visitStatus(v)}
                     </Text>
@@ -76,8 +91,9 @@ export function LastWeek({ onOpen }: { onOpen: (operationId: number) => void }) 
 }
 
 const styles = StyleSheet.create({
-  card: { marginHorizontal: space.lg, borderRadius: radius.card, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 72, paddingHorizontal: space.lg, paddingVertical: space.md },
-  divider: { borderTopWidth: StyleSheet.hairlineWidth },
+  // Hairline under the text column only, as in 'All nearby'.
+  divider: { position: 'absolute', top: 0, right: 0, left: space.lg + LEAD + space.md, height: StyleSheet.hairlineWidth },
+  lead: { width: LEAD, height: LEAD, borderRadius: LEAD / 2, alignItems: 'center', justifyContent: 'center' },
   status: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginTop: 2 },
 });

@@ -52,8 +52,9 @@ appId: host.exp.Exponent
     timeout: 10000
 - takeScreenshot: ../../harness/state/qa/u01-3-done
 - tapOn: "Explore the map"
+# The sheet header, not the search pill: with the half sheet full, the XCUITest snapshot can drop the map layer.
 - extendedWaitUntil:
-    visible: "Search daycares, cities, ZIP"
+    visible: "Daycares near you"
     timeout: 20000
 - assertNotVisible: "Location is off"
 - takeScreenshot: ../../harness/state/qa/u01-4-home

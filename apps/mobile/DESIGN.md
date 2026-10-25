@@ -98,7 +98,7 @@ Every finding belongs to one of nine kinds of rule. Each kind gets one SF Symbol
 | Primitive | Spec |
 |---|---|
 | `CategoryIcon` | Disc `size` (default 36), glyph 0.5 × size in `fg` on `bg`. 32 on FindingCard, 36 in Place top problems, 40 in onboarding |
-| `CategoryRow` | Up to 4 overlapping 24 discs (18% overlap, 2 pt surface ring) + "+N" in `footnote`. On "This week" / recent-visit items (`district_recent_visits.categories`): what kinds of problems that visit found |
+| `CategoryRow` | Up to 4 overlapping 24 discs (18% overlap, 2 pt surface ring) + "+N" in `footnote`. On "In TX-04 last week" feed rows (`district_recent_visits.categories`): what kinds of problems that visit found |
 
 No green and no red in the set; the safety-hazards orange and health pink sit at the same lightness as the blues, so neither reads as an alarm.
 
@@ -241,13 +241,13 @@ Past 2 years
 
 | # | Screen | Structure |
 |---|---|---|
-| 1 | **Home** | Map full-bleed with `MapPin` / `AreaPin` / clusters. Search pill top (safe area + 8). Locate rides above the sheet. Sheet peek: "Daycares near you" ("Daycares near Frisco" when the list is around a town, not the parent) + chip row. Half: "Closest to you" carousel ("Closest first" around a town) of `DaycareCard` and the "This week near you" feed. Full: `PlaceRow` list. "What the categories mean" opens a sheet listing §4 |
+| 1 | **Home** | Map full-bleed with `MapPin` / `AreaPin` / clusters. Search pill top (safe area + 8). Locate rides above the sheet. Sheet peek: "Daycares near you" ("Daycares near Frisco" when the list is around a town, not the parent) + chip row. Half: "Closest to you" carousel ("Closest first" around a town) of `DaycareCard`, then the "In TX-04 last week" feed, then "All nearby". Full: `PlaceRow` list. "What the categories mean" opens a sheet listing §4 |
 | 2 | **Place** | `PlaceGallery` hero → head on `bg`: name `title`, address · TX‑04 → white card: the answer + top 2 problems + "See all" → info chips → action tiles (State record · Directions; homes: State record only) → tabs Overview / Problems N / Your rights. Overview: white card "Past 2 years" rows → "Ask about these on your tour" → "More details". Sticky ink "Watch this daycare" + share; when alerts are off it reads "Watching · alerts off" (secondary, outline bell) |
 | 3 | **Onboarding** | Five steps, progress bar + Skip on each (below) |
 | 4 | **Alert** | The push opens the visit: same answer as Place for the new visit, the findings posted so far as `FindingCard`s, what changed since the last visit, what you can do (rights cards) |
 | 5 | **Problems + Rights** | Problems: visits newest first, highest state risk first; 2+ Low / Medium Low fold into "N less serious problems". Rights: one `RightCard` per right, each opens the generated request |
 
-**This week tab** (`(tabs)/pulse.tsx`): what the state posted for TX-04 daycares last week, with the date range. First view = one answer in `largeTitle` ("<N> findings posted so far from <V> state visits") + one grey line on High-risk-rule findings; no grid of stat cards. Then "By category" rows: `CategoryIcon` 32, label, a count bar in that category's `fg` on `sunken`, tabular count. Footnote: the state posts findings after due process, so recent weeks fill in. Any named item: centers by name, **home daycares never named** ("A licensed home in <city>").
+**"In TX-04 last week" feed** (on Home, under the closest cards; data `district_recent_visits`): header "In TX-04 last week" + one grey line with the date range, the visit count and how many have findings posted so far. Rows on the 16 gutter with hairlines: a 36 lead (`CategoryRow` when findings are posted, else the type glyph on `sunken`), name, "City · Visited Oct 16", and "N findings posted so far" or "No problems posted so far". Items are **newest first, always**: never sorted by findings, which would read as a ranking. Centers by name; **home daycares never named** ("A licensed home in <city>"). The standalone "This week" tab is parked.
 
 **Onboarding** (`src/app/onboarding/`):
 

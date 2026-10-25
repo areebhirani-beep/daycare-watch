@@ -29,11 +29,13 @@ appId: host.exp.Exponent
     visible: "Turn on alerts"
     timeout: 10000
 - tapOn: "Turn on alerts"
-- extendedWaitUntil:
-    visible: "Allow"
-    timeout: 10000
-- takeScreenshot: ../../harness/state/qa/u19-0-os-prompt
-- tapOn: "Allow"
+# iOS asks only once per install; on later runs the permission is already decided.
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - takeScreenshot: ../../harness/state/qa/u19-0-os-prompt
+      - tapOn: "Allow"
 - extendedWaitUntil:
     visible: "You’re watching.*"
     timeout: 15000

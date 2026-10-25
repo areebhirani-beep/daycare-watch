@@ -21,7 +21,7 @@ export function flyoverAllowed(d: Pick<DaycareHeader, 'operation_type' | 'geocod
 /**
  * Apple's 3D flyover of a real place, turning slowly like a drone shot. No touch and no labels; our pin
  * marks the building so the picture is unmistakably this place. Licensed centers with an exact geocode only (flyoverAllowed); the caller checks.
- * Android, web and Reduce Motion get a still aerial instead.
+ * Android and web get a still aerial instead; Reduce Motion gets the 3D view without the drift.
  */
 export function FlyoverHero({
   lat,
@@ -42,16 +42,19 @@ export function FlyoverHero({
 }) {
   const c = useColors();
   const map = useRef<MapView>(null);
-  const [still, setStill] = useState(Platform.OS !== 'ios');
+  // Android and web have no 3D view: a still aerial. Reduce Motion keeps the 3D view and stops the drift,
+  // so every caption that says "3D view · Apple Maps" stays true.
+  const still = Platform.OS !== 'ios';
+  const [drift, setDrift] = useState(true);
   const heading = useRef(START_HEADING);
   const [h, setH] = useState(0);
 
   useEffect(() => {
-    void AccessibilityInfo.isReduceMotionEnabled().then((r) => r && setStill(true));
+    void AccessibilityInfo.isReduceMotionEnabled().then((r) => r && setDrift(false));
   }, []);
 
   useEffect(() => {
-    if (still || lat == null || lng == null) return;
+    if (still || !drift || lat == null || lng == null) return;
     const turn = () => {
       heading.current += DRIFT_DEG;
       map.current?.animateCamera({ heading: heading.current }, { duration: DRIFT_MS });
@@ -62,7 +65,7 @@ export function FlyoverHero({
       clearTimeout(first);
       clearInterval(id);
     };
-  }, [still, lat, lng]);
+  }, [still, drift, lat, lng]);
 
   if (lat == null || lng == null) return <View style={[StyleSheet.absoluteFill, { backgroundColor: '#0B0B0C' }, style]} />;
   if (still) return <MapSnapshot lat={lat} lng={lng} zoom={17} showPin={pin} watched={watched} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, ...style }} />;

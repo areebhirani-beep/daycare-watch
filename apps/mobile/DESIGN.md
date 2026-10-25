@@ -114,7 +114,7 @@ No green and no red in the set; the safety-hazards orange and health pink sit at
 | `DaycareCard` | DoorDash card: picture on top (`heroRatio`, default 2:1), name 17/700 two lines (min height 44 so a carousel row stays even), one meta line, one record line in words ("1 problem found Oct 5") |
 | `PlaceRow` | Dense row: 64 thumb, name two lines, meta, record line |
 | `MapSnapshot` | Aerial tile mosaic (Esri World Imagery) with our pin; credit on every image; tiles load on view only. Homes get a street canvas with an area circle (§8) |
-| `FlyoverHero` | Apple Maps `satelliteFlyover` camera: pitch 56, altitude 340 m, start heading 20°, drifts 24° every 9 s. iOS + exact address only; a still `MapSnapshot` elsewhere and under Reduce Motion. `legalTop` moves the Apple legal mark clear of text |
+| `FlyoverHero` | Apple Maps `satelliteFlyover` camera: pitch 56, altitude 340 m, start heading 20°, drifts 24° every 9 s. iOS + exact address only; a still `MapSnapshot` on Android and web. Reduce Motion keeps the 3D view and stops the drift, so the "3D view · Apple Maps" caption is always true. `legalTop` moves the Apple legal mark clear of text |
 | `PlaceGallery` | The Place hero carousel (§9) |
 | `MapPin` / `AreaPin` / `ClusterBubble` | §7 |
 | `FindingCard` | White card, `card` elevation. Header: `CategoryIcon` 32 + category in grey. Then the finding in plain words (`subhead`), the fix status with a check or clock glyph, and one line with the state's own label: High = "Serious · High risk rule, per the state" in `subhead` plus a 1.5 pt ink border; every other level = "<level> risk rule, per the state" in tertiary. Then the inspector's own words and "View on the state's site" |
@@ -153,7 +153,7 @@ No green and no red in the set; the safety-hazards orange and health pink sit at
 | Watch confirm | Button label cross-fades (opacity 0.5 → 1, 200 ms), heavy haptic; no scale |
 | Watching confirmed | Yellow badge fades in 200 ms, then the check draws once left to right (350 ms) with a success haptic. Static soft halo |
 | Skeleton → content | 200 ms cross-fade |
-| Flyover | Camera drifts 24° every 9 s while the screen is visible; stops under Reduce Motion |
+| Flyover | Camera drifts 24° every 9 s while the screen is visible; under Reduce Motion the 3D view holds still |
 
 ## 7. Pins (`MapPin.tsx`)
 
@@ -285,6 +285,7 @@ Past 2 years
 ### Change log after the freeze
 | Date | Change | Why |
 |---|---|---|
+| Oct 25 03:04 | Reduce Motion keeps the 3D view, without drift | A swapped-in aerial ran under an Apple caption with no Esri credit |
 | Oct 25 02:36 | Street photos off; carousel = 3D → aerial → Street View link | 2 of 5 hand-checked photos showed the wrong building |
 | Oct 25 02:33 | Our pin on the 3D view | A whole block from above can't say which building is the daycare |
 | Oct 25 02:25 | Carousel page 1 = 3D view, photos second | Street photos are dashcam frames near the address; the flyover is the strongest real picture |

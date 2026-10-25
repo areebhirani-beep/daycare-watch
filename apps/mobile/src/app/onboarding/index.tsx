@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -66,7 +66,7 @@ export default function HookScreen() {
         </Animated.View>
         <Animated.View entering={rise(2)} style={{ gap: space.lg }}>
           <Text variant="footnote" color="rgba(255,255,255,0.78)" numberOfLines={1}>
-            {d ? `A licensed center in ${tidyCase(d.city)}, TX · 3D view, Apple Maps` : ' '}
+            {d ? `A licensed center in ${tidyCase(d.city)}, TX${Platform.OS === 'ios' ? ' · 3D view, Apple Maps' : ''}` : ' '}
           </Text>
           <Button label="Get started" kind="onImage" onPress={() => router.push('/onboarding/how')} />
         </Animated.View>

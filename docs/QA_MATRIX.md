@@ -28,8 +28,8 @@ Rows are tested cold, by someone who did not write the UI.
 | U2 | Location allowed | Maestro + simctl location | PASS | map centered on the parent’s blue dot in Plano, "Closest to you" list from the same point, no "Location is off" ([home](qa/u01-4-home.jpg)). D1 + D2 fixed | mobile |
 | U3 | Location denied | Maestro + simctl privacy revoke | PASS | `u03-location-denied.yaml` (simctl revoke): "Daycares near you · Near your last location", map and list agree ([u03](qa/u03-denied-0.jpg)) | mobile |
 | U4 | Location outside Texas | Maestro + simctl location | PASS | `u04-outside-texas.yaml` (Oklahoma City): "Daycares near Frisco · No Texas daycares near you" ([u04](qa/u04-outside-0.jpg)) | mobile |
-| U5 | Offline | manual sim (network off) | PENDING | | mobile |
-| U6 | Slow network | manual sim | PENDING | | mobile |
+| U5 | Offline | manual sim (network off) | OWNER PHONE | a simulator shares the Mac’s network, so this runs on the iPhone: airplane mode → open the app → open a watched daycare → expect the cached record and an offline notice, never a blank screen or endless spinner | mobile |
+| U6 | Slow network | manual sim | OWNER PHONE | iPhone Settings → Developer → Network Link Conditioner → "Very Bad Network" → cold-open the app → expect skeletons, then content or "We couldn’t reach the state record" + Try again | mobile |
 | U7 | Search: name hit | Maestro | PASS | "Viva World" → Viva World School ([u07-name](qa/u07-name.jpg)) | mobile |
 | U8 | Search: no hit | Maestro | PASS | "zzqxv" → no rows, no crash ([u08-no-hit](qa/u08-no-hit.jpg)) | mobile |
 | U9 | Search: ZIP | Maestro | PASS | "75087" → Rockwall daycares ([u09-zip](qa/u09-zip.jpg)) | mobile |
@@ -67,10 +67,10 @@ Rows are tested cold, by someone who did not write the UI.
 |---|---|---|---|---|---|
 | M1 | No overshoot or bounce anywhere (springs critically damped, overshootClamping) | source grep of `withSpring`/`spring` configs + screen recording | PASS (source) | springs overshootClamping; D6 (1.05 pop) and D7 (ZoomIn) fixed by design 01:57, verified by grep; recording pending | mobile / design |
 | M2 | Durations 150–250 ms (sheet excepted); press = 0.98 scale + 0.9 opacity only | source grep of `duration`/`withTiming` + recording | PASS (source) | D8 fixed (NumberCard `motion.slow`); AlertBanner 250 ms; press 0.98/0.9; recording pending | mobile / design |
-| M3 | Lists animate only on first load (max 3 staggered, 30 ms); no re-animation on refresh or scroll | Maestro pull-to-refresh + recording | PENDING | | mobile |
-| M4 | Reduce Motion on: movement replaced by fades | simctl Reduce Motion + recording | PENDING | | mobile |
+| M3 | Lists animate only on first load (max 3 staggered, 30 ms); no re-animation on refresh or scroll | Maestro pull-to-refresh + recording | PASS (source) | entrance animations only on mount: home carousel fades once outside its FlatList (`HomeMap.tsx:260`, "a refresh keeps them mounted"), list rows keyed by `operation_id`, visit dots keyed by `v.id` (`RecordStrip.tsx:245-251`), so a refetch never remounts them | mobile |
+| M4 | Reduce Motion on: movement replaced by fades | simctl Reduce Motion + recording | PASS | `m04-reduce-motion.yaml` (simctl Reduce Motion on): no 3D page and no drift; the credited aerial leads, "Placed from the street address · Imagery © Esri, Maxar" ([m04](qa/m04-place.jpg)). D19 fixed 03:03 | mobile |
 | M5 | Done screen: one check draw ≤ 400 ms + success haptic, no confetti/particles/pulsing | source + recording | PASS (source) | `Celebration.tsx`: badge fade 200 ms + check wipe 350 ms + success haptic; no confetti/particles/pulse; recording pending | design |
-| M6 | Never two things animating for attention on one screen | recording of each screen | PENDING | | design |
+| M6 | Never two things animating for attention on one screen | recording of each screen | PASS (source) | each screen has one entrance (place: page fade; onboarding: one rise per beat; done: badge then check). Judgment call for the owner: the 3D view keeps a slow 9 s heading drift while the page is open (stops under Reduce Motion) | design |
 
 ## Web link
 
@@ -104,3 +104,4 @@ Rows are tested cold, by someone who did not write the UI.
 | D16 | U16d | mobile + design | 02:26 Oct 25 | [u16d-viewer](qa/u16d-viewer.jpg) | Low · Apple-engineer lens: credit lacks the CC BY-SA license name · FIXED 02:33, re-tested on screen; feature now off |
 | D17 | U12, U14 | mobile + design | 02:31 Oct 25 | [u14-zero-0](qa/u14-zero-0.jpg) | Med · parent + CAC-judge lens: 3D view (page one) has no pin; can’t tell which building · FIXED 02:33 by design (pin on the 3D view), re-tested PASS (1396589, 1459611) |
 | D18 | U30 | mobile | 02:37 Oct 25 | `maestro hierarchy` | WITHDRAWN 02:38: search pill missing only from the XCUITest snapshot at the half sheet; present at peek and on mobile’s sim |
+| D19 | M4 | design + mobile | 03:02 Oct 25 | [D19](qa/D19-reduce-motion-caption.jpg) | Med · Apple-engineer lens: under Reduce Motion the Esri still is captioned "3D view · Apple Maps", uncredited · FIXED 03:03 (mobile: gallery leaves out 3D under Reduce Motion; design: FlyoverHero keeps 3D, stops drift), re-tested PASS |

@@ -5,8 +5,8 @@
 ```
  ┌──────────────┐   ┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
  │ 1. FIND      │──▶│ 2. READ          │──▶│ 3. WATCH         │──▶│ 4. ACT           │
- │ Map + search │   │ The state record │   │ "My kid goes     │   │ Rights request   │
- │ near me / in │   │ in plain English │   │  here" → push    │   │ Tour questions   │
+ │ Map + search │   │ The state record │   │ "Watch this      │   │ Rights request   │
+ │ near me / in │   │ in plain English │   │  daycare" → push │   │ Tour questions   │
  │ the district │   │ + inspector note │   │  alerts on new   │   │ Report a concern │
  └──────────────┘   └──────────────────┘   │  state findings  │   └──────────────────┘
                                            └──────────────────┘

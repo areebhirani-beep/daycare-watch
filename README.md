@@ -50,7 +50,7 @@ Built for the **2026 Congressional App Challenge · Texas's 4th District**
 ```mermaid
 flowchart LR
   A["1 · Find<br/>Map and search near home<br/>or inside TX-04"] --> B["2 · Read<br/>Every state finding in plain English<br/>with the inspector's own words"]
-  B --> C["3 · Watch<br/>'My kid goes here'<br/>turns on push alerts"]
+  B --> C["3 · Watch<br/>'Watch this daycare'<br/>turns on push alerts"]
   C --> D["4 · Act<br/>Records and visit requests under SB 1098<br/>Tour questions from this daycare's record<br/>Official report channels"]
 ```
 
@@ -259,7 +259,7 @@ daycare-watch/
 | Street photos that show the right building | Collected for 14 of 209 TX-04 centers but not shown: a Census address point sits on the street, not the building. Needs a rooftop or parcel point first |
 | Spanish | So a parent who reads Spanish first gets the same plain-English summaries and rights, in Spanish |
 | Any Texas district, not only TX-04 | The pipeline already loads the whole state; only the district boundary is TX-04 |
-| Track the federal Kairo Act (H.R. 2425) | If it becomes law, add its rights next to the Texas ones |
+| Federal rights, if a federal law passes | Add its rights next to the Texas ones |
 
 ## Known limits
 

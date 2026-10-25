@@ -102,7 +102,7 @@ export function PhoneStage() {
             Know what Texas inspectors found before you pick a daycare.
           </p>
           <p style={{ margin: 0, font: `400 17px/24px ${FONT}`, color: c.textSecondary }}>
-            Updated every night from data.texas.gov. Built for the 2026 Congressional App Challenge, TX-04.
+            Checked against data.texas.gov every day. Built for the 2026 Congressional App Challenge, TX-04.
           </p>
           <figure style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 16, lineHeight: 0 }}>

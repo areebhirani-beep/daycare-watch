@@ -31,7 +31,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta property="og:title" content="Daycare Watch" />
         <meta
           property="og:description"
-          content="What Texas inspectors found at your kid’s daycare, in plain English. Real state records from data.texas.gov, updated nightly."
+          content="What Texas inspectors found at your kid’s daycare, in plain English. Real state records from data.texas.gov, checked against the state every day."
         />
         <meta property="og:url" content="https://daycare-watch.vercel.app/" />
         <meta property="og:image" content="https://daycare-watch.vercel.app/og-1200x630.png" />

@@ -81,7 +81,7 @@ export default function HowScreen() {
     const raw = all.slice(0, big ? 2 : 3).map((x) => ({
       id: x.non_compliance_id,
       rule: splitStandard(x.standard),
-      words: x.narrative?.trim() ? stripBoilerplate(x.narrative.trim()) : '',
+      words: x.narrative?.trim() ? stripBoilerplate(x.narrative.trim()).replace(/\s+/g, ' ') : '',
     }));
     const words = f.narrative?.trim() ? stripBoilerplate(f.narrative.trim()) : (splitStandard(f.standard)?.title ?? '');
     return {
@@ -138,12 +138,13 @@ export default function HowScreen() {
                 </View>
                 {ex.raw.map((r) => (
                   <View key={r.id} style={[styles.raw, { borderTopColor: c.hairline }]}>
-                    <Text maxFontSizeMultiplier={1.3} variant="subhead" numberOfLines={2}>
-                      {r.rule ? `${r.rule.number} – ${r.rule.title}` : ''}
+                    {/* What the inspector wrote leads; the rule it falls under is the one meta line. */}
+                    <Text maxFontSizeMultiplier={1.3} variant="subhead" numberOfLines={3}>
+                      {r.words || r.rule?.title || ''}
                     </Text>
-                    {r.words ? (
-                      <Text maxFontSizeMultiplier={1.3} variant="callout" tone="secondary" numberOfLines={3}>
-                        {r.words}
+                    {r.rule ? (
+                      <Text maxFontSizeMultiplier={1.3} variant="footnote" tone="secondary" tabular>
+                        {`Rule ${r.rule.number}`}
                       </Text>
                     ) : null}
                   </View>

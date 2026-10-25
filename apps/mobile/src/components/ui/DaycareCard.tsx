@@ -12,16 +12,18 @@ import { Text } from './Text';
 
 /**
  * The card's record in words (hierarchy rule 4: content is the chart): what the state found at its most
- * recent visit. "3 problems found Oct 5 · 1 serious", "No problems cited Oct 5".
+ * recent activity, date first. "Last visit Oct 5 · 3 problems · 1 serious", "Last visit Aug 27 · no problems cited".
  */
 export function recordLine(visits: StripVisit[]): { text: string; found: boolean } {
   const last = visits.reduce<StripVisit | null>((a, b) => (!a || b.date > a.date ? b : a), null);
   if (!last) return { text: 'No state visits posted in 2 years', found: false };
   const when = formatDateShort(last.date, new Date().toISOString().slice(0, 10));
+  // A report the daycare filed about itself is never called a state visit.
+  const head = last.self ? `Daycare’s own report ${when}` : `Last visit ${when}`;
   const n = last.marks.length;
-  if (n === 0) return { text: `No problems cited ${when}`, found: false };
+  if (n === 0) return { text: `${head} · no problems cited`, found: false };
   const serious = last.marks.filter((m) => m.rank === 5).length;
-  return { text: `${plural(n, 'problem')} found ${when}${serious > 0 ? ` · ${serious} serious` : ''}`, found: true };
+  return { text: `${head} · ${plural(n, 'problem')}${serious > 0 ? ` · ${serious} serious` : ''}`, found: true };
 }
 
 /** What VoiceOver reads for a card or row: name, meta, then the record line, which is the point of the card. */

@@ -24,7 +24,26 @@ export function SeriousTag() {
   );
 }
 
-/** One state finding: what was wrong in plain words, whether it's fixed, the inspector's words. */
+/** A small neutral tag for how the finding came about ("Coached", "From a report"). Never yellow, never a verdict. */
+function NoteTag({ label }: { label: string }) {
+  const c = useColors();
+  return (
+    <View style={[styles.pill, { borderWidth: 1, borderColor: c.hairline, paddingVertical: 0 }]}>
+      <Text variant="footnote" tone="secondary" maxFontSizeMultiplier={1.4}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+/** The fix status in a few words for the card's one meta line: "Fix due Oct 30, not yet checked". */
+function metaStatus(f: Finding): string {
+  return plainStatus(f)
+    .replace(' · no state check on record yet', ', not yet checked')
+    .replace('Fixed · the state checked', 'Fixed, state checked');
+}
+
+/** One state finding: what was wrong in plain words, then one line with the rule, its risk level and the fix. */
 export function FindingCard({
   finding: f,
   visitDate,
@@ -37,29 +56,31 @@ export function FindingCard({
 }) {
   const c = useColors();
   const standard = splitStandard(f.standard);
-  const summary = f.plain ?? standard?.title ?? 'The state did not publish a description.';
-  // "on record yet" stays together so a wrap never leaves "yet" alone.
-  const fixed = plainStatus(f).replace(/ on record yet$/, ' on\u00A0record\u00A0yet');
-  const status = f.date && f.date === visitDate ? fixed : `Found ${formatDateShort(f.date)} · ${fixed}`;
-  const rule = standard?.number ? `Rule ${standard.number}` : null;
-  const note =
-    [
-      f.via_investigation ? 'Found while looking into a report, not on a routine inspection.' : null,
-      f.technical_assistance ? 'The inspector showed the daycare how to meet this rule.' : null,
-    ]
-      .filter(Boolean)
-      .join(' ') || null;
+  const summary = (f.plain ?? standard?.title ?? 'The state did not publish a description.').replace(/\s+/g, ' ');
+  const status = f.date && f.date === visitDate ? metaStatus(f) : `Found ${formatDateShort(f.date)} · ${metaStatus(f)}`;
+  // One meta line. "not yet checked" stays together so a wrap never leaves "checked" alone.
+  const meta = [standard?.number ? `Rule ${standard.number}` : null, riskLabel(f.risk_level), status]
+    .filter(Boolean)
+    .join(' · ')
+    .replace(/ not yet checked$/, ' not\u00A0yet\u00A0checked');
   const words = f.narrative?.trim() || null;
-  // When the summary is the inspector's own sentence, the credit sits right under it, not at the card's foot.
+  // When the summary is the inspector's own sentence, a tag credits it instead of a second copy below.
   const verbatim = words != null && quotesPlain(words, f.plain);
+  const tags = [
+    verbatim ? 'Inspector’s words' : null,
+    f.technical_assistance ? 'Coached' : null,
+    f.via_investigation ? 'From a report' : null,
+  ].filter((t): t is string => t != null);
   const done = isFixed(f);
-  // A finding under a High-risk rule carries the page's only tag ("Serious") and an ink outline.
+  // A finding under a High-risk rule carries the page's only ink tag ("Serious") and an ink outline.
   const high = f.risk_level === 'High';
   return (
     <View style={[styles.card, elevation.card, { backgroundColor: c.surface, borderColor: high ? c.text : 'transparent' }, high && styles.cardHigh]}>
       <View
         accessible
-        accessibilityLabel={`${high ? 'Serious. ' : ''}${categoryLabel(f.category)}. ${summary.replace(/[.\s]+$/, '')}. ${status.replace(/ · /g, ', ')}.`}
+        accessibilityLabel={`${high ? 'Serious. ' : ''}${categoryLabel(f.category)}. ${summary.replace(/[.\s]+$/, '')}. ${meta.replace(/ · /g, ', ')}.${
+          tags.length ? ` ${tags.join('. ')}.` : ''
+        }`}
         style={{ gap: space.sm }}
       >
         {/* The category reads first, as a picture (CategoryIcon). */}
@@ -68,36 +89,26 @@ export function FindingCard({
           <Text variant="callout" tone="secondary" numberOfLines={1} style={{ flex: 1 }}>
             {categoryLabel(f.category)}
           </Text>
+          {high ? <SeriousTag /> : null}
         </View>
-        <View style={{ gap: 2 }}>
-          <Text variant="subhead">{summary}</Text>
-          {verbatim ? (
-            <Text variant="footnote" tone="tertiary">
-              {rule ? `Inspector’s words · ${rule}` : 'Inspector’s words'}
-            </Text>
-          ) : null}
-        </View>
+        <Text variant="subhead">{summary}</Text>
         <View style={styles.status}>
           <View style={styles.statusGlyph}>
             <Glyph name={done ? 'check' : 'clock'} size={13} color={done ? c.text : c.textSecondary} weight="bold" />
           </View>
           <Text variant="callout" tone="secondary" tabular style={{ flex: 1 }}>
-            {status}
+            {meta}
           </Text>
         </View>
-        {/* One line carries both our word and the state's label, so the card never says it twice. */}
-        {high ? (
-          <Text variant="subhead">{`Serious · ${riskLabel(f.risk_level)} rule, per the state`}</Text>
-        ) : (
-          <Text variant="callout" tone="tertiary">{`${riskLabel(f.risk_level)} rule, per the state`}</Text>
-        )}
+        {tags.length ? (
+          <View style={styles.tags}>
+            {tags.map((t) => (
+              <NoteTag key={t} label={t} />
+            ))}
+          </View>
+        ) : null}
       </View>
-      {words && !verbatim ? <InspectorQuote text={words} plain={f.plain} source={rule} note={note} /> : null}
-      {verbatim && note ? (
-        <Text variant="callout" tone="tertiary">
-          {note}
-        </Text>
-      ) : null}
+      {words && !verbatim ? <InspectorQuote text={words} plain={f.plain} /> : null}
       {onOfficial ? (
         <Pressable
           onPress={onOfficial}
@@ -121,6 +132,7 @@ const styles = StyleSheet.create({
   cardHigh: { borderWidth: 1.5 },
   head: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   pill: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 1 },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
   // The glyph sits on the first line of the status, however many lines it wraps to.
   status: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   statusGlyph: { marginTop: 4 },

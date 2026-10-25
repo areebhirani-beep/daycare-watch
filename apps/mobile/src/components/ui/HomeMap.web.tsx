@@ -96,7 +96,7 @@ export function HomeMap({ rows, loading, center, areaLabel, watchedIds, onOpen, 
           Search any Texas daycare
         </Text>
         <Text variant="callout" tone="secondary" style={{ marginTop: space.xs, marginBottom: space.lg }}>
-          What state inspectors found, in plain English. Updated nightly from the state.
+          What state inspectors found, in plain English. Checked against the state every day.
         </Text>
         <SearchPill onPress={onSearch} floating={false} />
       </View>

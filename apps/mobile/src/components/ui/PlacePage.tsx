@@ -183,7 +183,8 @@ export function PlacePage({
   // The card's rows belong to the activity its headline names; only when that one was clean do earlier problems
   // show, labelled as earlier.
   const top = useMemo(
-    () => [...(last && last.findings.length > 0 ? last.findings : problems)].sort(byWeight).slice(0, 2),
+    // The latest visit's problems all show (up to three), so the headline's count and the list agree.
+    () => [...(last && last.findings.length > 0 ? last.findings : problems)].sort(byWeight).slice(0, last && last.findings.length > 0 ? 3 : 2),
     [last, problems],
   );
 
@@ -307,6 +308,7 @@ export function PlacePage({
               items={top}
               total={problems.length}
               today={today}
+              said={last && last.findings.length > 0 ? { date: last.date, status: visitAnswer(last, today).sub } : null}
               onSeeAll={seeAll}
               // When the latest visit was clean, the problems shown come from earlier visits: say so.
               label={last && last.findings.length === 0 ? 'Earlier in the past 2 years' : null}
@@ -424,6 +426,12 @@ export function PlacePage({
               </Text>
               <Glyph name="chevronRight" size={13} color={c.textSecondary} weight="bold" />
             </Pressable>
+          ) : null}
+          {/* Said once under the list, not on every card. */}
+          {tab === 'findings' && findingVisits.length > 0 ? (
+            <Text variant="callout" tone="tertiary">
+              Risk levels are the state’s.
+            </Text>
           ) : null}
 
           {tab === 'rights' ? (
@@ -543,7 +551,9 @@ export function visitAnswer(last: Visit | undefined, today: string): { headline:
     : last.status === 'pending'
       ? `Results from the ${when} ${activityNoun(last) === 'own report' ? 'report' : activityNoun(last)} aren’t posted yet`
       : n > 0
-        ? `${plural(n, 'problem')} found ${activityPhrase(last, when)}`
+        ? activityNoun(last) === 'own report'
+          ? `${plural(n, 'problem')} in a report the daycare filed ${when}`
+          : `${plural(n, 'problem')} found ${activityPhrase(last, when)}`
         : `No problems cited ${activityPhrase(last, when)}`;
   let sub: string | null = null;
   if (last && n > 0) {
@@ -578,6 +588,17 @@ function Answer({ last, today }: { last: Visit | undefined; today: string }) {
   );
 }
 
+/** The headline's status reduced to one finding's short status ("Fixes due Oct 30 · no state check…" → "Fix due Oct 30"). */
+function headStatus(sub: string): string {
+  return sub
+    .replace(/^\d+ fixed · /, '')
+    .split(' · no state check')[0]
+    .replace(/^All f/, 'F')
+    .replace(/^Fixes due/, 'Fix due')
+    .replace(/^Latest fix date was/, 'Fix date was')
+    .replace(/\u00A0/g, ' ');
+}
+
 /** The two problems a parent most needs, in the state's words, then the way to the rest. */
 function TopProblems({
   items,
@@ -585,10 +606,13 @@ function TopProblems({
   today,
   onSeeAll,
   label,
+  said,
 }: {
   items: Finding[];
   total: number;
   today: string;
+  /** What the headline above already says (its date and status), so a row never repeats it. */
+  said?: { date: string; status: string | null } | null;
   onSeeAll: () => void;
   label: string | null;
 }) {
@@ -600,30 +624,42 @@ function TopProblems({
           {label}
         </Text>
       ) : null}
-      {items.map((f) => (
-        <View
-          key={f.non_compliance_id}
-          accessible
-          accessibilityLabel={`${f.risk_level === 'High' ? 'Serious. ' : ''}${f.plain ?? ''} ${formatDate(f.date)}. ${shortStatus(f)}.`}
-          style={[styles.topRow, { borderBottomColor: c.hairline }]}
-        >
-          {/* Every row leads with its category; "Serious" is an extra on High-risk rules only. */}
-          <CategoryIcon category={f.category} size={36} />
-          <View style={{ flex: 1, gap: space.xs }}>
-            <Text variant="subhead">{f.plain ?? 'The state did not publish a description.'}</Text>
-            {/* The tag rides the meta line so the finding keeps the full width at every text size. */}
-            <View style={styles.topMeta}>
-              {f.risk_level === 'High' ? <SeriousTag /> : null}
-              <Text variant="callout" tone="secondary" tabular style={{ flexShrink: 1 }}>
-                {`${formatDateShort(f.date, today)} · ${shortStatus(f)}`}
-              </Text>
+      {items.map((f) => {
+        const meta = [
+          said && f.date === said.date ? null : formatDateShort(f.date, today),
+          said?.status != null && headStatus(said.status) === shortStatus(f) ? null : shortStatus(f),
+        ]
+          .filter(Boolean)
+          .join(' · ');
+        return (
+          <View
+            key={f.non_compliance_id}
+            accessible
+            accessibilityLabel={`${f.risk_level === 'High' ? 'Serious. ' : ''}${f.plain ?? ''} ${formatDate(f.date)}. ${shortStatus(f)}.`}
+            style={[styles.topRow, { borderBottomColor: c.hairline }]}
+          >
+            {/* Every row leads with its category; "Serious" is an extra on High-risk rules only. */}
+            <CategoryIcon category={f.category} size={36} />
+            <View style={{ flex: 1, gap: space.xs }}>
+              <Text variant="subhead">{f.plain ?? 'The state did not publish a description.'}</Text>
+              {/* The tag rides the meta line so the finding keeps the full width at every text size. */}
+              {f.risk_level === 'High' || meta ? (
+                <View style={styles.topMeta}>
+                  {f.risk_level === 'High' ? <SeriousTag /> : null}
+                  {meta ? (
+                    <Text variant="callout" tone="secondary" tabular style={{ flexShrink: 1 }}>
+                      {meta}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
             </View>
           </View>
-        </View>
-      ))}
+        );
+      })}
       <Pressable accessibilityRole="button" onPress={onSeeAll} style={({ pressed }) => [styles.more, pressed && { opacity: 0.6 }]}>
         <Text variant="subhead" style={{ flex: 1 }}>
-          {total > items.length ? `See all ${total} from the past 2\u00A0years` : 'See the details'}
+          {total > items.length ? `Past 2\u00A0years (${total})` : 'See the details'}
         </Text>
         <Glyph name="chevronRight" size={13} color={c.textSecondary} weight="bold" />
       </Pressable>
@@ -758,7 +794,7 @@ function TourCard({ questions, onOpen }: { questions: ReturnType<typeof buildTou
         <View
           key={q.question}
           accessible
-          accessibilityLabel={`Question ${i + 1}. ${q.question}${q.fact ? ` ${q.fact}` : ''}`}
+          accessibilityLabel={`${i + 1}. ${q.fact ? `${q.fact}. ` : ''}${q.question}`}
           style={styles.tourRow}
         >
           <View style={[styles.tourNum, { backgroundColor: c.text }]}>
@@ -766,11 +802,12 @@ function TourCard({ questions, onOpen }: { questions: ReturnType<typeof buildTou
               {String(i + 1)}
             </Text>
           </View>
+          {/* The fact from the record leads; the one question it raises follows. */}
           <View style={{ flex: 1, gap: space.xxs }}>
-            <Text variant="subhead">{q.question}</Text>
+            <Text variant="subhead">{q.fact ?? q.question}</Text>
             {q.fact ? (
               <Text variant="callout" tone="secondary">
-                {q.fact}
+                {q.question}
               </Text>
             ) : null}
           </View>

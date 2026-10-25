@@ -15,7 +15,6 @@ v4 is frozen for the Oct 26 2026 submission. Changes after the freeze go into §
 | **DoorDash** | Store card: big picture on top, bold name, one meta row; horizontal carousels; dense clean list | Carousel card 0.76 × screen width, picture 2:1 (1.2:1 in onboarding), radius 16, name 17/700 two lines max, 12 gap, next card peeks. List row: 64 thumb radius 12 |
 | **Apple Maps** | Sheet detents, blur only over the map, place card layout, the 3D flyover | Detents: peek 156 + bottom inset, half 60%, full = screen − top inset − 8. Grabber 36×5. Sheet top radius 28. Flyover pitch 56, altitude 340 m |
 | **Duolingo** | Onboarding: progress bar on top, one decision per screen, chunky 3D buttons, a finish moment | Progress bar 14 high, radius 7. Button 56 high, radius 16, 4 pt bottom edge one shade darker |
-| **Cal AI** | Huge confident numerals | Numeral 56/800 tabular, tracking −1.5 |
 | **Brilliant / Headspace / Calm** | Crisp geometric marks, soft color fields, motion with a purpose | Soft field = a category tint behind its glyph. Nothing loops except the flyover drift |
 | **Apple Settings / Health** | Grouped grey background with white rounded cards | bg #F2F2F5, card radius 20, 16 padding, 12 between cards |
 
@@ -117,7 +116,7 @@ No green and no red in the set; the safety-hazards orange and health pink sit at
 | `FlyoverHero` | Apple Maps `satelliteFlyover` camera: pitch 56, altitude 340 m, start heading 20°, drifts 24° every 9 s. iOS + exact address only; a still `MapSnapshot` on Android and web. Reduce Motion keeps the 3D view and stops the drift, so the "3D view · Apple Maps" caption is always true. `legalTop` moves the Apple legal mark clear of text |
 | `PlaceGallery` | The Place hero carousel (§9) |
 | `MapPin` / `AreaPin` / `ClusterBubble` | §7 |
-| `FindingCard` | White card, `card` elevation. Header: `CategoryIcon` 32 + category in grey. Then the finding in plain words (`subhead`), the fix status with a check or clock glyph, and one line with the state's own label: High = "Serious · High risk rule, per the state" in `subhead` plus a 1.5 pt ink border; every other level = "<level> risk rule, per the state" in tertiary. When our summary is the inspector's own sentence, "Inspector's words · Rule N" sits directly under it; otherwise the inspector's words follow in their own block. Then any state note (found during an investigation, technical assistance) and "View on the state's site" |
+| `FindingCard` | White card, `card` elevation. Header: `CategoryIcon` 32 + category in grey; High adds an ink "Serious" tag and a 1.5 pt ink border. Then the finding in plain words (`subhead`) and one meta line: "Rule N · <level> risk · Fix due …". Small neutral outline tags (Inspector's words, Coached, From a report) and "View on the state's site". "Risk levels are the state's." is said once under the list, never on each card |
 | `SeriousTag` | The only tag on Place: a small ink pill, on High-risk findings only |
 | `status.ts` | Fix-status copy, pure and tested (§10) |
 | `AlertBanner` | An iOS notification banner with our real push copy; the tag sits where iOS shows "now" ("Example", "Replay") |
@@ -125,7 +124,7 @@ No green and no red in the set; the safety-hazards orange and health pink sit at
 | `Tabs` | Place tabs, underline slides between tabs (200 ms) |
 | `Skeleton` | Card-, row- and hero-shaped placeholders (`heroRatio`), slow opacity pulse, cross-fade to content |
 | `OnboardingFrame` / `ProgressBar` / `OnboardingTop` / `Celebration` | Onboarding chrome (§11) |
-| `AppMark` | The mark: one visit on a time rail (ink ring, solid centre, an earlier visit to its left). Reads as a visit and as an eye. Never a letter in a square |
+| `AppMark` | The mark, same drawing as the app icon: a solid building with its door, and one dot at the top-right corner for something new the state posted. Door and the dot's gap are cut out, so it sits on photos. Square; ink on light, white on imagery, yellow tile for the icon. Never a shield, check, star, badge or eye |
 | `RecordStrip` | Kept as the data helpers `stripFromRecord` / `stripFromRow`; the drawn strip is off Place and cards (it needed a legend) |
 
 ## 6. Motion (tokens: `motion`, `spring`, `theme/motion.ts`)
@@ -278,7 +277,7 @@ From 768 px wide, the web shows the live app inside a drawn iPhone, not a deskto
  Daycare Watch                         ▕│                       │▏ ← side buttons, 3 px slabs
  Know what Texas inspectors            ▕│     the live app,     │
  found before you pick a daycare.       │     393 × 852 iframe, │
- • Real Texas state data, synced daily  │     scaled to fit     │
+ Checked against data.texas.gov daily   │     scaled to fit     │
  ┌──────┐                              ▕│                       │
  │  QR  │ Open on your phone             │        ▬▬▬▬           │ ← home indicator
  └──────┘                                ╰───────────────────────╯
@@ -290,7 +289,7 @@ From 768 px wide, the web shows the live app inside a drawn iPhone, not a deskto
 | Breakpoints | < 768: the app, full screen, no frame. 768–1023: the frame alone, centred. ≥ 1024: the column and the frame as one centred group |
 | Frame | Titanium ring 4 px, flat two tones with no gradient: light `#8E8A84` with a 1 px `#5E5B57` inner line; dark scheme `#3A3A3C` / `#1C1C1E`. Black bezel 12. Screen radius 55. Dynamic Island 126 × 37 pill at top 11. Side buttons as 3 px slabs in the ring colour, measured from the frame top: left action 122 (h 34), volume 190 and 268 (h 64); right side button 230 (h 104). Shadow `0 30px 80px rgba(0,0,0,.18)`. Scale `min(1, (window h − 80) / 884)`, centred vertically |
 | Screen | `<iframe title="Daycare Watch app">` of the current path at 393 × 852, `transform: scale(s)`. On load the page gives the app iPhone insets (top 59, bottom 34) through the safe-area provider's measured element, then fires `resize`. The app draws its own 9:41 status bar (white over the place hero and onboarding step 1, ink elsewhere, white in dark) and a home indicator 134 × 5 |
-| Column | App icon 64, radius 14. "Daycare Watch" 20/700 as the page's one `h1`. The line "Know what Texas inspectors found before you pick a daycare." 40/44, weight 800, tracking −0.8. "Real Texas state data, synced daily" 17 `textSecondary` after an 8 pt ink dot. QR 128 on a white card (padding 12, radius 16), caption "Open on your phone" 13. Links as text, 17 semibold: GitHub, and the video only once its real URL exists |
+| Column | App icon 64, radius 14. "Daycare Watch" 20/700 as the page's one `h1`. The line "Know what Texas inspectors found before you pick a daycare." 40/44, weight 800, tracking −0.8. "Checked against data.texas.gov every day. Built for the 2026 Congressional App Challenge, TX-04." 17 `textSecondary`, a sentence, not a bullet. QR 128 on a white card (padding 12, radius 16), caption "Open on your phone" 13. Links as text, 17 semibold: GitHub, and the video only once its real URL exists |
 | Deep links | The page URL is the app's URL: `/daycare/<id>` opens that place inside the frame with no onboarding. When the app navigates, the page URL follows (`replaceState`) and the QR re-encodes it, so a scan opens the same page on a phone |
 | Page | Background is the theme `bg` (light `#F2F2F7`, dark `#000`). One `<main>` landmark. Lighthouse accessibility ≥ 90 |
 | Never | A floating box or a fake phone screenshot; a re-laid-out desktop version of a screen; gloss or gradient on the frame; a second scrollbar on the page; horizontal page scroll at any width |
@@ -303,27 +302,21 @@ From 768 px wide, the web shows the live app inside a drawn iPhone, not a deskto
 - Blur only over the map. No gradients. No illustration. No stock imagery. Only real places.
 - A lint script fails the build on `borderLeftWidth` callout cards and banned icon sets.
 
-| Tell of template UI | Us |
-|---|---|
-| Indigo / purple / "internet blue" accent, gradients | Ink for every action, yellow for one meaning. No gradients |
-| Neon on dark, glows | True black, graphite cards, one yellow |
-| Inter everywhere | The platform grotesk, heavy and tightly tracked |
-| Grid of identical stat cards | One sentence that answers, then rows |
-| Colored left-border callouts | Pills, plain labels, category discs |
-| Stock icon sets, emoji | SF Symbols / Material Symbols via `expo-symbols`; pins and the mark drawn by us |
-| Clip-art illustration | Real places: 3D flyover and aerial, with our pin |
-| Generic copy ("Welcome back!", "Unlock insights") | DoorDash-length labels; numbers carry the message |
-| Generic empty / error states | Skeletons shaped like the real card; empty states say what's true and give one action |
-| Confetti, bouncing, pulsing | §6: 150–250 ms, no overshoot |
-
 **5-second test (on every screen):** Viva World School → "3 problems at the Oct 5 visit, fixes due Oct 30, one serious (pool gate)."
 
 ### Change log after the freeze
 | Date | Change | Why |
 |---|---|---|
-| Oct 25 12:29 | Web ≥ 768 px is a map with a 420 px panel (360 on tablets); onboarding becomes a centred card | Owner: desktop must not be a phone column; judges open the link on laptops |
-| Oct 25 13:02 | Replaces 12:29: web ≥ 768 px is the live app in a real iPhone frame (iframe at 393 × 852), with a calm left column from 1024 px; the split layout and the onboarding card are retired | Owner change: judges should see the real app on a real-looking phone, not a desktop re-layout |
-| Oct 25 12:28 | Carousel = up to 2 verified street photos of the building, then ONE overhead; Street View tile cut | Owner: "2 pics of the building itself, then the satellite view", not three satellite angles |
+| Oct 25 13:54 | A finding card has one meta line (rule · risk level · fix), small neutral tags (Inspector's words, Coached, From a report), no per-card source sentence | Five stacked qualifier lines and one sentence repeated on every card read as boilerplate |
+| Oct 25 13:54 | Card record line leads with the date: "Last visit Aug 27 · no problems cited" | "No problems cited Aug 27" was telegraphic |
+| Oct 25 13:54 | Done screen: left aligned, the mark, "Watching", the daycare's own card; no badge or halo | The centred check in a glow was the stock success screen |
+| Oct 25 13:54 | Welcome shows Castle Montessori of Frisco; the How example stays on its own record | The splash should not put a business with open findings up front |
+| Oct 25 13:54 | Place answer lists every problem from the latest visit (up to 3), rows skip the date and status the headline already says, link reads "Past 2 years (N)" | Three different numbers and a status said twice in one card |
+| Oct 25 14:11 | New mark and app icon: a building with its door and one dot for something new, ink on school-bus yellow; iOS light, dark and tinted icons, Android adaptive and monochrome | The old ring on a rail read as abstract tech; the building plus the dot says what the app does in one second at 29 pt |
+| Oct 25 14:11 | Large text: past 1.6x the Find card picture drops to 3:1, and onboarding steps flash the scroll bar once when they run past the fold | Text never truncates at those sizes, so the picture gives up height and the fold reads as more, not cut |
+| Oct 25 12:29 | Web ≥ 768 px is a map with a 420 px panel (360 on tablets); onboarding becomes a centred card | Desktop must not be a phone column; judges open the link on laptops |
+| Oct 25 13:02 | Replaces 12:29: web ≥ 768 px is the live app in a real iPhone frame (iframe at 393 × 852), with a calm left column from 1024 px; the split layout and the onboarding card are retired | Judges should see the real app on a real-looking phone, not a desktop re-layout |
+| Oct 25 12:28 | Carousel = up to 2 verified street photos of the building, then ONE overhead; Street View tile cut | Two pictures of the building itself, then the satellite view, not three satellite angles |
 | Oct 25 06:20 | At ≥1.6× text, a history row stacks the date over its status | Dates truncated to "J…" at the largest size |
 | Oct 25 05:45 | The Home map is one VoiceOver element pointing to the list | The maps library reads every custom pin as "Map pin"; the list carries the same daycares with their records |
 | Oct 25 05:30 | Spoken labels are sentences: a card reads name, meta, record line, "Watching"; " · " becomes ", "; a clean visit is said once; stepped-back onboarding cards are hidden | Read back from the accessibility tree on every screen |

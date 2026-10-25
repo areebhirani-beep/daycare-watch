@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 
 import { registerDevice } from './api';
+import { isWeb } from './runtime';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

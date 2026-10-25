@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 
 import Animated, {
   FadeIn,
@@ -8,6 +8,7 @@ import Animated, {
   ReduceMotion,
   runOnJS,
   useAnimatedReaction,
+  useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
@@ -27,17 +28,20 @@ import {
 } from '@/lib/format';
 import { groupByVisit, summarize, visibleVisits, visitTypeLabel } from '@/lib/record';
 import { imageryAllowed } from '@/lib/imagery';
+import { placeAddress } from '@/lib/maps';
+import { buildTourQuestions } from '@/lib/tour';
 import { lawCovers, NOT_COVERED, REQUEST_CARDS, type RequestKind } from '@/lib/rights';
 import type { AreaCompare, DaycareRecord } from '@/lib/types';
-import { haptic, radius, space, spring, useColors } from '@/theme';
+import { haptic, radius, riskRank, space, spring, useColors } from '@/theme';
 
 import { Button } from './Button';
 import { FactChips } from './Chip';
 import { ActionTile, IconButton, SquareButton, StickyBar } from './Chrome';
 import { FindingCard } from './FindingCard';
-import type { GlyphName } from './Glyph';
+import { Glyph, type GlyphName } from './Glyph';
 import { Disclosure } from './Disclosure';
-import { RingCard, StatBand } from './NumberCard';
+import { MapSnapshot } from './MapSnapshot';
+import { RingCard } from './NumberCard';
 import { type GeocodeQuality, PlaceGallery } from './PlaceGallery';
 import { RecordStrip, stripFromRecord } from './RecordStrip';
 import { RightCard } from './RightCard';
@@ -46,7 +50,8 @@ import { Text } from './Text';
 
 /**
  * The place page (googlemaps place sheet + doordash-3 store page + uber-3 sticky CTA, harness/state/refs).
- * Map hero, huge name, fact chips, action pills, tabs; the record strip and big counts lead Overview.
+ * Map hero, huge name, then the record itself (days since the last visit, the visit rail, one sentence),
+ * fact chips, action tiles, tabs. Tour questions lead Overview.
  * Data and navigation come in as props.
  */
 
@@ -103,7 +108,10 @@ export function PlacePage({
   const heroH = hasPoint ? HERO : 72;
   // Past the photo, a solid bar with the name fades in and the status bar turns dark (Apple Maps place card).
   const y = useSharedValue(0);
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const [solid, setSolid] = useState(false);
+  // The bar's slim aerial only loads once the reader scrolls toward it (tiles load on view).
+  const [barImage, setBarImage] = useState(false);
   const onScroll = useAnimatedScrollHandler((e) => {
     y.value = e.contentOffset.y;
   });
@@ -111,6 +119,12 @@ export function PlacePage({
     () => y.value > heroH - 40,
     (now, before) => {
       if (now !== before) runOnJS(setSolid)(now);
+    },
+  );
+  useAnimatedReaction(
+    () => y.value > heroH - 160,
+    (now) => {
+      if (now) runOnJS(setBarImage)(true);
     },
   );
   // The bar is fully solid before the large title reaches it, and the large title fades as it passes under,
@@ -162,22 +176,30 @@ export function PlacePage({
     daycare.corrective_action ? 'The state lists this daycare on corrective action: it stays open under extra conditions and more inspections.' : null,
   ].filter((n): n is string => n !== null);
 
-  // The state's address field already carries city, "TX" and ZIP+4 ("5853 Horizon Rd  Rockwall TX- 75032 7788").
-  const street = daycare.address
-    ? tidyCase(daycare.address.replace(/\s+/g, ' ').replace(/\bTX-?\s*(\d{5})(?:[\s-]?\d{4})?\b/i, 'TX $1').trim()).replace(/\bTx\b/, 'TX')
-    : null;
-  const address = [
-    (privateHome ? null : street) ?? [tidyCase(daycare.city), daycare.zip].filter(Boolean).join(' '),
-    daycare.in_district && daycare.district_basis === 'point' ? 'TX-04' : null,
-  ]
+  // Centers: the state's full address line. Homes: city and ZIP only (lib/maps).
+  const address = [placeAddress(daycare), daycare.in_district && daycare.district_basis === 'point' ? 'TX-04' : null]
     .filter(Boolean)
     .join(' · ');
+  const tour = useMemo(() => buildTourQuestions(record.findings).slice(0, 2), [record.findings]);
+
+  // Tapping a visit on the rail opens Findings scrolled to that visit.
+  const bodyTop = useRef(0);
+  const [target, setTarget] = useState<string | number | null>(null);
+  const jumpTo = (id: string | number) => {
+    setTab('findings');
+    setTarget(id);
+  };
+  const onVisitLayout = (id: string | number) => (e: LayoutChangeEvent) => {
+    if (id !== target) return;
+    scrollRef.current?.scrollTo({ y: Math.max(0, bodyTop.current + e.nativeEvent.layout.y - insets.top - 56 - space.md), animated: true });
+    setTarget(null);
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: c.surface }}>
-      {/* Light status-bar text over the aerial photo; the street maps follow the theme. */}
-      <StatusBar style={solid || !aerial ? 'auto' : 'light'} />
-      <Animated.ScrollView contentContainerStyle={{ paddingBottom: space.section }} onScroll={onScroll} scrollEventThrottle={16}>
+      {/* Light status-bar text over the aerial photo and the dimmed header; the street maps follow the theme. */}
+      <StatusBar style={(solid ? hasPoint : aerial) ? 'light' : 'auto'} />
+      <Animated.ScrollView ref={scrollRef} contentContainerStyle={{ paddingBottom: space.section }} onScroll={onScroll} scrollEventThrottle={16}>
         <PlaceGallery
           lat={daycare.lat}
           lng={daycare.lng}
@@ -206,6 +228,11 @@ export function PlacePage({
               ))}
             </View>
           ) : null}
+          <View style={styles.record}>
+            <HeroFact lastVisit={s.lastVisit} visits={s.visits} months={s.months} />
+            <RecordStrip visits={strip} variant="hero" months={s.months} onPressVisit={jumpTo} />
+            <RecordLine s={s} area={area} />
+          </View>
           <FactChips facts={facts} />
           <View style={styles.tiles}>
             {privateHome ? null : onOpenAppleMaps && onOpenGoogleMaps ? (
@@ -220,7 +247,12 @@ export function PlacePage({
           </View>
         </View>
 
-        <View style={{ backgroundColor: c.surface }}>
+        <View
+          style={{ backgroundColor: c.surface }}
+          onLayout={(e) => {
+            bodyTop.current = e.nativeEvent.layout.y + e.nativeEvent.layout.height;
+          }}
+        >
           <Tabs
             tabs={[
               { key: 'overview', label: 'Overview' },
@@ -235,16 +267,8 @@ export function PlacePage({
         <Animated.View key={tab} entering={FadeIn.duration(180).reduceMotion(ReduceMotion.System)} style={styles.body}>
           {tab === 'overview' ? (
             <>
-              <HeroFact lastVisit={s.lastVisit} visits={s.visits} months={s.months} />
-              <RecordStrip visits={strip} variant="hero" months={s.months} onPressVisit={() => setTab('findings')} />
-              <StatBand
-                items={[
-                  { label: 'State visits', value: s.visits },
-                  { label: 'Findings', value: s.findings },
-                  { label: 'On High risk rules', value: s.high, tint: s.high > 0 ? c.risk.High : undefined },
-                ]}
-              />
-              <Disclosure title="More details" detail="Fixes verified, the county, tour questions">
+              <TourCard questions={tour} onOpen={onTour} />
+              <Disclosure title="More details" detail="Fixes verified, permit, capacity">
                 {s.findings > 0 ? (
                   <RingCard
                     value={verified}
@@ -253,7 +277,6 @@ export function PlacePage({
                     sub={s.notFixed > 0 ? `${s.notFixed} not yet verified` : undefined}
                   />
                 ) : null}
-                {area && area.peer_count >= 3 ? <CountyCard area={area} /> : null}
                 {more.length > 0 ? (
                   <View style={{ gap: space.xs }}>
                     {more.map((m) => (
@@ -263,14 +286,6 @@ export function PlacePage({
                     ))}
                   </View>
                 ) : null}
-                <RightCard
-                  icon="list"
-                  title="Questions to ask on a tour"
-                  detail="Built from this daycare's own findings"
-                  hint="Opens the tour questions"
-                  trailing="chevronRight"
-                  onPress={onTour}
-                />
               </Disclosure>
             </>
           ) : null}
@@ -284,21 +299,35 @@ export function PlacePage({
                 </Text>
               </View>
             ) : (
-              findingVisits.map((v) => (
-                <View key={v.activity_id} style={{ gap: space.md }}>
-                  <View>
-                    <Text variant="title" tabular>
-                      {formatDate(v.date)}
-                    </Text>
-                    <Text variant="footnote" tone="secondary">
-                      {`${visitTypeLabel(v.type)} · ${plural(v.findings.length, 'finding')}`}
-                    </Text>
+              findingVisits.map((v) => {
+                // Highest-risk first. Two or more lower-risk findings fold into one row.
+                const sorted = [...v.findings].sort((a, b) => riskRank[b.risk_level] - riskRank[a.risk_level]);
+                const lower = sorted.filter((f) => riskRank[f.risk_level] <= 2);
+                const fold = lower.length >= 2;
+                const shown = fold ? sorted.filter((f) => riskRank[f.risk_level] > 2) : sorted;
+                return (
+                  <View key={v.activity_id} style={{ gap: space.md }} onLayout={onVisitLayout(v.activity_id)}>
+                    <View>
+                      <Text variant="title" tabular>
+                        {formatDate(v.date)}
+                      </Text>
+                      <Text variant="footnote" tone="secondary">
+                        {`${visitTypeLabel(v.type)} · ${plural(v.findings.length, 'finding')}`}
+                      </Text>
+                    </View>
+                    {shown.map((f) => (
+                      <FindingCard key={f.non_compliance_id} finding={f} visitDate={v.date} />
+                    ))}
+                    {fold ? (
+                      <Disclosure title={`${lower.length} lower-risk findings`} detail="Rules the state rates Low or Medium Low">
+                        {lower.map((f) => (
+                          <FindingCard key={f.non_compliance_id} finding={f} visitDate={v.date} />
+                        ))}
+                      </Disclosure>
+                    ) : null}
                   </View>
-                  {v.findings.map((f) => (
-                    <FindingCard key={f.non_compliance_id} finding={f} visitDate={v.date} />
-                  ))}
-                </View>
-              ))
+                );
+              })
             )
           ) : null}
 
@@ -330,7 +359,22 @@ export function PlacePage({
         pointerEvents="none"
         style={[styles.bar, { height: insets.top + 56, paddingTop: insets.top, backgroundColor: c.surface, borderBottomColor: c.hairline }, barStyle]}
       >
-        <Text variant="headline" numberOfLines={1} style={{ marginHorizontal: 64 }} align="center">
+        {/* The page keeps its picture: a slim, dimmed slice of the hero map behind the name. */}
+        {hasPoint && barImage ? (
+          <>
+            <MapSnapshot
+              lat={daycare.lat}
+              lng={daycare.lng}
+              zoom={privateHome ? 14 : 16}
+              privateHome={privateHome}
+              showPin={false}
+              attribution="short"
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={[StyleSheet.absoluteFill, styles.scrim]} />
+          </>
+        ) : null}
+        <Text variant="headline" numberOfLines={1} color={hasPoint ? '#FFFFFF' : undefined} style={{ marginHorizontal: 64 }} align="center">
           {tidyCase(daycare.name)}
         </Text>
       </Animated.View>
@@ -390,43 +434,77 @@ function HeroFact({ lastVisit, visits, months }: { lastVisit: string | null; vis
       <Text variant="title">{days != null ? (days === 1 ? 'day since the state’s last visit' : 'days since the state’s last visit') : `state visits in ${months} months`}</Text>
       {days != null ? (
         <Text variant="callout" tone="secondary" tabular>
-          {`Visited ${formatDate(lastVisit)} · last ${months} months below`}
+          {`Last visit ${formatDate(lastVisit)}`}
         </Text>
       ) : null}
     </View>
   );
 }
 
-function CountyCard({ area }: { area: AreaCompare }) {
-  const c = useColors();
-  const median = Number.isInteger(area.median.findings) ? String(area.median.findings) : area.median.findings.toFixed(1);
-  const peers = `${plural(area.peer_count, operationTypeLabel(area.operation_type).toLowerCase())} in ${tidyCase(area.county)} County`;
-  const max = Math.max(area.this.findings, area.median.findings, 1);
-  const rows = [
-    { label: 'This daycare', value: String(area.this.findings), share: area.this.findings / max, color: c.text },
-    { label: 'County median', value: median, share: area.median.findings / max, color: c.textTertiary },
-  ];
+/** The record in one plain sentence under the rail, plus the county median when there are enough peers. Facts only. */
+function RecordLine({ s, area }: { s: ReturnType<typeof summarize>; area: AreaCompare | null | undefined }) {
+  const [since] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth() - s.months, d.getDate()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  });
+  const line =
+    s.visits === 0
+      ? `No state visits posted since ${since}`
+      : s.findings === 0
+      ? `${plural(s.visits, 'state visit')} since ${since}, no findings posted`
+      : `${plural(s.findings, 'finding')} across ${plural(s.visits, 'state visit')} since ${since}${s.high > 0 ? ` · ${s.high} on a High-risk rule` : ''}`;
+  const median = area && area.peer_count >= 3 ? (Number.isInteger(area.median.findings) ? String(area.median.findings) : area.median.findings.toFixed(1)) : null;
   return (
-    <View accessible accessibilityLabel={`Findings in 24 months: this daycare ${area.this.findings}, median ${median} for ${peers}`} style={{ gap: space.md }}>
-      <Text variant="title">Next to the county</Text>
-      {rows.map((r) => (
-        <View key={r.label} style={{ gap: space.xs }}>
-          <View style={styles.countyRow}>
-            <Text variant="subhead" style={{ flex: 1 }}>
-              {r.label}
-            </Text>
-            <Text variant="headline" tabular>
-              {r.value}
+    <View style={{ gap: space.xxs }}>
+      <Text variant="callout" tabular style={{ fontWeight: '600' }}>
+        {line}
+      </Text>
+      {area && median != null ? (
+        <Text variant="footnote" tone="secondary" tabular>
+          {`Median for ${operationTypeLabel(area.operation_type).toLowerCase()}s in ${tidyCase(area.county)} County: ${plural(Number(median), 'finding')} in ${area.window_months} months`}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+/** Tour questions built from this daycare's own findings (lib/tour), promoted to the top of Overview. */
+function TourCard({ questions, onOpen }: { questions: ReturnType<typeof buildTourQuestions>; onOpen: () => void }) {
+  const c = useColors();
+  if (questions.length === 0) return null;
+  return (
+    <View style={[styles.tour, { backgroundColor: c.sunken }]}>
+      <Text variant="title">Ask about these on your tour</Text>
+      {questions.map((q, i) => (
+        <View key={q.question} style={styles.tourRow}>
+          <View style={[styles.tourNum, { backgroundColor: c.text }]}>
+            <Text variant="footnote" color={c.surface} tabular style={{ fontWeight: '800' }}>
+              {String(i + 1)}
             </Text>
           </View>
-          <View style={[styles.track, { backgroundColor: c.sunken }]}>
-            <View style={[styles.bar2, { width: `${Math.max(r.share * 100, 2)}%`, backgroundColor: r.color }]} />
+          <View style={{ flex: 1, gap: space.xxs }}>
+            <Text variant="headline">{q.question}</Text>
+            {q.fact ? (
+              <Text variant="footnote" tone="secondary">
+                {q.fact}
+              </Text>
+            ) : null}
           </View>
         </View>
       ))}
-      <Text variant="footnote" tone="tertiary">
-        {`Findings in the last ${area.window_months} months. Median of ${peers}.`}
-      </Text>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          haptic.select();
+          onOpen();
+        }}
+        style={({ pressed }) => [styles.tourMore, { borderTopColor: c.hairline }, pressed && { opacity: 0.6 }]}
+      >
+        <Text variant="subhead" style={{ flex: 1, fontWeight: '600' }}>
+          All tour questions
+        </Text>
+        <Glyph name="chevronRight" size={13} color={c.textSecondary} weight="bold" />
+      </Pressable>
     </View>
   );
 }
@@ -447,9 +525,12 @@ const styles = StyleSheet.create({
   tiles: { flexDirection: 'row', gap: space.sm, paddingTop: space.sm },
   body: { paddingHorizontal: space.lg, paddingTop: space.xl, gap: space.xxl },
   empty: { borderRadius: radius.card, padding: space.lg, gap: space.xs },
-  countyRow: { flexDirection: 'row', alignItems: 'baseline', gap: space.lg },
-  track: { height: 10, borderRadius: 5, overflow: 'hidden' },
-  bar2: { height: 10, borderRadius: 5 },
+  record: { gap: space.md, paddingTop: space.lg, paddingBottom: space.md },
+  tour: { borderRadius: radius.card, padding: space.lg, gap: space.lg },
+  tourRow: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },
+  tourNum: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  tourMore: { flexDirection: 'row', alignItems: 'center', borderTopWidth: StyleSheet.hairlineWidth, paddingTop: space.md, minHeight: 44 },
+  scrim: { backgroundColor: 'rgba(0,0,0,0.52)' },
   bar: { position: 'absolute', left: 0, right: 0, top: 0, justifyContent: 'center', borderBottomWidth: StyleSheet.hairlineWidth },
   floatTop: { position: 'absolute', left: space.lg, right: space.lg, flexDirection: 'row', justifyContent: 'space-between' },
 });

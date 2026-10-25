@@ -6,6 +6,7 @@ import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 
 import { haptic, radius, space, useColors } from '@/theme';
 
+import { Glyph } from './Glyph';
 import { Text, type Props as TextProps } from './Text';
 
 type SerifStyle = 'display' | 'title' | 'heading' | 'quote';
@@ -81,7 +82,10 @@ export function InspectorQuote({
         hitSlop={8}
         style={({ pressed }) => [styles.link, pressed && { opacity: 0.6 }]}
       >
-        <Text variant="subhead" tone="accent">{`${label} in full`}</Text>
+        <Text variant="footnote" tone="tertiary" style={{ flexShrink: 1 }}>
+          {source ? `${label} in full · ${source}` : `${label} in full`}
+        </Text>
+        <Glyph name="chevronRight" size={10} color={c.textTertiary} weight="bold" />
       </Pressable>
     );
   }
@@ -137,7 +141,7 @@ function squash(s: string): string {
 }
 
 const styles = StyleSheet.create({
-  link: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
+  link: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
   head: {
     marginTop: space.xxxl,
     marginBottom: space.md,

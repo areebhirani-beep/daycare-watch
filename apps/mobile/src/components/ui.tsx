@@ -1,10 +1,10 @@
-import * as Haptics from 'expo-haptics';
 import type { ReactNode } from 'react';
 import { Pressable, type PressableProps, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { useLastSync } from '@/lib/api';
 import { formatCheckedAt } from '@/lib/format';
 import { minTap, radius, space, useColors } from '@/theme';
+import { haptic } from '@/theme/haptics';
 
 import { Icon, type IconName } from './Icon';
 import { T } from './T';
@@ -28,7 +28,7 @@ export function Button({ label, kind = 'primary', icon, style, onPress, disabled
       accessibilityState={{ disabled: Boolean(disabled) }}
       disabled={disabled}
       onPress={(e) => {
-        void Haptics.selectionAsync();
+        haptic.select();
         onPress?.(e);
       }}
       style={({ pressed }) => [

@@ -37,20 +37,35 @@ export function FindingCard({ finding: f, visitDate }: { finding: Finding; visit
       .filter(Boolean)
       .join(' ') || null;
   const done = isFixed(f);
+  // A finding on a High-risk rule carries more weight on the page: an ink header and a bigger line.
+  const high = f.risk_level === 'High';
   return (
-    <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.hairline }]}>
+    <View style={[styles.card, { backgroundColor: c.surface, borderColor: high ? c.text : c.hairline }, high && styles.cardHigh]}>
+      {high ? (
+        <View style={[styles.highBar, { backgroundColor: c.text }]}>
+          <View style={[styles.swatch, { backgroundColor: c.risk.High, borderWidth: 1.5, borderColor: c.surface }]} />
+          <Text variant="subhead" color={c.surface} style={{ fontWeight: '700' }}>
+            High-risk rule
+          </Text>
+          <Text variant="footnote" color={c.surface} numberOfLines={1} style={{ flexShrink: 1, opacity: 0.75 }}>
+            {categoryLabel(f.category)}
+          </Text>
+        </View>
+      ) : null}
       <View
         accessible
         accessibilityLabel={`${riskLabel(f.risk_level)} rule. ${categoryLabel(f.category)}. ${summary}. ${status}.`}
         style={{ gap: space.sm }}
       >
-        <View style={styles.top}>
-          <RiskTag level={f.risk_level} />
-          <Text variant="footnote" tone="tertiary" numberOfLines={1} style={{ flexShrink: 1 }}>
-            {categoryLabel(f.category)}
-          </Text>
-        </View>
-        <Text variant="headline">{summary}</Text>
+        {high ? null : (
+          <View style={styles.top}>
+            <RiskTag level={f.risk_level} />
+            <Text variant="footnote" tone="tertiary" numberOfLines={1} style={{ flexShrink: 1 }}>
+              {categoryLabel(f.category)}
+            </Text>
+          </View>
+        )}
+        <Text variant={high ? 'title' : 'headline'}>{summary}</Text>
         <View style={styles.status}>
           <Glyph name={done ? 'check' : 'clock'} size={12} color={done ? c.text : c.textSecondary} weight="bold" />
           <Text variant="footnote" tone="secondary" tabular style={{ flex: 1 }}>
@@ -64,7 +79,16 @@ export function FindingCard({ finding: f, visitDate }: { finding: Finding; visit
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.card, borderWidth: StyleSheet.hairlineWidth, padding: space.lg, gap: space.md },
+  card: { borderRadius: radius.card, borderWidth: StyleSheet.hairlineWidth, padding: space.lg, gap: space.md, overflow: 'hidden' },
+  cardHigh: { borderWidth: 1.5, paddingTop: 0 },
+  highBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    marginHorizontal: -space.lg,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.sm + 2,
+  },
   top: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' },
   tag: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   swatch: { width: 10, height: 10, borderRadius: 3 },

@@ -42,12 +42,19 @@ const findings: Finding[] = violations
     technical_assistance: v.technical_assistance_given === 'YES',
   }));
 
-const inspections: Inspection[] = activities.map((a) => ({
-  activity_id: Number(a.activity_id),
-  date: a.activity_date.slice(0, 10),
-  type: a.activity_type as Inspection['type'],
-  violation_found: a.violation_found as Inspection['violation_found'],
-}));
+// Per-visit counts come from the same captured findings, as daycare_record computes them.
+const inspections: Inspection[] = activities.map((a) => {
+  const at = findings.filter((f) => f.activity_id === Number(a.activity_id));
+  return {
+    activity_id: Number(a.activity_id),
+    date: a.activity_date.slice(0, 10),
+    type: a.activity_type as Inspection['type'],
+    violation_found: a.violation_found as Inspection['violation_found'],
+    findings_count: at.length,
+    high_count: at.filter((f) => f.risk_level === 'High').length,
+    open_count: at.filter((f) => !f.corrected_at_inspection && f.verified_date === null).length,
+  };
+});
 
 describe('format', () => {
   it('formats calendar dates without time zone drift', () => {

@@ -85,4 +85,12 @@ describe('ensureSession', () => {
     expect(await resetSession()).toBe('fresh-user');
     expect(mockAuth.signOut).toHaveBeenCalledWith({ scope: 'local' });
   });
+
+  it('shares one anonymous sign-in between concurrent first-launch callers', async () => {
+    mockAuth.getSession.mockResolvedValue({ data: { session: null } });
+    const { ensureSession } = load();
+    const ids = await Promise.all([ensureSession(), ensureSession(), ensureSession(), ensureSession()]);
+    expect(new Set(ids)).toEqual(new Set(['fresh-user']));
+    expect(mockAuth.signInAnonymously).toHaveBeenCalledTimes(1);
+  });
 });

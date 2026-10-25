@@ -1,6 +1,6 @@
 // Pure derivations over a daycare_record payload. Counts and dates only, never a verdict.
 
-import { isFixed, parseDay } from './format';
+import { isFixed, parseDay, splitStandard } from './format';
 import type { DaycareRecord, Finding, Inspection } from './types';
 
 export type Visit = {
@@ -122,4 +122,29 @@ export function segments(visits: Visit[]): Segment[] {
     }
   }
   return out;
+}
+
+export type Change = {
+  /** The visit the alert is about. */
+  visit: Visit | null;
+  /** The state visit just before it, of any outcome. */
+  previous: Visit | null;
+  /** Rules cited at this visit that the state also cited at an earlier visit, with the latest earlier date. */
+  repeats: { rule: string; lastCited: string }[];
+};
+
+/** What a visit adds to the record: the visit before it, and which of its rules were cited before. */
+export function whatChanged(record: Pick<DaycareRecord, 'findings' | 'inspections'>, activityId: number): Change {
+  const visits = groupByVisit(record); // newest first
+  const i = visits.findIndex((v) => v.activity_id === activityId);
+  if (i < 0) return { visit: null, previous: null, repeats: [] };
+  const visit = visits[i] ?? null;
+  const earlier = visits.slice(i + 1).filter((v) => v.date && visit && v.date < visit.date);
+  const ruleOf = (f: Finding) => splitStandard(f.standard)?.number || null;
+  const repeats: Change['repeats'] = [];
+  for (const rule of new Set((visit?.findings ?? []).map(ruleOf).filter((r): r is string => Boolean(r)))) {
+    const before = earlier.find((v) => v.findings.some((f) => ruleOf(f) === rule));
+    if (before) repeats.push({ rule, lastCited: before.date });
+  }
+  return { visit, previous: earlier[0] ?? null, repeats };
 }

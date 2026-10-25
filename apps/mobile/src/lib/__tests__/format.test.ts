@@ -1,6 +1,6 @@
 import { describe, expect, it, jest } from '@jest/globals';
 
-import { formatLocalDay } from '../format';
+import { formatLocalDay, tidyCase } from '../format';
 
 describe('formatLocalDay', () => {
   it('uses the local calendar day, not the UTC date in the string', () => {
@@ -22,5 +22,12 @@ describe('map links', () => {
     expect(line).toBe('5853 HORIZON RD, ROCKWALL, TX 75032-7788');
     expect(appleMapsUrl(line)).toBe('https://maps.apple.com/?daddr=5853%20HORIZON%20RD%2C%20ROCKWALL%2C%20TX%2075032-7788');
     expect(googleMapsUrl(line)).toContain('destination=5853%20HORIZON%20RD');
+  });
+});
+
+describe('tidyCase', () => {
+  it('collapses the double spaces in state names', () => {
+    // Operation 1304920 as data.texas.gov carries it.
+    expect(tidyCase('Childrens Lighthouse of  McKinney')).toBe('Childrens Lighthouse of McKinney');
   });
 });

@@ -218,7 +218,32 @@ export function ActionPill({ icon, label, onPress, primary }: { icon: GlyphName;
 
 export const SHEET_GRABBER = sheet.grabber;
 
+/**
+ * Uber-style action tile: icon over a short label, equal widths, so a row of three always fits
+ * (no pill clipped mid-word at the screen edge).
+ */
+export function ActionTile({ icon, label, onPress }: { icon: GlyphName; label: string; onPress: () => void }) {
+  const c = useColors();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={() => {
+        haptic.select();
+        onPress();
+      }}
+      style={({ pressed }) => [styles.tile, { backgroundColor: c.sunken, transform: [{ scale: pressed ? 0.96 : 1 }] }]}
+    >
+      <Glyph name={icon} size={20} color={c.text} weight="semibold" />
+      <Text variant="footnote" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85} maxFontSizeMultiplier={1.4} style={{ fontWeight: '600' }}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  tile: { flex: 1, minHeight: 64, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: space.xs },
   pill: {
     minHeight: 52,
     borderRadius: radius.pill,

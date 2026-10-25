@@ -127,7 +127,9 @@ const SMALL_WORDS = new Set(['of', 'the', 'and', 'at', 'in', 'on', 'for', 'a', '
 const KEEP_UPPER = new Set(['TX', 'LLC', 'YMCA', 'ISD', 'II', 'III', 'IV', 'NE', 'NW', 'SE', 'SW', 'FM', 'US', 'CR', 'PO']);
 
 /** Title-cases text only when the source gave it in ALL CAPS. */
-export function tidyCase(s: string | null | undefined): string {
+export function tidyCase(raw: string | null | undefined): string {
+  // State names carry stray double spaces ("Childrens Lighthouse of  McKinney"); show single ones.
+  const s = (raw ?? '').replace(/\s+/g, ' ').trim();
   if (!s) return '';
   if (s !== s.toUpperCase() || !/[A-Z]/.test(s)) return s;
   return s

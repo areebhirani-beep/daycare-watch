@@ -60,7 +60,7 @@ export function PlaceGallery({
   const aerial = has && imagery && quality !== 'non_exact';
 
   const pages: Page[] = !imagery
-    ? [{ key: 'area', caption: 'Neighborhood only. This is a private home' }]
+    ? [{ key: 'area', caption: 'Neighborhood only · private home' }]
     : aerial
     ? [
         { key: 'near', caption: locationLabel(quality) },
@@ -71,6 +71,9 @@ export function PlaceGallery({
 
   const onEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => setPage(Math.round(e.nativeEvent.contentOffset.x / width));
   const region = has ? { latitude: lat, longitude: lng, latitudeDelta: 0.008, longitudeDelta: 0.008 } : undefined;
+
+  // The state record has no map location: a plain band, no caption, nothing that pretends to be a map.
+  if (!has) return <View style={{ height, backgroundColor: c.sunken }} />;
 
   return (
     <View style={{ height }}>

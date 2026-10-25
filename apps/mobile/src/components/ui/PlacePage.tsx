@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { type ReactNode, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import Animated, {
   FadeIn,
@@ -11,6 +11,8 @@ import Animated, {
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
+  withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -27,11 +29,11 @@ import { groupByVisit, summarize, visibleVisits, visitTypeLabel } from '@/lib/re
 import { imageryAllowed } from '@/lib/imagery';
 import { lawCovers, NOT_COVERED, REQUEST_CARDS, type RequestKind } from '@/lib/rights';
 import type { AreaCompare, DaycareRecord } from '@/lib/types';
-import { radius, space, useColors } from '@/theme';
+import { haptic, radius, space, spring, useColors } from '@/theme';
 
 import { Button } from './Button';
 import { FactChips } from './Chip';
-import { ActionPill, IconButton, SquareButton, StickyBar } from './Chrome';
+import { ActionTile, IconButton, SquareButton, StickyBar } from './Chrome';
 import { FindingCard } from './FindingCard';
 import type { GlyphName } from './Glyph';
 import { Disclosure } from './Disclosure';
@@ -96,6 +98,9 @@ export function PlacePage({
   const c = useColors();
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<Tab>('overview');
+  const hasPoint = typeof record.daycare.lat === 'number' && typeof record.daycare.lng === 'number';
+  // No map location in the state record: a short band, not an empty map that pretends to be one.
+  const heroH = hasPoint ? HERO : 72;
   // Past the photo, a solid bar with the name fades in and the status bar turns dark (Apple Maps place card).
   const y = useSharedValue(0);
   const [solid, setSolid] = useState(false);
@@ -103,12 +108,27 @@ export function PlacePage({
     y.value = e.contentOffset.y;
   });
   useAnimatedReaction(
-    () => y.value > HERO - 40,
+    () => y.value > heroH - 40,
     (now, before) => {
       if (now !== before) runOnJS(setSolid)(now);
     },
   );
-  const barStyle = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [HERO - 80, HERO - 20], [0, 1], 'clamp') }));
+  // The bar is fully solid before the large title reaches it, and the large title fades as it passes under,
+  // so the two names never overlap (Apple's large-title collapse).
+  const barStyle = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [heroH - 110, heroH - 50], [0, 1], 'clamp') }));
+  const nameStyle = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [heroH - 60, heroH + 10], [1, 0], 'clamp') }));
+
+  // Watch confirm: success haptic and a spring pop the moment watching turns on.
+  const pop = useSharedValue(1);
+  const wasWatching = useRef(watching);
+  useEffect(() => {
+    if (watching && !wasWatching.current) {
+      haptic.success();
+      pop.value = withSequence(withSpring(1.05, spring.pop), withSpring(1, spring.pop));
+    }
+    wasWatching.current = watching;
+  }, [watching, pop]);
+  const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
   const { daycare } = record;
   const s = summarize(record);
   const strip = stripFromRecord(record);
@@ -152,19 +172,24 @@ export function PlacePage({
   return (
     <View style={{ flex: 1, backgroundColor: c.surface }}>
       {/* Light status-bar text over the aerial photo. */}
-      <StatusBar style={solid ? 'auto' : 'light'} />
+      <StatusBar style={solid || !hasPoint ? 'auto' : 'light'} />
       <Animated.ScrollView contentContainerStyle={{ paddingBottom: space.section }} onScroll={onScroll} scrollEventThrottle={16}>
         <PlaceGallery
           lat={daycare.lat}
           lng={daycare.lng}
           quality={quality}
           imagery={imageryAllowed(daycare.operation_type)}
-          watched={watching} height={HERO + insets.top} bottomInset={radius.sheet} />
+          watched={watching}
+          height={heroH + insets.top}
+          bottomInset={radius.sheet}
+        />
 
         <View style={[styles.head, { backgroundColor: c.surface }]}>
-          <Text variant="display" accessibilityRole="header">
-            {tidyCase(daycare.name)}
-          </Text>
+          <Animated.View style={nameStyle}>
+            <Text variant="display" accessibilityRole="header">
+              {tidyCase(daycare.name)}
+            </Text>
+          </Animated.View>
           <Text variant="callout" tone="secondary" selectable>
             {address}
           </Text>
@@ -178,17 +203,17 @@ export function PlacePage({
             </View>
           ) : null}
           <FactChips facts={facts} />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} style={styles.bleed}>
+          <View style={styles.tiles}>
             {onOpenAppleMaps && onOpenGoogleMaps ? (
               <>
-                <ActionPill icon="map" label="Apple Maps" onPress={onOpenAppleMaps} />
-                <ActionPill icon="directions" label="Google Maps" onPress={onOpenGoogleMaps} />
+                <ActionTile icon="map" label="Apple Maps" onPress={onOpenAppleMaps} />
+                <ActionTile icon="directions" label="Google Maps" onPress={onOpenGoogleMaps} />
               </>
             ) : (
-              <ActionPill icon="directions" label="Directions" onPress={onDirections} />
+              <ActionTile icon="directions" label="Directions" onPress={onDirections} />
             )}
-            <ActionPill icon="record" label="State record" onPress={onOfficial} />
-          </ScrollView>
+            <ActionTile icon="record" label="State record" onPress={onOfficial} />
+          </View>
         </View>
 
         <View style={{ backgroundColor: c.surface }}>
@@ -206,10 +231,8 @@ export function PlacePage({
         <Animated.View key={tab} entering={FadeIn.duration(180).reduceMotion(ReduceMotion.System)} style={styles.body}>
           {tab === 'overview' ? (
             <>
-              <View style={{ gap: space.md }}>
-                <Text variant="title">Last 24 months</Text>
-                <RecordStrip visits={strip} variant="hero" months={s.months} onPressVisit={() => setTab('findings')} />
-              </View>
+              <HeroFact lastVisit={s.lastVisit} visits={s.visits} months={s.months} />
+              <RecordStrip visits={strip} variant="hero" months={s.months} onPressVisit={() => setTab('findings')} />
               <StatBand
                 items={[
                   { label: 'State visits', value: s.visits },
@@ -313,6 +336,7 @@ export function PlacePage({
       </View>
 
       <StickyBar>
+        <Animated.View style={[{ flex: 1 }, popStyle]}>
         {watching ? (
           <Button
             label="Watching · alerts on"
@@ -334,8 +358,36 @@ export function PlacePage({
             style={{ flex: 1 }}
           />
         )}
+        </Animated.View>
         <SquareButton icon="share" label="Share" onPress={onShare} />
       </StickyBar>
+    </View>
+  );
+}
+
+/**
+ * The page's one giant number (DESIGN.md §9): days since the state's last visit. A date fact from the
+ * record, never a grade. With no visit in the window it counts visits instead (0).
+ */
+function HeroFact({ lastVisit, visits, months }: { lastVisit: string | null; visits: number; months: number }) {
+  // Today is read once per mount; the count is whole days, so it can't drift while the page is open.
+  const [today] = useState(() => new Date().setHours(12, 0, 0, 0));
+  const days = lastVisit ? Math.max(0, Math.round((today - new Date(`${lastVisit}T12:00:00`).getTime()) / 86_400_000)) : null;
+  return (
+    <View
+      accessible
+      accessibilityLabel={days != null ? `${days} days since the state's last visit, on ${formatDate(lastVisit)}` : `No state visits in ${months} months`}
+      style={{ gap: space.xxs }}
+    >
+      <Text variant="hero" tabular>
+        {days != null ? String(days) : String(visits)}
+      </Text>
+      <Text variant="title">{days != null ? (days === 1 ? 'day since the state’s last visit' : 'days since the state’s last visit') : `state visits in ${months} months`}</Text>
+      {days != null ? (
+        <Text variant="callout" tone="secondary" tabular>
+          {`Visited ${formatDate(lastVisit)} · last ${months} months below`}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -387,6 +439,7 @@ const styles = StyleSheet.create({
   notes: { borderRadius: radius.card, padding: space.md, gap: space.xs, marginTop: space.xs },
   bleed: { marginHorizontal: -space.lg, flexGrow: 0 },
   row: { paddingHorizontal: space.lg, gap: space.sm, paddingTop: space.sm },
+  tiles: { flexDirection: 'row', gap: space.sm, paddingTop: space.sm },
   body: { paddingHorizontal: space.lg, paddingTop: space.xl, gap: space.xxl },
   empty: { borderRadius: radius.card, padding: space.lg, gap: space.xs },
   countyRow: { flexDirection: 'row', alignItems: 'baseline', gap: space.lg },

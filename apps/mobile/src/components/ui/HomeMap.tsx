@@ -1,4 +1,4 @@
-import BottomSheet, { BottomSheetFlatList, type BottomSheetFlatListMethods } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetFlatList, type BottomSheetFlatListMethods, useBottomSheetSpringConfigs } from '@gorhom/bottom-sheet';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import MapView, { Marker, type Region } from 'react-native-maps';
@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { formatDateShort, plural, tidyCase } from '@/lib/format';
 import type { DaycareRow } from '@/lib/types';
-import { haptic, sheet, space, TAB_BAR_CLEARANCE, useColors, useIsDark } from '@/theme';
+import { haptic, sheet, space, spring, TAB_BAR_CLEARANCE, useColors, useIsDark } from '@/theme';
 
 import { FloatButton } from './Button';
 import { Chip, ChipRow } from './Chip';
@@ -84,6 +84,8 @@ function cluster(rows: DaycareRow[], region: Region): Cluster[] {
 
 // The near() RPC returns at most this many rows, so a full page means "the closest N", not "all".
 const NEAR_LIMIT = 50;
+// From the screen bottom to just above the floating tab bar.
+const TAB_FLOOR = TAB_BAR_CLEARANCE - 20;
 
 type Props = {
   rows: DaycareRow[];
@@ -122,6 +124,8 @@ export function HomeMap({
   const { width, height } = useWindowDimensions();
   const map = useRef<MapView>(null);
   const sheetRef = useRef<BottomSheet>(null);
+  // Detents spring like Apple Maps instead of easing on a timer.
+  const sheetSpring = useBottomSheetSpringConfigs(spring.sheet);
   const carousel = useRef<FlatList<DaycareRow>>(null);
   const list = useRef<BottomSheetFlatListMethods>(null);
   const [filters, setFilters] = useState<Set<Filter>>(new Set());
@@ -199,7 +203,7 @@ export function HomeMap({
       </View>
       <ChipRow style={{ paddingBottom: space.lg }}>
         <Chip label="Centers" icon="center" selected={filters.has('centers')} onPress={() => toggle('centers')} />
-        <Chip label="Home daycares" icon="home" selected={filters.has('homes')} onPress={() => toggle('homes')} />
+        <Chip label="Homes" icon="home" selected={filters.has('homes')} onPress={() => toggle('homes')} />
         <Chip label="In TX-04" icon="district" selected={filters.has('district')} onPress={() => toggle('district')} />
       </ChipRow>
       <SectionHeader title="Closest to you" onMore={() => sheetRef.current?.snapToIndex(2)} />
@@ -298,6 +302,7 @@ export function HomeMap({
         handleComponent={SheetHandle}
         backgroundStyle={{ backgroundColor: c.surface, borderRadius: 28 }}
         style={sheetShadow}
+        animationConfigs={sheetSpring}
         enableDynamicSizing={false}
         onChange={(i) => {
           if (i === 2) haptic.heavy();
@@ -340,6 +345,8 @@ export function HomeMap({
           ListFooterComponent={<View style={{ paddingHorizontal: space.lg, paddingBottom: TAB_BAR_CLEARANCE }}>{footer}</View>}
         />
       </BottomSheet>
+      {/* A solid floor under the floating tab bar: list content slides behind it, never under the glass. */}
+      <View pointerEvents="none" style={[styles.floor, { height: TAB_FLOOR, backgroundColor: c.surface, borderTopColor: c.hairline }]} />
     </View>
   );
 }
@@ -353,6 +360,7 @@ const sheetShadow = {
 } as const;
 
 const styles = StyleSheet.create({
+  floor: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopWidth: StyleSheet.hairlineWidth },
   top: { position: 'absolute', left: space.lg, right: space.lg },
   locate: { position: 'absolute', right: space.lg, top: 0 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingTop: space.xs, paddingBottom: space.md },

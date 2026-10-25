@@ -124,6 +124,8 @@ export const weight = { regular: '400', medium: '500', semibold: '600', bold: '7
 
 // Strict scale. Nothing outside these styles appears in the app.
 export const type = {
+  /** One per screen at most: the place page's hero fact. */
+  hero: { ...face('800'), fontSize: 104, lineHeight: 104, letterSpacing: -4 },
   numeral: { ...face('800'), fontSize: 56, lineHeight: 60, letterSpacing: -1.5 },
   display: { ...face('800'), fontSize: 34, lineHeight: 38, letterSpacing: -0.8 },
   largeTitle: { ...face('800'), fontSize: 28, lineHeight: 32, letterSpacing: -0.6 },
@@ -140,6 +142,7 @@ export type TypeStyle = keyof typeof type;
 
 /** How far each style may grow with Dynamic Type before it would break its layout. */
 export const maxScale: Record<TypeStyle, number> = {
+  hero: 1.1,
   numeral: 1.3,
   display: 1.4,
   largeTitle: 1.5,

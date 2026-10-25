@@ -57,8 +57,8 @@ type Props = {
 };
 
 export function MapSnapshot({
-  lat,
-  lng,
+  lat: rawLat,
+  lng: rawLng,
   zoom = 15,
   watched,
   pinY = 0.5,
@@ -72,18 +72,22 @@ export function MapSnapshot({
   const c = useColors();
   const isDark = useIsDark();
   const base: Base = privateHome ? (isDark ? 'dark' : 'light') : 'imagery';
-  if (privateHome) zoom = Math.min(zoom, HOME_MAX_ZOOM);
+
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
     if (!size || Math.round(width) !== size.w || Math.round(height) !== size.h) setSize({ w: Math.round(width), h: Math.round(height) });
   };
 
+  // A home's circle centres on a 0.005° grid point (~500 m), never on the geocoded house (integrator, 23:17).
+  const snap = (v: number | null | undefined) => (privateHome && typeof v === 'number' ? Math.round(v / 0.005) * 0.005 : v);
+  const lat = snap(rawLat);
+  const lng = snap(rawLng);
   const has = typeof lat === 'number' && typeof lng === 'number';
 
   const tiles: { key: string; uri: string; left: number; top: number }[] = [];
   if (has && size) {
-    const z = zoom + 1;
+    const z = (privateHome ? Math.min(zoom, HOME_MAX_ZOOM) : zoom) + 1;
     const p = project(lat, lng, z);
     const left = p.x - size.w / 2;
     const top = p.y - size.h * pinY;
@@ -120,7 +124,7 @@ export function MapSnapshot({
             styles.area,
             (() => {
               // Points per metre at this latitude and zoom, so the circle is a true ~400 m area.
-              const metersPerPoint = (156543.03392 * Math.cos((lat * Math.PI) / 180)) / 2 ** zoom / (TILE / 128) / 2;
+              const metersPerPoint = (156543.03392 * Math.cos(((lat as number) * Math.PI) / 180)) / 2 ** Math.min(zoom, HOME_MAX_ZOOM);
               const r = Math.max(18, Math.min(AREA_RADIUS_M / metersPerPoint, Math.min(size.w, size.h) * 0.42));
               return { width: r * 2, height: r * 2, borderRadius: r, left: size.w / 2 - r, top: size.h * pinY - r, borderColor: c.ink, backgroundColor: c.scrim };
             })(),

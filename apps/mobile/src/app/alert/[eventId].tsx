@@ -9,7 +9,8 @@ import { RecordStrip, stripFromRecord } from '@/components/ui/RecordStrip';
 import { PlaceSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useAlertDetail, useDaycareRecord } from '@/lib/api';
-import { formatDate, formatLocalDay, tidyCase } from '@/lib/format';
+import { formatDate, formatLocalDay, plural, tidyCase } from '@/lib/format';
+import { type Change, whatChanged } from '@/lib/record';
 import { lawCovers } from '@/lib/rights';
 import type { AlertDetail } from '@/lib/types';
 import { radius, space, useColors } from '@/theme';
@@ -54,6 +55,7 @@ export default function AlertScreen() {
 
   const a = alert.data;
   const strip = record.data ? stripFromRecord(record.data) : null;
+  const change = record.data && a.finding ? whatChanged(record.data, a.finding.activity_id) : null;
   const visit = a.finding?.date ?? a.source_date;
   const when = [visit ? `Visit ${formatDate(visit)}` : null, `posted by ${formatLocalDay(a.detected_at)}`]
     .filter(Boolean)
@@ -84,6 +86,8 @@ export default function AlertScreen() {
           {when}
         </Text>
 
+        {change?.visit ? <WhatChanged change={change} /> : null}
+
         {a.finding ? <FindingCard finding={a.finding} visitDate={a.finding.date} /> : null}
         <Text variant={a.finding ? 'footnote' : 'callout'} tone="secondary">
           {meaning(a)}
@@ -108,6 +112,37 @@ export default function AlertScreen() {
       <StickyBar>
         <Button label="Open full record" kind="ink" onPress={() => router.push(`/daycare/${a.operation_id}`)} style={{ flex: 1 }} />
       </StickyBar>
+    </View>
+  );
+}
+
+/** This visit against the one before it, in counts and dates only. */
+function WhatChanged({ change }: { change: Change }) {
+  const c = useColors();
+  const { visit, previous, repeats } = change;
+  if (!visit) return null;
+  const high = visit.findings.filter((f) => f.risk_level === 'High').length;
+  const lines = [
+    `This visit: ${plural(visit.findings.length, 'finding')} posted${high > 0 ? `, ${high} on High risk rules` : ''}`,
+    previous
+      ? `Visit before, ${formatDate(previous.date)}: ${
+          previous.status === 'findings'
+            ? `${plural(previous.findings.length, 'finding')} posted`
+            : previous.status === 'pending'
+              ? 'findings not posted yet'
+              : 'no findings posted'
+        }`
+      : 'No earlier visit in the state record',
+    ...repeats.slice(0, 2).map((r) => `Rule ${r.rule} was also cited ${formatDate(r.lastCited)}`),
+  ];
+  return (
+    <View style={[styles.changed, { backgroundColor: c.sunken }]} accessible accessibilityLabel={`What changed. ${lines.join('. ')}`}>
+      <Text variant="subhead">What changed</Text>
+      {lines.map((l) => (
+        <Text key={l} variant="callout" tone="secondary" tabular>
+          {l}
+        </Text>
+      ))}
     </View>
   );
 }
@@ -159,4 +194,5 @@ const styles = StyleSheet.create({
   content: { padding: space.lg, gap: space.lg, paddingBottom: space.section },
   replay: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  changed: { borderRadius: radius.card, padding: space.lg, gap: space.xs },
 });

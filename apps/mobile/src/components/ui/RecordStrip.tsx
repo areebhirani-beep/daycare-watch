@@ -77,8 +77,8 @@ export function stripSentence(visits: StripVisit[], months: number): string {
 
 type Geometry = { col: number; mark: number; step: number; cap: number; dot: number; minRows: number };
 
-const FULL: Geometry = { col: 14, mark: 10, step: 13, cap: 9, dot: 6, minRows: 4 };
-const HERO: Geometry = { col: 20, mark: 14, step: 18, cap: 8, dot: 8, minRows: 5 };
+const FULL: Geometry = { col: 14, mark: 10, step: 13, cap: 9, dot: 6, minRows: 2 };
+const HERO: Geometry = { col: 20, mark: 14, step: 18, cap: 8, dot: 8, minRows: 2 };
 const COMPACT: Geometry = { col: 8, mark: 6, step: 8, cap: 5, dot: 4, minRows: 4 };
 const COL_GAP = 2;
 // Axis labels sit under fixed-size marks, so they grow with Dynamic Type only this far.
@@ -276,13 +276,22 @@ export function StripKey() {
   return (
     <View style={styles.key} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <View style={styles.keyItem}>
+        <View style={{ width: 9, height: 9, borderRadius: 3, backgroundColor: c.textSecondary }} />
+        <T variant="caption" tone="secondary" style={{ flexShrink: 1 }}>
+          1 mark = 1 finding
+        </T>
+      </View>
+      <View style={styles.keyItem}>
+        <T variant="caption" tone="secondary">
+          Low
+        </T>
         <View style={styles.keyRamp}>
           {ranks.map((r) => (
             <View key={r} style={{ width: 9, height: 9, borderRadius: 3, backgroundColor: c.risk[LEVEL_BY_RANK[r]] }} />
           ))}
         </View>
         <T variant="caption" tone="secondary" style={{ flexShrink: 1 }}>
-          One finding, by rule risk Low to High
+          High state rule risk
         </T>
       </View>
       <View style={styles.keyItem}>

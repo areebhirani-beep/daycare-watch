@@ -46,15 +46,24 @@ AppState.addEventListener('change', (state) => {
 });
 
 let verifiedUserId: string | null = null;
+let pending: Promise<string> | null = null;
 
 /**
  * Anonymous sign-in on first launch, so watching needs no account.
  * A stored session is checked with the server once per launch: if the server no longer knows the user
  * (database reset, or the app now points at a different project), start a fresh anonymous session
  * instead of failing every write. Offline, the stored session is kept so cached records still open.
+ * Concurrent callers share one sign-in, so the first launch creates exactly one anonymous user.
  */
-export async function ensureSession(): Promise<string> {
-  if (verifiedUserId) return verifiedUserId;
+export function ensureSession(): Promise<string> {
+  if (verifiedUserId) return Promise.resolve(verifiedUserId);
+  pending ??= establish().finally(() => {
+    pending = null;
+  });
+  return pending;
+}
+
+async function establish(): Promise<string> {
   const { data } = await supabase.auth.getSession();
   if (data.session) {
     const { error } = await supabase.auth.getUser();

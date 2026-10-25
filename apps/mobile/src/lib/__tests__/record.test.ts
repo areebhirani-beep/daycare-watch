@@ -15,7 +15,7 @@ import {
   stripBoilerplate,
   tidyCase,
 } from '../format';
-import { groupByVisit, summarize, visibleVisits } from '../record';
+import { groupByVisit, summarize, visibleVisits, whatChanged } from '../record';
 import { buildTourQuestions } from '../tour';
 import type { Finding, Inspection } from '../types';
 import type { RiskLevel } from '@/theme/tokens';
@@ -134,5 +134,21 @@ describe('record derivations on a real record', () => {
     const qs = buildTourQuestions(findings, new Date('2026-10-24T12:00:00'));
     expect(qs.at(-1)?.question).toMatch(/drop in/);
     expect(qs.every((q) => !/safe|unsafe|grade|score/i.test(q.question))).toBe(true);
+  });
+});
+
+describe('whatChanged', () => {
+  const record = { findings, inspections };
+
+  it('finds the visit before and the rules cited at an earlier visit', () => {
+    // Sep 20, 2024 (activity 904053452) cited 746.2805(3), which the state also cited on Jun 6, 2024.
+    const c = whatChanged(record, 904053452);
+    expect(c.visit?.date).toBe('2024-09-20');
+    expect(c.previous && c.previous.date < '2024-09-20').toBe(true);
+    expect(c.repeats).toEqual([{ rule: '746.2805(3)', lastCited: '2024-06-06' }]);
+  });
+
+  it('returns nothing for a visit that is not in the record', () => {
+    expect(whatChanged(record, 1)).toEqual({ visit: null, previous: null, repeats: [] });
   });
 });

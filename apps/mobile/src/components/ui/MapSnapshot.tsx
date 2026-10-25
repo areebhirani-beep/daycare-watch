@@ -167,7 +167,7 @@ export function MapSnapshot({
             style={attribution === 'short' ? { fontSize: 7, lineHeight: 9, color: '#FFFFFF' } : { fontSize: 9, lineHeight: 12, color: '#FFFFFF' }}
             maxFontSizeMultiplier={1}
           >
-            {attribution === 'short' ? '© Esri' : privateHome ? 'Map © Esri, HERE, Garmin, OSM' : 'Imagery © Esri, Maxar'}
+            {attribution === 'short' ? '© Esri' : privateHome ? 'Map © Esri, HERE, Garmin, OSM' : 'Imagery © Esri, Vantor, Earthstar Geographics'}
           </Text>
         </View>
       ) : null}

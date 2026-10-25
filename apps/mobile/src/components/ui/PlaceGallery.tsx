@@ -52,7 +52,8 @@ type Page =
   | { key: 'area'; kind: 'area' }
   | { key: 'approx'; kind: 'approx' };
 
-const ESRI_CREDIT = 'Imagery © Esri, Maxar';
+// Esri's own credit for World Imagery (MapServer copyrightText): Esri, Vantor, Earthstar Geographics.
+const ESRI_CREDIT = 'Imagery © Esri, Vantor, Earthstar Geographics';
 const POINT_CAVEAT = 'Apple does not say when it was taken, and it may not show this daycare.';
 
 type Caption = {
@@ -327,7 +328,8 @@ export function PlaceGallery({
 
       <View pointerEvents="none" style={[styles.bottom, { bottom: bottomInset + space.sm }]}>
         <Animated.View key={at.key} entering={fade(motion.fast)} style={[styles.chip, !onPicture && styles.mapChip]}>
-          <Text variant="caption" style={styles.white} maxFontSizeMultiplier={1.3} numberOfLines={1}>
+          {/* Two lines at most: Esri's full credit can wrap on the smallest iPhone instead of being cut. */}
+          <Text variant="caption" style={styles.white} maxFontSizeMultiplier={1.3} numberOfLines={2}>
             {cap.chip}
           </Text>
           {cap.credit ? (

@@ -5,25 +5,17 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { FRAME_SCREEN, inFrame } from '@/lib/layout';
 import { useIsDark } from '@/theme';
 
-// A phone shows no scrollbars; a desktop browser would draw them inside the drawn screen. expo-router's web tab bar
-// is pinned to the top of the window, under the drawn status bar; on the iPhone the tabs sit at the bottom, so inside
-// the frame they move there, above the home indicator.
+// A phone shows no scrollbars; a desktop browser would draw them inside the drawn screen.
 if (inFrame) {
   const style = document.createElement('style');
-  style.textContent = [
-    '* { scrollbar-width: none; } *::-webkit-scrollbar { display: none; }',
-    '[class*="navigationMenuRoot"] { top: auto !important; bottom: 42px !important; padding: 4px; border-radius: 999px;' +
-      ' background: #FFFFFF !important; box-shadow: 0 0 0 1px #E8E8EC; }',
-    '@media (prefers-color-scheme: dark) { [class*="navigationMenuRoot"] { background: #1C1C1E !important;' +
-      ' box-shadow: 0 0 0 1px #26262A; } }',
-  ].join('\n');
+  style.textContent = '* { scrollbar-width: none; } *::-webkit-scrollbar { display: none; }';
   document.head.appendChild(style);
 }
 
-// An iPhone 17 Pro's safe areas: under the status bar and above the home indicator. The tab screens also keep their
-// last rows clear of the tab bar.
+// An iPhone 17 Pro's safe areas: under the status bar and above the home indicator. On the tab screens the tab bar
+// ((tabs)/_layout.web.tsx) sits below the screen and clears the home indicator itself.
 const FRAME_INSETS = { top: 59, bottom: 34, left: 0, right: 0 };
-const TAB_INSETS = { ...FRAME_INSETS, bottom: 90 };
+const TAB_INSETS = { ...FRAME_INSETS, bottom: 0 };
 const TAB_ROUTE = /^\/(watching|rights|pulse)?\/?$/;
 
 /**

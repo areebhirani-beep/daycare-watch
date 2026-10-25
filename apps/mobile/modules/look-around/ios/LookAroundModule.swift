@@ -21,6 +21,9 @@ private enum Facing: String {
 }
 
 public class LookAroundModule: Module {
+  /// The viewer on screen, if any, so the app can close it when it moves on (a tapped alert, say).
+  private weak var shown: MKLookAroundViewController?
+
   public func definition() -> ModuleDefinition {
     Name("LookAround")
 
@@ -67,7 +70,16 @@ public class LookAroundModule: Module {
         let viewer = MKLookAroundViewController(scene: scene)
         viewer.modalPresentationStyle = .fullScreen
         top.present(viewer, animated: true)
+        self?.shown = viewer
         return true
+      }
+    }
+
+    // Closes the viewer, if one is open, without animation.
+    AsyncFunction("dismiss") { () async -> Void in
+      await MainActor.run { [weak self] in
+        if let viewer = self?.shown, viewer.presentingViewController != nil { viewer.dismiss(animated: false) }
+        self?.shown = nil
       }
     }
   }

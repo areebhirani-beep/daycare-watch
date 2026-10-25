@@ -15,8 +15,9 @@ type Options = { name?: string; width?: number; height?: number; cacheKey?: stri
 type Native = {
   snapshot(lat: number, lng: number, options: Options): Promise<LookAroundSnapshot | null>;
   present(lat: number, lng: number, name: string | undefined, allowPoint: boolean): Promise<boolean>;
-  // Absent from builds made before it was added.
+  // Absent from builds made before they were added.
   prepareFlyover?(lat: number, lng: number, width: number, height: number): Promise<boolean>;
+  dismiss?(): Promise<void>;
 };
 
 // Only in a real iOS build: Expo Go, Android and web have no module, and every call answers null/false.
@@ -30,6 +31,11 @@ export function lookAroundSnapshot(lat: number, lng: number, options: Options = 
 
 export function presentLookAround(lat: number, lng: number, name?: string, allowPoint = false): Promise<boolean> {
   return native ? native.present(lat, lng, name, allowPoint) : Promise.resolve(false);
+}
+
+/** Closes the full Look Around viewer if it is open. */
+export function dismissLookAround(): Promise<void> {
+  return native?.dismiss ? native.dismiss() : Promise.resolve();
 }
 
 /** Resolves true once Apple has rendered the 3D flyover at this spot; null where this build can't tell (the caller times out). */

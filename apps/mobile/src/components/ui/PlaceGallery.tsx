@@ -1,6 +1,7 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { useEffect, useRef, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { type AccessibilityActionEvent, Modal, PixelRatio, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Animated, {
@@ -20,7 +21,7 @@ import { useAppWidth } from '@/lib/layout';
 import { photoMonth, photosEnabled, photoUrl } from '@/lib/mapillary';
 import type { Photo } from '@/lib/types';
 
-import { type Facing, lookAroundAvailable, lookAroundSnapshot, presentLookAround } from '../../../modules/look-around';
+import { dismissLookAround, type Facing, lookAroundAvailable, lookAroundSnapshot, presentLookAround } from '../../../modules/look-around';
 import { fade, haptic, motion, radius, space, useColors, useIsDark } from '@/theme';
 
 import { FlyoverHero } from './FlyoverHero';
@@ -158,6 +159,19 @@ export function PlaceGallery({
   const scroller = useAnimatedRef<Animated.ScrollView>();
   const [page, setPage] = useState(0);
   const [viewer, setViewer] = useState<number | null>(null);
+  // The full-screen viewers (ours and Apple's Look Around) sit above every route, so they close when this page loses
+  // focus (a tapped alert opening on top, say); otherwise the new screen would sit hidden underneath them.
+  useFocusEffect(
+    useCallback(
+      () => () => {
+        setViewer(null);
+        void dismissLookAround();
+      },
+      [],
+    ),
+  );
+  // With one picture the row doesn't scroll, so a sideways swipe would end as a press; only a tap opens the viewer.
+  const downAt = useRef({ x: 0, y: 0 });
   // Until the parent swipes, pictures of the building that arrive late slide in ahead of the view from above.
   // After a swipe they still join, but the page on screen stays put.
   const swiped = useRef(false);
@@ -306,7 +320,17 @@ export function PlaceGallery({
         scrollEnabled={many}
       >
         {pages.map((p, i) => (
-          <Pressable key={p.key} style={{ width, height }} onPress={() => open(i)} disabled={p.kind === 'area' || p.kind === 'approx'}>
+          <Pressable
+            key={p.key}
+            style={{ width, height }}
+            onPressIn={(e) => {
+              downAt.current = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
+            }}
+            onPress={(e) => {
+              if (Math.hypot(e.nativeEvent.pageX - downAt.current.x, e.nativeEvent.pageY - downAt.current.y) <= 10) open(i);
+            }}
+            disabled={p.kind === 'area' || p.kind === 'approx'}
+          >
             {/* The 3D view mounts only when it's on screen or next, so it loads on view, not on open. */}
             <PageBody
               page={p}

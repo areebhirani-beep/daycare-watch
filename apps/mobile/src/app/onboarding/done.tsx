@@ -44,7 +44,7 @@ export default function DoneScreen() {
   // just after the prompt goes must not open the record before the parent has seen this screen.
   const [settled, setSettled] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setSettled(true), 700);
+    const t = setTimeout(() => setSettled(true), 1500);
     return () => clearTimeout(t);
   }, []);
 

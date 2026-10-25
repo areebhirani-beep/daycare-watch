@@ -46,11 +46,11 @@ export function SearchPill({
           autoCorrect={false}
           clearButtonMode="while-editing"
           style={[styles.input, { color: c.text }]}
-          maxFontSizeMultiplier={1.6}
+          maxFontSizeMultiplier={1.4}
           {...input}
         />
       ) : (
-        <Text variant="callout" tone="tertiary" numberOfLines={1} style={{ flex: 1 }}>
+        <Text variant="callout" tone="tertiary" numberOfLines={1} maxFontSizeMultiplier={1.4} style={{ flex: 1 }}>
           {placeholder}
         </Text>
       )}

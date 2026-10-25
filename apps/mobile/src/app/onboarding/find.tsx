@@ -210,7 +210,8 @@ export default function FindScreen() {
                       width={cardW}
                       heroRatio={heroRatio}
                       name={tidyCase(d.name)}
-                      meta={rowMeta(d)}
+                      // Miles only from the parent's own location; around the Frisco default, the city.
+                      meta={rowMeta(center ? d : { ...d, distance_km: null })}
                       lat={d.lat}
                       lng={d.lng}
                       operationType={d.operation_type}

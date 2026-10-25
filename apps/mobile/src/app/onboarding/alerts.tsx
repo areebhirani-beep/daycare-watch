@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { AlertBanner } from '@/components/ui/AlertBanner';
@@ -15,21 +15,16 @@ import { enableAlerts } from '@/lib/notifications';
 import { groupByVisit } from '@/lib/record';
 import { radius, space } from '@/theme';
 
+// The lock screen is an illustration, so it shows Apple's 9:41 with today's date.
 function useClock() {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 15_000);
-    return () => clearInterval(id);
-  }, []);
-  const h = now.getHours();
   return {
-    time: `${((h + 11) % 12) + 1}:${String(now.getMinutes()).padStart(2, '0')}`,
-    day: now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+    time: '9:41',
+    day: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
   };
 }
 
 /**
- * Step 4: alerts. A lock screen (the real time, the watched daycare's 3D view as wallpaper when it's a
+ * Step 4: alerts. A lock screen (9:41, the watched daycare's 3D view as wallpaper when it's a
  * center with an exact address, plain ink otherwise) and the push the pipeline would send for its
  * latest posted visit, dropping in. One line, then the OS prompt.
  */

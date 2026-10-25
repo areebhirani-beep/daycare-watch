@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View, type ViewStyle } from 'react-native';
 
 import { imageryAllowed } from '@/lib/imagery';
 import { haptic, radius, space, useColors } from '@/theme';
@@ -24,11 +24,17 @@ export function recordLine(visits: StripVisit[]): { text: string; found: boolean
   return { text: `${plural(n, 'problem')} found ${when}${serious > 0 ? ` · ${serious} serious` : ''}`, found: true };
 }
 
+/** Line caps for names and meta; past 1.6x text nothing truncates, the row grows instead. */
+function useLines(n: number): number | undefined {
+  return useWindowDimensions().fontScale >= 1.6 ? undefined : n;
+}
+
 function RecordLine({ strip, fallback }: { strip?: StripVisit[] | null; fallback?: string }) {
   const line = strip ? recordLine(strip) : fallback ? { text: fallback, found: false } : null;
+  const one = useLines(1);
   if (!line) return null;
   return (
-    <Text variant="subhead" tone={line.found ? 'primary' : 'secondary'} numberOfLines={1} tabular>
+    <Text variant="subhead" tone={line.found ? 'primary' : 'secondary'} numberOfLines={one} tabular>
       {line.text}
     </Text>
   );
@@ -86,6 +92,8 @@ export function DaycareCard({
   style,
 }: Common & { width?: number | `${number}%`; heroRatio?: number; style?: ViewStyle }) {
   const c = useColors();
+  const one = useLines(1);
+  const two = useLines(2);
   return (
     <Pressable
       accessibilityRole="button"
@@ -106,10 +114,10 @@ export function DaycareCard({
       </View>
       <View style={styles.body}>
         {/* Two lines so long state names stay whole; the minimum keeps a carousel's cards even. */}
-        <Text variant="headline" numberOfLines={2}>
+        <Text variant="headline" numberOfLines={two}>
           {name}
         </Text>
-        <Text variant="footnote" tone="secondary" numberOfLines={1} tabular>
+        <Text variant="footnote" tone="secondary" numberOfLines={one} tabular>
           {meta}
         </Text>
         <View style={styles.strip}>
@@ -135,6 +143,8 @@ export function PlaceRow({
   selected,
 }: Common & { selected?: boolean }) {
   const c = useColors();
+  const one = useLines(1);
+  const two = useLines(2);
   return (
     <Pressable
       accessibilityRole="button"
@@ -163,10 +173,10 @@ export function PlaceRow({
         />
       </View>
       <View style={styles.rowBody}>
-        <Text variant="headline" numberOfLines={2}>
+        <Text variant="headline" numberOfLines={two}>
           {name}
         </Text>
-        <Text variant="footnote" tone="secondary" numberOfLines={1} tabular>
+        <Text variant="footnote" tone="secondary" numberOfLines={one} tabular>
           {meta}
         </Text>
         <View style={{ marginTop: 2 }}>

@@ -28,7 +28,7 @@ export default function FindScreen() {
   const locate = useCallback(
     () =>
       findPosition((late) => {
-        mark('location late');
+        mark(`location late ${typeof late === 'string' ? late : 'found'}`);
         setPosition(late);
       }).then((p) => {
         mark(`location ${typeof p === 'string' ? p : 'found'}`);
@@ -91,12 +91,14 @@ export default function FindScreen() {
           outside
             ? 'No Texas daycares near you'
             : point || saved
-              ? position === 'denied' && !point
+              ? (position === 'denied' || position === 'unavailable') && !point
                 ? 'Near your last location'
                 : undefined
               : position === 'denied'
                 ? 'Location is off'
-                : 'Finding your location…'
+                : position === 'unavailable'
+                  ? 'Location unavailable'
+                  : 'Finding your location…'
         }
         watchedIds={watchedIds}
         onOpen={open}

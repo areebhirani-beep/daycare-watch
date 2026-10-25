@@ -10,16 +10,20 @@ on:
   workflow_dispatch:
     inputs:
       command:
-        description: "sync (daily), backfill (first load of a new database), or photos (Mapillary street photos only)"
+        description: "sync (daily), backfill (first load of a new database), photos (Mapillary street photos only), or replay (resend a real past visit's findings as a labelled replay)"
         type: choice
-        options: [sync, backfill, photos]
+        options: [sync, backfill, photos, replay]
         default: sync
+      operation_id:
+        description: "replay only: the daycare's state operation ID; its newest visit with findings is resent to the parents who watch it"
+        type: string
+        default: ""
       full:
         description: "sync only: re-pull every operation, not only those past the watermark"
         type: boolean
         default: false
       dry_run:
-        description: "sync and photos: do everything, then write nothing; no pushes"
+        description: "sync, photos, and replay: do everything, then write nothing; no pushes"
         type: boolean
         default: false
 
@@ -53,9 +57,16 @@ jobs:
           python-version: "3.12"
       - run: uv sync --frozen --no-dev || uv sync --no-dev
       - name: Run
+        env:
+          OPERATION_ID: ${{ inputs.operation_id }}
         run: |
           set -euo pipefail
-          if [ "${{ inputs.command }}" = "backfill" ]; then
+          if [ "${{ inputs.command }}" = "replay" ]; then
+            [[ "$OPERATION_ID" =~ ^[0-9]+$ ]] || { echo "operation_id must be a state operation ID (digits only)"; exit 1; }
+            args=(--replay-latest "$OPERATION_ID")
+            [ "${{ inputs.dry_run }}" = "true" ] && args+=(--dry-run)
+            uv run --no-sync python -m pipeline sync "${args[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ inputs.command }}" = "backfill" ]; then
             uv run --no-sync python -m pipeline backfill
           elif [ "${{ inputs.command }}" = "photos" ]; then
             args=(--record-dir "$RUNNER_TEMP/mapillary")

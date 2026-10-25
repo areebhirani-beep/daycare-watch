@@ -62,13 +62,33 @@ public class LookAroundModule: Module {
       request.resultTypes = .pointOfInterest
       let here = CLLocation(latitude: lat, longitude: lng)
       if let response = try? await MKLocalSearch(request: request).start(),
-         let item = response.mapItems.first(where: { ($0.placemark.location?.distance(from: here) ?? .infinity) <= 60 }),
+         let item = response.mapItems.first(where: {
+           ($0.placemark.location?.distance(from: here) ?? .infinity) <= 60 && sameName(name, $0.name ?? "")
+         }),
          let scene = try? await MKLookAroundSceneRequest(mapItem: item).scene {
         return (scene, .place, item.placemark.location?.distance(from: here))
       }
     }
     guard let scene = try await MKLookAroundSceneRequest(coordinate: point).scene else { return nil }
     return (scene, .point, nil)
+  }
+
+  // Words every daycare name shares, so "Kids Academy" never matches "Little Stars Academy" next door.
+  private static let generic: Set<String> = [
+    "the", "of", "at", "and", "a", "academy", "learning", "center", "centre", "child", "children", "childrens", "care",
+    "day", "daycare", "development", "early", "education", "kids", "kid", "school", "preschool", "montessori", "inc", "llc",
+  ]
+
+  private static func words(_ s: String) -> Set<String> {
+    let folded = s.lowercased().replacingOccurrences(of: "'", with: "").replacingOccurrences(of: "\u{2019}", with: "")
+    return Set(folded.components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty && !generic.contains($0) })
+  }
+
+  /// Apple's place is the daycare only if every distinctive word of Apple's name is in the state's name
+  /// ("Meridian Montessori" for "Meridian Montessori of Plano"); a search can return any business nearby.
+  static func sameName(_ ours: String, _ apples: String) -> Bool {
+    let theirs = words(apples)
+    return !theirs.isEmpty && theirs.isSubset(of: words(ours))
   }
 
   @MainActor
@@ -86,8 +106,8 @@ public class LookAroundModule: Module {
   }
 
   private static func file(_ key: String, _ facing: Facing) -> URL {
-    // v2: matched within 60 m (v1 allowed 150 m), so older snapshots are never reused.
-    folder.appendingPathComponent("v2-\(key)-\(facing.rawValue).jpg")
+    // v3: matched by name and within 60 m (v2 skipped the name check, v1 allowed 150 m); older snapshots are never reused.
+    folder.appendingPathComponent("v3-\(key)-\(facing.rawValue).jpg")
   }
 
   // A week: Apple refreshes Look Around rarely, and the cache lives in Caches, which iOS may clear anyway.

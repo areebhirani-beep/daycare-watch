@@ -13,7 +13,7 @@ import { tidyCase } from '@/lib/format';
 import { useAlertsOn } from '@/lib/notifications';
 import { since } from '@/lib/perf';
 import { shareText } from '@/lib/share';
-import { appleMapsUrl, directionsAddress, googleMapsUrl } from '@/lib/maps';
+import { appleMapsUrl, directionsAddress, googleMapsUrl, googlePhotosUrl } from '@/lib/maps';
 import { LAW_CITE, requestText } from '@/lib/rights';
 import { fade, space, useColors } from '@/theme';
 
@@ -51,6 +51,7 @@ export default function DaycareRecordScreen() {
   const name = tidyCase(daycare.name);
   // Null for home daycares: no directions to a private residence.
   const destination = directionsAddress(daycare);
+  const photosUrl = googlePhotosUrl(daycare);
   const openMaps = (url: (a: string) => string) => (destination ? () => void Linking.openURL(url(destination)) : undefined);
 
   return (
@@ -71,6 +72,7 @@ export default function DaycareRecordScreen() {
         onDirections={openMaps(Platform.OS === 'ios' ? appleMapsUrl : googleMapsUrl) ?? (() => undefined)}
         onOpenAppleMaps={openMaps(appleMapsUrl)}
         onOpenGoogleMaps={openMaps(googleMapsUrl)}
+        onGooglePhotos={photosUrl ? () => void Linking.openURL(photosUrl) : undefined}
         onOfficial={() => void WebBrowser.openBrowserAsync(official_url)}
         onTour={() => router.push(`/daycare/${operationId}/tour`)}
         onCategories={() => router.push('/categories')}

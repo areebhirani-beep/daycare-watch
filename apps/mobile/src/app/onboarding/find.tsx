@@ -15,6 +15,7 @@ import { OnboardingFrame } from '@/components/ui/OnboardingFrame';
 import { CardSkeleton, RowSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
 import { useDaycaresNear, useDaycareSearch, useSetWatch } from '@/lib/api';
+import { useAppWidth } from '@/lib/layout';
 import { tidyCase } from '@/lib/format';
 import type { DaycareRow } from '@/lib/types';
 import { easeOut, enter, haptic, motion, space, useColors } from '@/theme';
@@ -49,7 +50,8 @@ function Lift({ selected, children }: { selected: boolean; children: ReactNode }
  * The pre-filled cards are centers only: home daycares appear when a parent searches for one.
  */
 export default function FindScreen() {
-  const { width, fontScale } = useWindowDimensions();
+  const { fontScale } = useWindowDimensions();
+  const width = useAppWidth();
   // Large text: a wider, shorter picture so the name and the record stay in the first view.
   const heroRatio = fontScale > 1.3 ? 2.2 : 1.2;
   const [query, setQuery] = useState('');

@@ -4,6 +4,7 @@ import { type LayoutChangeEvent, StyleSheet, View, type ViewStyle } from 'react-
 
 import { useColors, useIsDark } from '@/theme';
 
+import { Glyph } from './Glyph';
 import { MapPin } from './MapPin';
 import { Text } from './Text';
 
@@ -112,6 +113,12 @@ export function MapSnapshot({
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
+      {/* No location on the state's record (it didn't geocode): the type's glyph, never an empty grey box. */}
+      {has ? null : (
+        <View style={styles.noPoint}>
+          <Glyph name={privateHome ? 'home' : 'center'} size={smallPin ? 18 : 28} color={c.textTertiary} />
+        </View>
+      )}
       {tiles.map((t) => (
         <Image
           key={t.key}
@@ -157,6 +164,7 @@ export function MapSnapshot({
 }
 
 const styles = StyleSheet.create({
+  noPoint: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' },
   root: { overflow: 'hidden' },
   area: { position: 'absolute', borderWidth: 2, opacity: 0.55 },
   pin: { position: 'absolute', width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },

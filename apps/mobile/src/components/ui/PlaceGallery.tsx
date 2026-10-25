@@ -1,21 +1,26 @@
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { useState } from 'react';
-import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { type AccessibilityActionEvent, Modal, PixelRatio, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Animated, {
   Extrapolation,
   interpolate,
   type SharedValue,
+  useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/Icon';
+import { useAppWidth } from '@/lib/layout';
 import { photoMonth, photosEnabled, photoUrl } from '@/lib/mapillary';
 import type { Photo } from '@/lib/types';
+
+import { lookAroundAvailable, lookAroundSnapshot, presentLookAround } from '../../../modules/look-around';
 import { fade, haptic, motion, radius, space, useColors, useIsDark } from '@/theme';
 
 import { FlyoverHero } from './FlyoverHero';
@@ -40,47 +45,63 @@ export function locationLabel(q: GeocodeQuality | null | undefined): string {
 }
 
 type Page =
-  | { key: string; kind: 'photo'; photo: Photo; url: string | undefined }
+  | { key: 'lookaround'; kind: 'lookaround'; uri: string }
+  | { key: string; kind: 'photo'; photo: Photo; url: string }
   | { key: 'flyover'; kind: 'flyover' }
   | { key: 'aerial'; kind: 'aerial' }
-  | { key: 'street'; kind: 'street' }
   | { key: 'area'; kind: 'area' }
   | { key: 'approx'; kind: 'approx' };
 
-const PHOTO_CREDIT = '© Mapillary contributors · CC BY-SA';
 const ESRI_CREDIT = 'Imagery © Esri, Maxar';
 
-function caption(p: Page, quality: GeocodeQuality | null | undefined): { text: string; credit?: string; date?: string } {
+type Caption = {
+  /** The chip on the hero: the source, and the month for a Mapillary photo. */
+  chip: string;
+  /** A second line, on the plain maps only. */
+  credit?: string;
+  /** What VoiceOver and TalkBack read for the page. */
+  label: string;
+  /** Under the picture in the full-screen viewer: the photographer and licence, then the month. */
+  viewer?: { credit: string; date: string };
+};
+
+function longMonth(p: Pick<Photo, 'captured_at'>): string {
+  return new Date(p.captured_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'America/Chicago' });
+}
+
+function caption(p: Page, name: string): Caption {
   switch (p.kind) {
+    case 'lookaround':
+      return { chip: 'Look Around · Apple Maps', label: `Street photo of ${name}, Apple Look Around` };
     case 'photo':
-      return { text: 'Street view near the address', credit: PHOTO_CREDIT, date: photoMonth(p.photo) };
+      return {
+        chip: `Photo · Mapillary · ${photoMonth(p.photo)}`,
+        label: `Street photo of ${name}, Mapillary, ${longMonth(p.photo)}`,
+        viewer: { credit: `© ${p.photo.creator ?? 'Mapillary contributors'} · CC BY-SA 4.0 · Mapillary`, date: `Taken ${longMonth(p.photo)}` },
+      };
     case 'flyover':
-      return { text: '3D view · Apple Maps' };
+      return { chip: '3D view · Apple Maps', label: `3D view of ${name} from above, Apple Maps` };
     case 'aerial':
-      return { text: locationLabel(quality), credit: ESRI_CREDIT };
-    case 'street':
-      return { text: 'Street View · Google Maps', credit: ESRI_CREDIT };
+      return { chip: ESRI_CREDIT, label: `Aerial view of ${name}` };
     case 'area':
-      return { text: 'Neighborhood only · private home', credit: 'Map © Esri' };
+      return { chip: 'Neighborhood only · private home', credit: 'Map © Esri', label: 'Map of the neighborhood. This is a private home, so no exact location is shown.' };
     case 'approx':
-      return { text: 'Approximate location' };
+      return { chip: 'Approximate location', label: `Map of the area around ${name}. The address matched only approximately.` };
   }
 }
 
-/** Google's own Street View at this point, opened in Google Maps or the browser. */
-function streetViewUrl(lat: number, lng: number): string {
-  return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
-}
-
 /**
- * The place-page hero, so a parent can tell it's the right place. A licensed center with an exact address gets
- * Apple's 3D view first (the aerial with its pin where there is none), then street photos (up to 3, newest first,
- * each with its month and credit), the aerial, and a door to Google Street View.
+ * The place-page hero, so a parent can tell it's the right place. A licensed center with an exact address gets up to
+ * two street-level pictures of the building (Apple Look Around where Apple matched the daycare by name, then
+ * hand-checked Mapillary photos, each with its month and credit), then ONE view from above: Apple's 3D view on
+ * iPhone, the aerial elsewhere. No picture of the building means the view from above alone, never a placeholder.
  * An address that only matched approximately gets a plain map with an area, never a point or a photo.
  * Home daycares (private residences) get one neighborhood map: no photo, no pin, no 3D view.
- * Tap a picture to see it full screen.
+ * Tap Look Around to walk the street in Apple's viewer; tap any other picture to see it full screen.
  */
 export function PlaceGallery({
+  id,
+  name = 'this daycare',
   lat,
   lng,
   quality,
@@ -92,6 +113,10 @@ export function PlaceGallery({
   height,
   bottomInset = 0,
 }: {
+  /** The daycare's operation id: Look Around snapshots are cached on the phone under it. */
+  id?: number;
+  /** The state's name, which Apple Maps matches to frame Look Around on the building. */
+  name?: string;
   lat: number | null | undefined;
   lng: number | null | undefined;
   quality?: GeocodeQuality | null;
@@ -108,18 +133,43 @@ export function PlaceGallery({
   bottomInset?: number;
 }) {
   const c = useColors();
-  const { width } = useWindowDimensions();
+  const width = useAppWidth();
+  const reduced = useReducedMotion();
+  const scroller = useAnimatedRef<Animated.ScrollView>();
   const [page, setPage] = useState(0);
   const [viewer, setViewer] = useState<number | null>(null);
-  // A photo's caption, date and credit wait for the photo itself; one that won't load drops out.
-  const [loaded, setLoaded] = useState<ReadonlySet<string>>(new Set());
+  // Until the parent swipes, pictures of the building that arrive late slide in ahead of the view from above.
+  // After a swipe they still join, but the page on screen stays put.
+  const swiped = useRef(false);
+  const visible = useRef<string | null>(null);
+  // A photo that won't load drops out.
   const [broken, setBroken] = useState<ReadonlySet<string>>(new Set());
-  const onPhoto = (id: string, ok: boolean) => (ok ? setLoaded : setBroken)((prev) => new Set(prev).add(id));
+  const onPhoto = (imageId: string, ok: boolean) => {
+    if (!ok) setBroken((prev) => new Set(prev).add(imageId));
+  };
   const x = useSharedValue(0);
   const has = typeof lat === 'number' && typeof lng === 'number';
 
-  // Photo URLs are looked up now (three small calls) so swiping never waits; a photo that fails drops out.
-  const shown = flyover && photosEnabled ? photos.slice(0, 3) : [];
+  // Apple's street-level picture, made once per daycare on the phone. Only a scene Apple matched to the daycare by
+  // name is shown: the street at the bare address point can face a different building.
+  const look = useQuery({
+    queryKey: ['lookaround', id],
+    queryFn: () =>
+      lookAroundSnapshot(lat!, lng!, {
+        name,
+        cacheKey: String(id),
+        width: Math.round(width * Math.min(PixelRatio.get(), 2)),
+        height: Math.round(height * Math.min(PixelRatio.get(), 2)),
+      }),
+    enabled: lookAroundAvailable && flyover && has && id != null,
+    staleTime: Infinity,
+    retry: 0,
+  });
+  const lookPages: Page[] = look.data?.facing === 'place' ? [{ key: 'lookaround', kind: 'lookaround', uri: look.data.uri }] : [];
+
+  // Only hand-checked photos reach the record. Their URLs are looked up now so swiping never waits, and a photo
+  // joins the carousel only once its URL is in.
+  const shown = flyover && photosEnabled ? photos.slice(0, 2) : [];
   const urls = useQueries({
     queries: shown.map((p) => ({
       queryKey: ['mapillary', p.image_id],
@@ -134,16 +184,26 @@ export function PlaceGallery({
     : quality === 'non_exact'
       ? [{ key: 'approx', kind: 'approx' }]
       : (() => {
-          // Page one must unmistakably be this place: the 3D view, or the aerial with its pin. Photos follow.
-          const photoPages = shown.flatMap((p, i): Page[] =>
-            urls[i]?.isError || broken.has(p.image_id) ? [] : [{ key: p.image_id, kind: 'photo', photo: p, url: urls[i]?.data }],
-          );
-          const aerial: Page = { key: 'aerial', kind: 'aerial' };
-          const street: Page[] = flyover ? [{ key: 'street', kind: 'street' }] : [];
-          return flyover && Platform.OS === 'ios'
-            ? [{ key: 'flyover', kind: 'flyover' } as const, ...photoPages, aerial, ...street]
-            : [aerial, ...photoPages, ...street];
+          // Pictures of the building first (two at most), then one view from above with our pin on the place.
+          const photoPages = shown.flatMap((p, i): Page[] => {
+            const url = urls[i]?.data;
+            return url && !broken.has(p.image_id) ? [{ key: p.image_id, kind: 'photo', photo: p, url }] : [];
+          });
+          const above: Page = flyover && Platform.OS === 'ios' ? { key: 'flyover', kind: 'flyover' } : { key: 'aerial', kind: 'aerial' };
+          return [...lookPages, ...photoPages].slice(0, 2).concat(above);
         })();
+  const keys = pages.map((p) => p.key).join('|');
+
+  // Pages changed under the parent: before a swipe show the first picture; after one, keep the page they are on.
+  useEffect(() => {
+    const at = visible.current ? pages.findIndex((p) => p.key === visible.current) : -1;
+    const next = swiped.current && at >= 0 ? at : 0;
+    setPage(next);
+    visible.current = pages[next]?.key ?? null;
+    scroller.current?.scrollTo({ x: next * width, animated: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when the set of pages changes, not on every render
+  }, [keys, width]);
+
   const current = Math.min(page, pages.length - 1);
   const onScroll = useAnimatedScrollHandler((e) => {
     x.value = e.contentOffset.x;
@@ -152,46 +212,73 @@ export function PlaceGallery({
   // The state record has no map location: a plain band, no caption, nothing that pretends to be a map.
   if (!has) return <View style={{ height, backgroundColor: c.sunken }} />;
 
+  const go = (i: number) => {
+    const next = Math.max(0, Math.min(pages.length - 1, i));
+    swiped.current = true;
+    visible.current = pages[next]!.key;
+    setPage(next);
+    scroller.current?.scrollTo({ x: next * width, animated: !reduced });
+  };
+
   const open = (i: number) => {
     const p = pages[i];
     if (!p) return;
-    if (p.kind === 'street') {
+    if (p.kind === 'lookaround') {
       haptic.select();
-      void Linking.openURL(streetViewUrl(lat, lng));
+      void presentLookAround(lat, lng, name);
     } else if (p.kind === 'photo' || p.kind === 'aerial' || p.kind === 'flyover') {
       setViewer(i);
     }
   };
 
-  const cap = caption(pages[current]!, quality);
   const at = pages[current]!;
-  const captionReady = at.kind !== 'photo' || loaded.has(at.key);
-  const onPicture = pages[current]!.kind !== 'area' && pages[current]!.kind !== 'approx';
+  const cap = caption(at, name);
+  const onPicture = at.kind !== 'area' && at.kind !== 'approx';
+  const street = at.kind === 'lookaround' || at.kind === 'photo';
+  const opens = onPicture;
+  const many = pages.length > 1;
+
+  const onAction = (e: AccessibilityActionEvent) => {
+    if (e.nativeEvent.actionName === 'increment') go(current + 1);
+    else if (e.nativeEvent.actionName === 'decrement') go(current - 1);
+    else if (e.nativeEvent.actionName === 'activate' && opens) open(current);
+  };
 
   return (
-    <View style={{ height, backgroundColor: '#0B0B0C' }}>
+    // One element for VoiceOver and TalkBack: it reads the picture on screen, swipe up or down to change it,
+    // double-tap to open it.
+    <View
+      style={{ height, backgroundColor: '#0B0B0C' }}
+      accessible
+      accessibilityRole={many ? 'adjustable' : opens ? 'imagebutton' : 'image'}
+      accessibilityLabel={cap.label}
+      accessibilityValue={many ? { text: `Picture ${current + 1} of ${pages.length}` } : undefined}
+      accessibilityHint={opens ? (at.kind === 'lookaround' ? 'Opens Look Around.' : 'Opens full screen.') : undefined}
+      accessibilityActions={[
+        ...(many ? [{ name: 'increment' as const }, { name: 'decrement' as const }] : []),
+        ...(opens ? [{ name: 'activate' as const }] : []),
+      ]}
+      onAccessibilityAction={onAction}
+    >
       <Animated.ScrollView
+        ref={scroller}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}
-        onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / width))}
-        scrollEnabled={pages.length > 1}
+        onScrollBeginDrag={() => {
+          swiped.current = true;
+        }}
+        onMomentumScrollEnd={(e) => {
+          const i = Math.round(e.nativeEvent.contentOffset.x / width);
+          visible.current = pages[i]?.key ?? null;
+          setPage(i);
+        }}
+        scrollEnabled={many}
       >
         {pages.map((p, i) => (
-          <Pressable
-            key={p.key}
-            style={{ width, height }}
-            onPress={() => open(i)}
-            disabled={p.kind === 'area' || p.kind === 'approx'}
-            accessibilityRole={p.kind === 'street' ? 'link' : 'imagebutton'}
-            accessibilityLabel={
-              p.kind === 'street'
-                ? 'Open Google Street View at this address'
-                : `${caption(p, quality).text}${p.kind === 'photo' ? `, taken ${photoMonth(p.photo)}` : ''}. Opens full screen.`
-            }
-          >
+          <Pressable key={p.key} style={{ width, height }} onPress={() => open(i)} disabled={p.kind === 'area' || p.kind === 'approx'}>
             {/* The 3D view mounts only when it's on screen or next, so it loads on view, not on open. */}
             <PageBody
               page={p}
@@ -202,6 +289,7 @@ export function PlaceGallery({
               bottomInset={bottomInset}
               height={height}
               watched={watched}
+              fadeMs={reduced ? 0 : motion.base}
               onPhoto={onPhoto}
             />
           </Pressable>
@@ -211,47 +299,42 @@ export function PlaceGallery({
       {onPicture ? (
         <>
           <View pointerEvents="none" style={styles.topScrim} />
-          <Scrim height={height * 0.35} />
+          {street ? <Scrim height={height * 0.28} steps={PHOTO_SCRIM} /> : <Scrim height={height * 0.35} steps={ABOVE_SCRIM} />}
         </>
       ) : null}
 
       <View pointerEvents="none" style={[styles.bottom, { bottom: bottomInset + space.sm }]}>
-        <Animated.View key={`${at.key}:${captionReady}`} entering={fade(motion.fast)} style={[styles.captionCol, !captionReady && styles.hidden]}>
-          {cap.date ? (
-            <View style={styles.dateChip}>
-              <Text variant="caption" style={styles.white} maxFontSizeMultiplier={1.3}>
-                {cap.date}
-              </Text>
-            </View>
-          ) : null}
-          <View style={onPicture ? null : styles.mapPill}>
-            <Text variant="caption" style={styles.white} maxFontSizeMultiplier={1.3} numberOfLines={1}>
-              {cap.text}
+        <Animated.View key={at.key} entering={fade(motion.fast)} style={[styles.chip, !onPicture && styles.mapChip]}>
+          <Text variant="caption" style={styles.white} maxFontSizeMultiplier={1.3} numberOfLines={1}>
+            {cap.chip}
+          </Text>
+          {cap.credit ? (
+            <Text variant="caption" style={[styles.white, styles.credit]} maxFontSizeMultiplier={1.3} numberOfLines={1}>
+              {cap.credit}
             </Text>
-            {cap.credit ? (
-              <Text variant="caption" style={[styles.white, styles.credit]} maxFontSizeMultiplier={1.3} numberOfLines={1}>
-                {cap.credit}
-              </Text>
-            ) : null}
-          </View>
+          ) : null}
         </Animated.View>
-        {pages.length > 1 ? <Dots count={pages.length} x={x} width={width} /> : null}
+        {many ? <Dots count={pages.length} x={x} width={width} /> : null}
       </View>
 
       {viewer !== null ? (
         <Viewer
           pages={pages.filter((p) => p.kind === 'photo' || p.kind === 'aerial' || p.kind === 'flyover')}
           start={pages[viewer]!.key}
+          name={name}
           lat={lat}
           lng={lng}
           kind={kind}
-          quality={quality}
           onClose={() => setViewer(null)}
         />
       ) : null}
     </View>
   );
 }
+
+// Street pictures get a lighter scrim (bottom 28%, up to 35% black) than the views from above (35%, up to 45%).
+const PHOTO_SCRIM = [0, 0.12, 0.24, 0.35];
+const ABOVE_SCRIM = [0.08, 0.18, 0.3, 0.45];
 
 function PageBody({
   page,
@@ -263,6 +346,7 @@ function PageBody({
   height,
   full = false,
   watched,
+  fadeMs = 0,
   onPhoto,
 }: {
   page: Page;
@@ -274,41 +358,39 @@ function PageBody({
   height: number;
   full?: boolean;
   watched?: boolean;
+  /** Cross-fade as a picture arrives: 200 ms, none with Reduce Motion. */
+  fadeMs?: number;
   onPhoto?: (imageId: string, ok: boolean) => void;
 }) {
-  const c = useColors();
   const isDark = useIsDark();
   switch (page.kind) {
+    case 'lookaround':
+      return (
+        <Image
+          source={{ uri: page.uri }}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          accessibilityIgnoresInvertColors
+          transition={{ duration: fadeMs, effect: 'cross-dissolve', timing: 'ease-out' }}
+        />
+      );
     case 'photo':
-      return page.url ? (
+      return (
         <Image
           source={{ uri: page.url }}
           style={StyleSheet.absoluteFill}
           contentFit={full ? 'contain' : 'cover'}
           cachePolicy="memory-disk"
           accessibilityIgnoresInvertColors
+          transition={{ duration: fadeMs, effect: 'cross-dissolve', timing: 'ease-out' }}
           onLoad={() => onPhoto?.(page.photo.image_id, true)}
           onError={() => onPhoto?.(page.photo.image_id, false)}
         />
-      ) : (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#1C1C1E' }]} />
       );
     case 'flyover':
       return live ? <FlyoverHero lat={lat} lng={lng} watched={watched} legalTop={full ? undefined : height - bottomInset - 64} /> : null;
     case 'aerial':
       return <MapSnapshot lat={lat} lng={lng} zoom={17} watched={watched} attribution={false} style={{ height }} />;
-    case 'street':
-      return (
-        <View style={StyleSheet.absoluteFill}>
-          <MapSnapshot lat={lat} lng={lng} zoom={18} attribution={false} showPin={false} style={{ height }} />
-          <View style={[StyleSheet.absoluteFill, styles.streetCover]}>
-            <View style={[styles.streetButton, { backgroundColor: c.surface }]}>
-              <Text variant="headline">Open Street View</Text>
-              <Icon name="external" size={15} color={c.ink} />
-            </View>
-          </View>
-        </View>
-      );
     case 'area':
       return <MapSnapshot lat={lat} lng={lng} zoom={14} privateHome attribution={false} style={{ height }} />;
     case 'approx':
@@ -334,9 +416,8 @@ function PageBody({
   }
 }
 
-/** Bottom 35% of the hero, stepped from clear to 45% black, so white type reads on any photo. */
-function Scrim({ height }: { height: number }) {
-  const steps = [0.08, 0.18, 0.3, 0.45];
+/** The bottom of the hero, stepped toward black, so white type reads on any picture. */
+function Scrim({ height, steps }: { height: number; steps: readonly number[] }) {
   return (
     <View pointerEvents="none" style={[styles.scrim, { height }]}>
       {steps.map((o) => (
@@ -372,28 +453,29 @@ function Dot({ i, x, width }: { i: number; x: SharedValue<number>; width: number
 function Viewer({
   pages,
   start,
+  name,
   lat,
   lng,
   kind,
-  quality,
   onClose,
 }: {
   pages: Page[];
   start: string;
+  name: string;
   lat: number;
   lng: number;
   kind: PinKind;
-  quality: GeocodeQuality | null | undefined;
   onClose: () => void;
 }) {
-  const { width, height } = useWindowDimensions();
+  const { height } = useWindowDimensions();
+  const width = useAppWidth();
   const insets = useSafeAreaInsets();
   const first = Math.max(
     0,
     pages.findIndex((p) => p.key === start),
   );
   const [page, setPage] = useState(first);
-  const cap = pages[page] ? caption(pages[page], quality) : null;
+  const cap = pages[page] ? caption(pages[page], name) : null;
 
   return (
     <Modal visible animationType="fade" presentationStyle="fullScreen" statusBarTranslucent onRequestClose={onClose}>
@@ -440,18 +522,18 @@ function Viewer({
 
         {cap ? (
           <View style={[styles.viewerBar, { paddingBottom: insets.bottom + space.md }]} pointerEvents="none">
-            {cap.date ? (
-              <Text variant="callout" style={styles.white}>
-                {cap.date}
-              </Text>
-            ) : null}
             <Text variant="callout" style={styles.white}>
-              {cap.text}
+              {cap.chip}
             </Text>
-            {cap.credit ? (
-              <Text variant="caption" style={[styles.white, styles.credit]}>
-                {cap.credit}
-              </Text>
+            {cap.viewer ? (
+              <>
+                <Text variant="caption" style={[styles.white, styles.credit]}>
+                  {cap.viewer.credit}
+                </Text>
+                <Text variant="caption" style={[styles.white, styles.credit]}>
+                  {cap.viewer.date}
+                </Text>
+              </>
             ) : null}
           </View>
         ) : null}
@@ -470,12 +552,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: space.md,
   },
-  captionCol: { flexShrink: 1, alignItems: 'flex-start', gap: 6 },
+  // 30% black over the scrim on a picture; a plain map has no scrim, so its pill is darker to keep white type legible.
+  chip: { flexShrink: 1, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, backgroundColor: 'rgba(0,0,0,0.3)' },
+  mapChip: { backgroundColor: 'rgba(0,0,0,0.6)' },
   white: { color: '#FFFFFF' },
-  hidden: { opacity: 0 },
   credit: { opacity: 0.85 },
-  dateChip: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: radius.pill, backgroundColor: 'rgba(0,0,0,0.5)' },
-  mapPill: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(0,0,0,0.6)' },
   scrim: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   // Keeps the status bar readable over a bright sky.
   topScrim: { position: 'absolute', left: 0, right: 0, top: 0, height: 64, backgroundColor: 'rgba(0,0,0,0.22)' },
@@ -489,15 +570,6 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   dot: { height: 6, borderRadius: 3, backgroundColor: '#FFFFFF' },
-  streetCover: { alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.35)' },
-  streetButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    minHeight: 44,
-    paddingHorizontal: space.lg,
-    borderRadius: radius.pill,
-  },
   viewer: { flex: 1, backgroundColor: '#000000' },
   close: {
     position: 'absolute',

@@ -44,6 +44,15 @@ export function placeAddress(d: Place): string {
   return addressLine(d);
 }
 
+/**
+ * The daycare's own Google Maps listing (a search for its name and street), where parents can see the photos Google
+ * shows. We link out and never copy them. Null for anything but a licensed center: no listing of a private home.
+ */
+export function googlePhotosUrl(d: Place & { name: string }): string | null {
+  if (d.operation_type !== CENTER) return null;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${tidyCase(d.name)}, ${addressLine(d)}`)}`;
+}
+
 /** Where directions may point, or null for a home daycare: no turn-by-turn route to a private house. */
 export function directionsAddress(d: Place): string | null {
   return d.operation_type === CENTER ? addressLine(d) : null;

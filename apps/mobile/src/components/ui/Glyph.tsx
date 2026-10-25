@@ -27,6 +27,7 @@ const GLYPHS = {
   list: { ios: 'list.bullet', android: 'list' },
   filter: { ios: 'line.3.horizontal.decrease', android: 'tune' },
   external: { ios: 'arrow.up.right', android: 'open_in_new' },
+  photo: { ios: 'photo.on.rectangle', android: 'photo_library' },
   center: { ios: 'building.2.fill', android: 'apartment' },
   home: { ios: 'house.fill', android: 'home' },
   district: { ios: 'flag.fill', android: 'flag' },

@@ -7,11 +7,11 @@ import type { Photo } from './types';
 // looked up when the photo is about to show and never saved.
 const token = process.env.EXPO_PUBLIC_MAPILLARY_TOKEN;
 
-// Off for now: a hand check of the nearest frames found the daycare's own building in only 2 of 5, because the
-// address point sits on the street, not the building. The 3D view and aerial always show the right place.
-export const SHOW_STREET_PHOTOS = false;
+// On: daycare_record returns only photos a person checked show that daycare's own building (verified = true), so an
+// unchecked frame of the street never reaches the carousel.
+export const SHOW_STREET_PHOTOS = true;
 
-/** False when street photos are off or there is no token: the carousel is 3D view, aerial, Street View link. */
+/** False when street photos are off or there is no token: the carousel is then Look Around and one view from above. */
 export const photosEnabled = SHOW_STREET_PHOTOS && Boolean(token);
 
 export async function photoUrl(imageId: string, signal?: AbortSignal): Promise<string> {

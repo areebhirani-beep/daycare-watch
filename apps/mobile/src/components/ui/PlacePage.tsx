@@ -72,6 +72,8 @@ type Props = {
   onDirections: () => void;
   onOpenAppleMaps?: () => void;
   onOpenGoogleMaps?: () => void;
+  /** Opens the center's Google Maps listing for its photos (lib/maps googlePhotosUrl); absent for homes. */
+  onGooglePhotos?: () => void;
   onOfficial: () => void;
   onTour: () => void;
   /** Opens "What the categories mean" (CategoryGuide). Without it the link is hidden. */
@@ -105,6 +107,7 @@ export function PlacePage({
   onDirections,
   onOpenAppleMaps,
   onOpenGoogleMaps,
+  onGooglePhotos,
   onOfficial,
   onTour,
   onCategories,
@@ -259,6 +262,8 @@ export function PlacePage({
         scrollEventThrottle={16}
       >
         <PlaceGallery
+          id={daycare.operation_id}
+          name={daycare.name}
           lat={daycare.lat}
           lng={daycare.lng}
           quality={quality}
@@ -314,6 +319,7 @@ export function PlacePage({
                 onPress={(Platform.OS === 'ios' ? onOpenAppleMaps : onOpenGoogleMaps) ?? onDirections}
               />
             )}
+            {onGooglePhotos ? <ActionTile icon="photo" label="Photos on Google Maps" lines={2} onPress={onGooglePhotos} /> : null}
           </View>
         </View>
 

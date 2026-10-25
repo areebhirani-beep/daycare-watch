@@ -1,12 +1,15 @@
-import { Redirect } from 'expo-router';
+import { Redirect, usePathname } from 'expo-router';
 import { NativeTabs } from 'expo-router/native-tabs';
 
 import { hasOnboarded } from '@/components/ui/onboarding';
+import { isWeb } from '@/lib/runtime';
 import { useColors } from '@/theme';
 
 export default function TabsLayout() {
   const c = useColors();
-  if (!hasOnboarded()) return <Redirect href="/onboarding" />;
+  const path = usePathname();
+  // On the web a shared link (a judge, a parent) opens the page it names; onboarding only greets the front door.
+  if (!hasOnboarded() && !(isWeb && path !== '/')) return <Redirect href="/onboarding" />;
   return (
     <NativeTabs backgroundColor={c.bg} tintColor={c.ink}>
       <NativeTabs.Trigger name="index">

@@ -227,7 +227,18 @@ export const SHEET_GRABBER = sheet.grabber;
  * Uber-style action tile: icon over a short label, equal widths, so a row of three always fits
  * (no pill clipped mid-word at the screen edge).
  */
-export function ActionTile({ icon, label, onPress }: { icon: GlyphName; label: string; onPress: () => void }) {
+export function ActionTile({
+  icon,
+  label,
+  onPress,
+  lines = 1,
+}: {
+  icon: GlyphName;
+  label: string;
+  onPress: () => void;
+  /** 2 for a label that can't shrink to one line in a third of the row (the web can't shrink text at all). */
+  lines?: number;
+}) {
   const c = useColors();
   return (
     <Pressable
@@ -240,7 +251,7 @@ export function ActionTile({ icon, label, onPress }: { icon: GlyphName; label: s
       style={({ pressed }) => [styles.tile, elevation.card, { backgroundColor: c.surface, transform: [{ scale: pressed ? 0.98 : 1 }], opacity: pressed ? 0.9 : 1 }]}
     >
       <Glyph name={icon} size={20} color={c.text} weight="semibold" />
-      <Text variant="subhead" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} maxFontSizeMultiplier={1.4}>
+      <Text variant="subhead" numberOfLines={lines} align="center" adjustsFontSizeToFit minimumFontScale={0.8} maxFontSizeMultiplier={1.4}>
         {label}
       </Text>
     </Pressable>

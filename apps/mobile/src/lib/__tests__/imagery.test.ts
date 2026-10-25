@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 
 import { imageryAllowed, isResidence, maxPlaceZoom } from '../imagery';
-import { addressLine, directionsAddress, placeAddress } from '../maps';
+import { addressLine, directionsAddress, googlePhotosUrl, placeAddress } from '../maps';
 
 // The four operation types in core.daycares (Oct 24 2026): Licensed Center 9,605 · Registered Child-Care Home 1,742 ·
 // Licensed Child-Care Home 1,593 · Listed Family Home 1,370.
@@ -61,5 +61,19 @@ describe('addresses for private residences', () => {
   it('keeps the full address and directions for a center', () => {
     expect(placeAddress(center)).toBe('5853 HORIZON RD, ROCKWALL, TX 75032-7788');
     expect(directionsAddress(center)).toBe('5853 HORIZON RD, ROCKWALL, TX 75032-7788');
+  });
+});
+
+describe('Google Maps photos link', () => {
+  it('links a center to its own listing by name and street', () => {
+    const url = googlePhotosUrl({ ...center, name: 'VIVA WORLD SCHOOL' });
+    expect(url).toMatch(/^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=/);
+    expect(decodeURIComponent(url!.split('query=')[1]!)).toBe('Viva World School, 5853 HORIZON RD, ROCKWALL, TX 75032-7788');
+  });
+
+  it('never links a home or an unknown type', () => {
+    for (const d of [listedHome, licensedHome, { ...center, operation_type: null as unknown as string }]) {
+      expect(googlePhotosUrl({ ...d, name: 'Any Name' })).toBeNull();
+    }
   });
 });

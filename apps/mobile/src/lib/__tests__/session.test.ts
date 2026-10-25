@@ -77,4 +77,12 @@ describe('ensureSession', () => {
     expect(await ensureSession()).toBe('fresh-user');
     expect(mockAuth.getUser).not.toHaveBeenCalled();
   });
+
+  it('resetSession drops a verified user that the server later deleted', async () => {
+    const { ensureSession, resetSession } = load();
+    expect(await ensureSession()).toBe('stored-user');
+    mockAuth.getSession.mockResolvedValue({ data: { session: null } });
+    expect(await resetSession()).toBe('fresh-user');
+    expect(mockAuth.signOut).toHaveBeenCalledWith({ scope: 'local' });
+  });
 });

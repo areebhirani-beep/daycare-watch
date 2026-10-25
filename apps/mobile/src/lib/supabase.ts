@@ -45,3 +45,13 @@ export async function ensureSession(): Promise<string> {
   if (error || !signed.user) throw error ?? new Error('Anonymous sign-in failed');
   return (verifiedUserId = signed.user.id);
 }
+
+/**
+ * Drop the cached user and start a fresh anonymous session. For a write the server rejects because the
+ * signed-in user no longer exists, e.g. after a database reset while the app stayed open.
+ */
+export async function resetSession(): Promise<string> {
+  verifiedUserId = null;
+  await supabase.auth.signOut({ scope: 'local' });
+  return ensureSession();
+}

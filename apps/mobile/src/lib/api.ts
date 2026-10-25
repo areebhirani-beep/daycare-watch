@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { ensureSession, supabase } from './supabase';
+import { ensureSession, resetSession, supabase } from './supabase';
 import type {
   AlertDetail,
   AreaCompare,
@@ -13,7 +13,12 @@ import type {
 // The app reaches data only through the RPCs in CONTRACT.md section 4.
 async function rpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
   await ensureSession();
-  const { data, error } = await supabase.rpc(fn, args);
+  let { data, error } = await supabase.rpc(fn, args);
+  // 23503 on user_id: the session's user was deleted server-side. Retry once as a fresh anonymous user.
+  if (error?.code === '23503' && error.details?.includes('(user_id)')) {
+    await resetSession();
+    ({ data, error } = await supabase.rpc(fn, args));
+  }
   if (error) throw new Error(`${fn}: ${error.message}`);
   return data as T;
 }

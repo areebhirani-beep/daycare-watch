@@ -71,7 +71,9 @@ export default function WatchScreen() {
         <T variant="body" tone="secondary">
           {on
             ? 'Alerts are on. The next time the state posts something about this daycare, you’ll get one notification.'
-            : 'Notifications are off for this app, so we can’t send alerts. New state records will still show in the Watching tab.'}
+            : blocked
+              ? 'Notifications are off for this app, so we can’t send alerts. New state records will still show in the Watching tab.'
+              : 'This phone couldn’t sign up for alerts yet. New state records will still show in the Watching tab.'}
         </T>
         <View style={styles.buttons}>
           <Button label="Done" onPress={() => router.back()} />

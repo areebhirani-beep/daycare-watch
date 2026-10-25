@@ -226,6 +226,7 @@ export function HomeMap({
               meta={rowMeta(item)}
               lat={item.lat}
               lng={item.lng}
+              operationType={item.operation_type}
               watched={watchedIds.has(item.operation_id)}
               strip={rowStrip(item)}
               fallback={rowFallback(item)}
@@ -328,6 +329,7 @@ export function HomeMap({
               meta={rowMeta(item)}
               lat={item.lat}
               lng={item.lng}
+              operationType={item.operation_type}
               watched={watchedIds.has(item.operation_id)}
               strip={rowStrip(item)}
               fallback={rowFallback(item)}

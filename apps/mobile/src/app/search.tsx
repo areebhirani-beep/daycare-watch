@@ -36,6 +36,7 @@ export default function SearchScreen() {
         renderItem={({ item }) => (
           <PlaceRow
             name={tidyCase(item.name)}
+            operationType={item.operation_type}
             meta={rowMeta(item)}
             lat={item.lat}
             lng={item.lng}

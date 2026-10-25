@@ -24,6 +24,7 @@ import {
   tidyCase,
 } from '@/lib/format';
 import { groupByVisit, summarize, visibleVisits, visitTypeLabel } from '@/lib/record';
+import { imageryAllowed } from '@/lib/imagery';
 import { lawCovers, NOT_COVERED, REQUEST_CARDS, type RequestKind } from '@/lib/rights';
 import type { AreaCompare, DaycareRecord } from '@/lib/types';
 import { radius, space, useColors } from '@/theme';
@@ -137,9 +138,12 @@ export function PlacePage({
     daycare.corrective_action ? 'The state lists this daycare on corrective action: it stays open under extra conditions and more inspections.' : null,
   ].filter((n): n is string => n !== null);
 
+  // The state's address field already carries city, "TX" and ZIP+4 ("5853 Horizon Rd  Rockwall TX- 75032 7788").
+  const street = daycare.address
+    ? tidyCase(daycare.address.replace(/\s+/g, ' ').replace(/\bTX-?\s*(\d{5})(?:[\s-]?\d{4})?\b/i, 'TX $1').trim()).replace(/\bTx\b/, 'TX')
+    : null;
   const address = [
-    daycare.address ? tidyCase(daycare.address) : null,
-    [tidyCase(daycare.city), daycare.zip].filter(Boolean).join(' '),
+    street ?? [tidyCase(daycare.city), daycare.zip].filter(Boolean).join(' '),
     daycare.in_district && daycare.district_basis === 'point' ? 'TX-04' : null,
   ]
     .filter(Boolean)
@@ -150,7 +154,12 @@ export function PlacePage({
       {/* Light status-bar text over the aerial photo. */}
       <StatusBar style={solid ? 'auto' : 'light'} />
       <Animated.ScrollView contentContainerStyle={{ paddingBottom: space.section }} onScroll={onScroll} scrollEventThrottle={16}>
-        <PlaceGallery lat={daycare.lat} lng={daycare.lng} quality={quality} watched={watching} height={HERO + insets.top} bottomInset={radius.sheet} />
+        <PlaceGallery
+          lat={daycare.lat}
+          lng={daycare.lng}
+          quality={quality}
+          imagery={imageryAllowed(daycare.operation_type)}
+          watched={watching} height={HERO + insets.top} bottomInset={radius.sheet} />
 
         <View style={[styles.head, { backgroundColor: c.surface }]}>
           <Text variant="display" accessibilityRole="header">

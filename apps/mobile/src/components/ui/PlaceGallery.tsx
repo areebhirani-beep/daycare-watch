@@ -24,9 +24,11 @@ export function locationLabel(q: GeocodeQuality | null | undefined): string {
   }
 }
 
-type Page = { key: 'near' | 'wide' | 'flyover' | 'map'; caption: string };
+type Page = { key: 'near' | 'wide' | 'flyover' | 'map' | 'area'; caption: string };
 
 /**
+ * Home daycares (private residences) get a single neighborhood street map: no photo, no pin, no flyover.
+ *
  * Swipeable place-page hero so a parent can tell it's the right place: the aerial at two zooms and
  * Apple's 3D flyover. It shows the area, never claims to show the building. When the address only
  * matched with corrections, the aerials are hidden and a plain map stands in.
@@ -35,6 +37,7 @@ export function PlaceGallery({
   lat,
   lng,
   quality,
+  imagery,
   watched,
   height,
   bottomInset = 0,
@@ -42,6 +45,8 @@ export function PlaceGallery({
   lat: number | null | undefined;
   lng: number | null | undefined;
   quality?: GeocodeQuality | null;
+  /** False for home daycares (lib/imagery): one neighborhood street map, no photo, no pin, no flyover. */
+  imagery: boolean;
   watched?: boolean;
   height: number;
   /** Space taken by whatever overlaps the bottom of the hero (the head card). */
@@ -52,9 +57,11 @@ export function PlaceGallery({
   const { width } = useWindowDimensions();
   const [page, setPage] = useState(0);
   const has = typeof lat === 'number' && typeof lng === 'number';
-  const aerial = has && quality !== 'non_exact';
+  const aerial = has && imagery && quality !== 'non_exact';
 
-  const pages: Page[] = aerial
+  const pages: Page[] = !imagery
+    ? [{ key: 'area', caption: 'Neighborhood only. This is a private home' }]
+    : aerial
     ? [
         { key: 'near', caption: locationLabel(quality) },
         { key: 'wide', caption: 'The neighborhood' },
@@ -70,7 +77,9 @@ export function PlaceGallery({
       <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onMomentumScrollEnd={onEnd} scrollEnabled={pages.length > 1}>
         {pages.map((p, i) => (
           <View key={p.key} style={{ width, height }}>
-            {p.key === 'near' ? (
+            {p.key === 'area' ? (
+              <MapSnapshot lat={lat} lng={lng} zoom={14} privateHome attributionInset={bottomInset} style={{ height }} />
+            ) : p.key === 'near' ? (
               <MapSnapshot lat={lat} lng={lng} zoom={17} watched={watched} attributionInset={bottomInset} style={{ height }} />
             ) : p.key === 'wide' ? (
               <MapSnapshot lat={lat} lng={lng} zoom={15} watched={watched} smallPin attributionInset={bottomInset} style={{ height }} />

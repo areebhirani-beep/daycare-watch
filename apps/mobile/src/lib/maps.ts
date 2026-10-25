@@ -1,8 +1,18 @@
 import type { DaycareHeader } from './types';
 
-/** "123 Main St, Rockwall, TX 75087" from the state record. Directions use the address, never our geocoded point. */
+/**
+ * The state's one-line address, tidied for a maps search: "5853 HORIZON RD  ROCKWALL TX- 75032 7788" becomes
+ * "5853 HORIZON RD, ROCKWALL, TX 75032-7788". Directions use the address, never our geocoded point.
+ */
 export function addressLine(d: Pick<DaycareHeader, 'address' | 'city' | 'zip'>): string {
-  return [d.address, d.city, ['TX', d.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  const raw = (d.address ?? '').trim();
+  const city = (d.city ?? '').trim();
+  const line = raw
+    .replace(/\s+TX-?\s*/i, ', TX ')
+    .replace(/\s{2,}/, ', ')
+    .replace(/(\d{5}) (\d{4})$/, '$1-$2');
+  if (city && line.toUpperCase().includes(city.toUpperCase())) return line;
+  return [line, city, ['TX', d.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
 }
 
 /** Apple Maps directions to the address. */

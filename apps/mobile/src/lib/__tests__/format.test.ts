@@ -17,9 +17,10 @@ describe('formatLocalDay', () => {
 describe('map links', () => {
   it('route to the state record address, encoded', () => {
     const { addressLine, appleMapsUrl, googleMapsUrl } = jest.requireActual<typeof import('../maps')>('../maps');
-    const line = addressLine({ address: '1120 E Ralph Hall Pkwy', city: 'ROCKWALL', zip: '75032' });
-    expect(line).toBe('1120 E Ralph Hall Pkwy, ROCKWALL, TX 75032');
-    expect(appleMapsUrl(line)).toBe('https://maps.apple.com/?daddr=1120%20E%20Ralph%20Hall%20Pkwy%2C%20ROCKWALL%2C%20TX%2075032');
-    expect(googleMapsUrl(line)).toContain('destination=1120%20E%20Ralph%20Hall%20Pkwy');
+    // Viva World School (operation 1459611) as data.texas.gov carries it.
+    const line = addressLine({ address: '5853 HORIZON RD  ROCKWALL TX- 75032 7788', city: 'ROCKWALL', zip: '75032 7788' });
+    expect(line).toBe('5853 HORIZON RD, ROCKWALL, TX 75032-7788');
+    expect(appleMapsUrl(line)).toBe('https://maps.apple.com/?daddr=5853%20HORIZON%20RD%2C%20ROCKWALL%2C%20TX%2075032-7788');
+    expect(googleMapsUrl(line)).toContain('destination=5853%20HORIZON%20RD');
   });
 });

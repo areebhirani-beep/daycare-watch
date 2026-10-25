@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 
+import { imageryAllowed } from '@/lib/imagery';
 import { haptic, radius, space, useColors } from '@/theme';
 
 import { Glyph } from './Glyph';
@@ -13,6 +14,8 @@ type Common = {
   meta: string;
   lat: number | null;
   lng: number | null;
+  /** Required: decides whether aerial imagery may show (homes are private residences, lib/imagery). */
+  operationType: string | null;
   watched?: boolean;
   /** The 24-month record strip. Null when the row carries no per-visit summary. */
   strip?: StripVisit[] | null;
@@ -46,6 +49,7 @@ export function DaycareCard({
   meta,
   lat,
   lng,
+  operationType,
   watched,
   strip,
   fallback,
@@ -66,7 +70,7 @@ export function DaycareCard({
       style={({ pressed }) => [{ width, transform: [{ scale: pressed ? 0.98 : 1 }] }, style]}
     >
       <View style={[styles.hero, { backgroundColor: c.sunken }]}>
-        <MapSnapshot lat={lat} lng={lng} zoom={17} watched={watched} style={StyleSheet.absoluteFill} />
+        <MapSnapshot lat={lat} lng={lng} zoom={17} watched={watched} privateHome={!imageryAllowed(operationType)} style={StyleSheet.absoluteFill} />
         {onToggleWatch ? (
           <View style={styles.heroToggle}>
             <WatchToggle watched={watched} onPress={onToggleWatch} onImage />
@@ -100,6 +104,7 @@ export function PlaceRow({
   meta,
   lat,
   lng,
+  operationType,
   watched,
   strip,
   fallback,
@@ -124,7 +129,16 @@ export function PlaceRow({
       ]}
     >
       <View style={[styles.thumb, { backgroundColor: c.sunken }]}>
-        <MapSnapshot lat={lat} lng={lng} zoom={16} watched={watched} smallPin attribution="short" style={StyleSheet.absoluteFill} />
+        <MapSnapshot
+          lat={lat}
+          lng={lng}
+          zoom={16}
+          watched={watched}
+          smallPin
+          attribution="short"
+          privateHome={!imageryAllowed(operationType)}
+          style={StyleSheet.absoluteFill}
+        />
       </View>
       <View style={styles.rowBody}>
         <Text variant="headline" numberOfLines={1}>

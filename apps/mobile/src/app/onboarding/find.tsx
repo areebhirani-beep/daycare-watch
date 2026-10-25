@@ -112,6 +112,7 @@ export default function FindScreen() {
                   meta={rowMeta(d)}
                   lat={d.lat}
                   lng={d.lng}
+                  operationType={d.operation_type}
                   strip={rowStrip(d)}
                   fallback={rowFallback(d)}
                   selected={picked?.operation_id === d.operation_id}

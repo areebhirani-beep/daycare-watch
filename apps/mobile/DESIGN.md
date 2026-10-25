@@ -155,3 +155,27 @@ Sources: Fountain Institute, "7 Signs a UI Has Been Vibe Coded"; Tessl `de-llm-u
 | Five-tab bar with a floating + button | The template app shell | Three tabs (Find · Watching · Your rights), map first |
 
 What "built" looks like here: a 4/8-pt rhythm, optically centred glyphs, card shapes that vary with content, hierarchy through size and weight before color, haptics on every commit, springs on the sheet and presses, skeletons on every load, and corner radii that grow with elevation (chip 999 · thumb 12 · card 16 · stat 22 · sheet 28).
+
+## 9. Content density (owner, Oct 24)
+
+**First view of any screen = one headline, at most 3 key facts, the record strip, one primary action.** Everything else is one tap deeper. No repeated labels, no footnotes, no secondary stats in first view.
+
+| Primitive | Enforces |
+|---|---|
+| `FactChips` | Renders at most `MAX_FACTS` (3) facts, whatever it is given. Place page: type · ages · hours |
+| `Disclosure` | "More details" row. Place page Overview hides the verified-fix ring, the county bars, capacity / subsidies / permit date and tour questions behind it |
+| `StatBand` | Three counts, never more |
+| `StickyBar` | Exactly one primary action |
+
+Place page, first view: gallery · name · address (· TX-04) · 3 fact chips · Apple Maps / Google Maps / State record · tabs · strip · 3 counts · "Watch this daycare".
+
+## 10. Location imagery (integrator rules, Oct 24 11:15 pm)
+
+| Daycare | Hero | Thumbs / cards | Caption |
+|---|---|---|---|
+| Licensed Center, geocode `state` / `exact` / unknown | `PlaceGallery`: Esri aerial z17 → z15 → Apple 3D flyover (pitch 60), dots, swipe | Esri aerial, pin | "Location from the state record" / "Placed from the street address" / "Area around the address" |
+| Licensed Center, geocode `non_exact` | Plain muted map with pin, no aerial | Esri aerial | "Approximate location (address matched with corrections)" |
+| Any home type (Licensed / Registered Child-Care Home, Listed Family Home), or unknown type | Grey Esri street canvas, zoom ≤ 14, ~400 m area circle, **no pin, no photo, no flyover** | Same grey canvas, circle, no pin | "Neighborhood only. This is a private home" |
+
+`lib/imagery.ts` (`imageryAllowed`) is the single test; `DaycareCard` / `PlaceRow` require `operationType` so no caller can skip it. Credit shows on every image: "Imagery © Esri, Maxar", "Map © Esri, HERE, Garmin, OSM", or "© Esri" on thumbnails. An aerial never claims to show the building.
+

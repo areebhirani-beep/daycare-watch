@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { useState } from 'react';
 import { type LayoutChangeEvent, StyleSheet, View, type ViewStyle } from 'react-native';
 
-import { useColors } from '@/theme';
+import { useColors, useIsDark } from '@/theme';
 
 import { MapPin } from './MapPin';
 import { Text } from './Text';
@@ -12,8 +12,20 @@ import { Text } from './Text';
 // Tiles are fetched one zoom level deeper and drawn at half size, so they stay sharp on retina screens.
 const TILE = 128;
 
-function tileUrl(z: number, x: number, y: number): string {
-  return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
+// Home daycares are private residences (CONTRACT data rules, Oct 24; callers decide with lib/imagery):
+// never aerial imagery, never a pin on the house. A grey street map at neighborhood zoom with an area circle.
+const HOME_MAX_ZOOM = 14;
+const AREA_RADIUS_M = 400;
+
+type Base = 'imagery' | 'light' | 'dark';
+const BASE_PATH: Record<Base, string> = {
+  imagery: 'World_Imagery',
+  light: 'Canvas/World_Light_Gray_Base',
+  dark: 'Canvas/World_Dark_Gray_Base',
+};
+
+function tileUrl(base: Base, z: number, x: number, y: number): string {
+  return `https://server.arcgisonline.com/ArcGIS/rest/services/${BASE_PATH[base]}/MapServer/tile/${z}/${y}/${x}`;
 }
 
 function project(lat: number, lng: number, z: number): { x: number; y: number } {
@@ -39,6 +51,8 @@ type Props = {
   attribution?: boolean | 'short';
   /** Lifts the credit above anything that overlaps the bottom of the image (the place page's head card). */
   attributionInset?: number;
+  /** A private residence: street map, zoom capped at 14, area circle, no pin. */
+  privateHome?: boolean;
   style?: ViewStyle;
 };
 
@@ -52,9 +66,13 @@ export function MapSnapshot({
   smallPin = false,
   attribution = true,
   attributionInset = 0,
+  privateHome = false,
   style,
 }: Props) {
   const c = useColors();
+  const isDark = useIsDark();
+  const base: Base = privateHome ? (isDark ? 'dark' : 'light') : 'imagery';
+  if (privateHome) zoom = Math.min(zoom, HOME_MAX_ZOOM);
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
@@ -74,7 +92,7 @@ export function MapSnapshot({
       for (let ty = Math.floor(top / TILE); ty <= Math.floor((top + size.h) / TILE); ty++) {
         if (ty < 0 || ty >= max) continue;
         const wx = ((tx % max) + max) % max;
-        tiles.push({ key: `${z}/${wx}/${ty}`, uri: tileUrl(z, wx, ty), left: tx * TILE - left, top: ty * TILE - top });
+        tiles.push({ key: `${base}/${z}/${wx}/${ty}`, uri: tileUrl(base, z, wx, ty), left: tx * TILE - left, top: ty * TILE - top });
       }
     }
   }
@@ -95,7 +113,21 @@ export function MapSnapshot({
           style={{ position: 'absolute', left: t.left, top: t.top, width: TILE, height: TILE }}
         />
       ))}
-      {has && size && showPin ? (
+      {has && size && privateHome ? (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.area,
+            (() => {
+              // Points per metre at this latitude and zoom, so the circle is a true ~400 m area.
+              const metersPerPoint = (156543.03392 * Math.cos((lat * Math.PI) / 180)) / 2 ** zoom / (TILE / 128) / 2;
+              const r = Math.max(18, Math.min(AREA_RADIUS_M / metersPerPoint, Math.min(size.w, size.h) * 0.42));
+              return { width: r * 2, height: r * 2, borderRadius: r, left: size.w / 2 - r, top: size.h * pinY - r, borderColor: c.ink, backgroundColor: c.scrim };
+            })(),
+          ]}
+        />
+      ) : null}
+      {has && size && showPin && !privateHome ? (
         <View style={[styles.pin, { top: size.h * pinY - 20, left: size.w / 2 - 20 }]} pointerEvents="none">
           <MapPin watched={watched} selected={!smallPin} />
         </View>
@@ -107,7 +139,7 @@ export function MapSnapshot({
             style={attribution === 'short' ? { fontSize: 7, lineHeight: 9, color: '#FFFFFF' } : { fontSize: 9, lineHeight: 12, color: '#FFFFFF' }}
             maxFontSizeMultiplier={1}
           >
-            {attribution === 'short' ? '© Esri' : 'Imagery © Esri, Maxar'}
+            {attribution === 'short' ? '© Esri' : privateHome ? 'Map © Esri, HERE, Garmin, OSM' : 'Imagery © Esri, Maxar'}
           </Text>
         </View>
       ) : null}
@@ -117,6 +149,7 @@ export function MapSnapshot({
 
 const styles = StyleSheet.create({
   root: { overflow: 'hidden' },
+  area: { position: 'absolute', borderWidth: 2, opacity: 0.55 },
   pin: { position: 'absolute', width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   attr: { position: 'absolute', right: 6, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: 'rgba(0,0,0,0.55)' },
   attrShort: { position: 'absolute', right: 3, paddingHorizontal: 3, borderRadius: 3, backgroundColor: 'rgba(0,0,0,0.55)' },

@@ -13,9 +13,10 @@ OUT="$(cd "$(dirname "$0")/.." && pwd)/tests/fixtures/real_rows.psql"
 
 # Viva World School (Rockwall, census exact, 5853 Horizon Rd), one KinderCare, one licensed center with a
 # non-exact geocode (Bethel Early Learning Center), and the daycares behind the
-# six TX-04 visits district_recent_visits returns when today is 2026-10-25.
-OPS="1459611,94796,94225,507034,1442993,1515820,1512927,929797,1385267"
-ACTS="903901052,903982555,904007385,904006573,903908160,903966727"
+# six TX-04 visits district_recent_visits returns when today is 2026-10-25, and one daycare (245451) whose newest
+# activity is its own self-report (904024902) after an inspection (903884663).
+OPS="1459611,94796,94225,507034,1442993,1515820,1512927,929797,1385267,245451"
+ACTS="903901052,903982555,904007385,904006573,903908160,903966727,904024902,903884663"
 
 mkdir -p "$(dirname "$OUT")"
 docker exec -i "$DB_CONTAINER" psql -U postgres -X -q -At -v ON_ERROR_STOP=1 > "$OUT" <<SQL

@@ -2,7 +2,9 @@
 -- Van Alstyne; 1366137 Princeton Montessori; both from supabase/seed.sql).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(44);
+-- Real records the asserts below name, so they hold on a fresh clone too (rolled back with the test).
+\ir fixtures/real_rows.psql
+select plan(46);
 
 insert into auth.users (id, aud, role) values
   ('00000000-0000-4000-8000-00000000000a', 'authenticated', 'authenticated'),
@@ -48,8 +50,14 @@ select ok(
        from jsonb_array_elements(public.daycare_record(1471156) -> 'findings') f) b on b.n = a.n + 1),
   'findings are newest first');
 select ok(jsonb_array_length(public.daycare_record(1471156) -> 'inspections') > 0, 'inspections present');
-select ok(public.daycare_record(1471156) -> 'inspections' -> 0 ?& array['activity_id', 'date', 'type', 'violation_found'],
+select ok(public.daycare_record(1471156) -> 'inspections' -> 0 ?& array['activity_id', 'date', 'type', 'self_report', 'violation_found'],
   'inspection has every key');
+select is((select i -> 'self_report' from jsonb_array_elements(public.daycare_record(245451) -> 'inspections') i
+            where (i ->> 'activity_id')::bigint = 904024902), 'true'::jsonb,
+          'the daycare''s own report is marked self_report (245451, May 4 2026)');
+select is((select i -> 'self_report' from jsonb_array_elements(public.daycare_record(245451) -> 'inspections') i
+            where (i ->> 'activity_id')::bigint = 903884663), 'false'::jsonb,
+          'a state inspection is not a self-report (null in the source becomes false)');
 select is(public.daycare_record(1471156) ->> 'official_url',
   'https://childcare.hhs.texas.gov/Public/OperationDetails?operationId=1471156', 'official link');
 select ok(public.daycare_record(1471156) ->> 'last_checked_at' is not null, 'last_checked_at comes from ops.sync_runs');

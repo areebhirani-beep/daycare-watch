@@ -42,10 +42,22 @@ appId: com.areebhirani.daycare-watch
 - tapOn:
     text: "^Allow$"
     optional: true
+    retryTapIfNoChange: false
+# The Allow button sits over the done screen's daycare card, and in the simulator the tap can reach the card
+# too, which opens that daycare's record. Either way, go on to the map.
 - extendedWaitUntil:
-    visible: "See its record"
+    visible: "See its record|Watching · alerts.*"
     timeout: 15000
-- tapOn: "Explore the map"
+- runFlow:
+    when:
+      visible: "Explore the map"
+    commands:
+      - tapOn: "Explore the map"
+- runFlow:
+    when:
+      visible: "Watching · alerts.*"
+    commands:
+      - tapOn: "Back"
 - extendedWaitUntil:
     visible: "Search daycares, cities, ZIP"
     timeout: 30000

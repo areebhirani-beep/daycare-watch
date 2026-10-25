@@ -1,0 +1,43 @@
+# Filming check, after _release-watch-viva.yaml leaves the app on Viva World School's place page: the photo
+# carousel, the record, then Your rights. Paced like a person so the recording shows every transition.
+appId: com.areebhirani.daycare-watch
+---
+- waitForAnimationToEnd
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- waitForAnimationToEnd
+- swipe:
+    start: 15%, 15%
+    end: 90%, 15%
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element: "Ask about these on your tour"
+    direction: DOWN
+- waitForAnimationToEnd
+- scroll
+- waitForAnimationToEnd
+- tapOn: "Back"
+# The place was opened from search, so Back returns there first.
+- runFlow:
+    when:
+      visible: "Cancel"
+    commands:
+      - tapOn: "Cancel"
+- extendedWaitUntil:
+    visible: "Daycares near you"
+    timeout: 15000
+- waitForAnimationToEnd
+- tapOn: "Your rights"
+- extendedWaitUntil:
+    visible: "Drop in any time they.re open"
+    timeout: 10000
+- waitForAnimationToEnd
+- scroll
+- waitForAnimationToEnd
+- tapOn: "Find"
+- waitForAnimationToEnd

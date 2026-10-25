@@ -109,7 +109,7 @@ Every number below is inside TX-04 by map point (PostGIS point-in-polygon agains
 | `geo.districts` | id | TX-04 polygon (Census TIGER CD119) |
 | `ops.sync_runs` | run_id | stage counts, join rate, newest source date, ok, error |
 
-The app calls only the RPC functions pinned in CONTRACT.md section 4.1 (`daycares_near`, `daycare_record`, `area_compare`, `district_pulse`, `alert_detail`, …). It never touches raw tables. `core.*` is read-only to clients, and `app.*` is guarded by row-level security.
+The app calls only the RPC functions in [`supabase/migrations/20261024210500_rpc.sql`](../supabase/migrations/20261024210500_rpc.sql) and later migrations (`daycares_near`, `daycare_record`, `area_compare`, `district_pulse`, `alert_detail`, …). It never touches raw tables. `core.*` is read-only to clients, and `app.*` is guarded by row-level security.
 
 ## 7. Guardrails
 - It never says safe, unsafe, a score, or a grade. It shows what the state found, when, and whether it was fixed.

@@ -14,7 +14,7 @@ OPERATIONS = "bc5r-88dy"
 ACTIVITIES = "m5q4-3y3d"
 VIOLATIONS = "tqgd-mf4x"
 
-# CONTRACT section 3: daycare operation types. Foster and residential types are out of scope.
+# In-scope daycare operation types (docs/DATA.md). Foster and residential types are out of scope.
 IN_SCOPE_TYPES = frozenset(
     {
         "Licensed Center",

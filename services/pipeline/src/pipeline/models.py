@@ -1,4 +1,4 @@
-"""Stage 2, validate: the data contract (CONTRACT.md section 3) as pydantic models.
+"""Stage 2, validate: the data contract (docs/DATA.md) as pydantic models.
 
 Every source row passes through one of these models. An unknown risk level, a missing
 required field, or an unparseable date raises, and the run fails rather than loading a guess.

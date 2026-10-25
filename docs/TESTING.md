@@ -12,7 +12,6 @@ Every number below came from running the command next to it on **Oct 25 2026**. 
 | Mobile unit (Jest) | **37 tests in 7 suites, all pass** | `cd apps/mobile && npx jest` |
 | Mobile end-to-end (Maestro) | 11 flows, including the full find-to-alert journey and the largest accessibility text size | `maestro test apps/mobile/e2e/journey-find-watch.yaml` |
 | Mobile static checks | `tsc --noEmit`, ESLint | `npm run typecheck --prefix apps/mobile` |
-| Everything at once | the team's gate | `harness/bin/check` |
 
 ## What the tests guard
 

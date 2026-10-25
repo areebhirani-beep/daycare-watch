@@ -31,7 +31,7 @@ EXPO_RECEIPTS = "https://exp.host/--/api/v2/push/getReceipts"
 BATCH = 100
 RECEIPT_BATCH = 1000
 
-# Alert copy, agreed with mobile (CONTRACT 4.2). Plain statements of what the state posted.
+# Alert copy, agreed with the app's alert screen. Plain statements of what the state posted.
 NEW_FINDINGS = "The state posted {n} new {noun} from a visit on {date}. Tap to read what inspectors wrote."
 FLAG_COPY: dict[str, tuple[str, str]] = {
     "corrective_action": ("The state placed this daycare under corrective action.",

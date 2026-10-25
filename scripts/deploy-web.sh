@@ -26,6 +26,11 @@ trap 'git -C "$ROOT" worktree remove --force "$work/src" >/dev/null 2>&1 || true
 git -C "$ROOT" worktree add -q --detach "$work/src" HEAD
 # An APFS clone of the installed packages: seconds, and no network install.
 cp -Rc "$ROOT/node_modules" "$work/src/node_modules" 2>/dev/null || cp -R "$ROOT/node_modules" "$work/src/node_modules"
+# npm nests a package in the app's own node_modules when its version differs from the root's.
+if [ -d "$ROOT/apps/mobile/node_modules" ]; then
+  cp -Rc "$ROOT/apps/mobile/node_modules" "$work/src/apps/mobile/node_modules" 2>/dev/null \
+    || cp -R "$ROOT/apps/mobile/node_modules" "$work/src/apps/mobile/node_modules"
+fi
 APP="$work/src/apps/mobile"
 
 echo "== export web build from $SHA"

@@ -45,9 +45,9 @@ Every row passes a pydantic data contract before it is loaded ([`models.py`](../
 | Risk level of the rule | `standard_risk_level` | `risk_level` | The state's own weight for the rule: High, Medium High, Medium, Medium Low, Low. It rates the rule, not the daycare |
 | Rule | `standard_number_description` | `standard_code`, `standard_title` | Split at the first " - " |
 | The inspector's words | `narrative` | `narrative` | Verbatim |
-| Fixed during the visit | `corrected_at_inspection` | `corrected_at_inspection` | |
-| Fix due date | `corrected_date` | `corrected_date` | Shown as a due date. Many fall in the future, so it is never shown as "fixed" |
-| State checked the fix | `date_correction_verified` | `verified_date` | Only this, or a fix during the visit, earns "Fixed" |
+| Fixed during the visit | `corrected_at_inspection` | `corrected_at_inspection` | Shown as "Fixed during the visit" |
+| Fix due date | `corrected_date` | `corrected_date` | 124 fall in the future, so it is a due date, never proof of a fix: "Fix due <date>" or "Fix date was <date>", each with "no state check on record yet" on the finding |
+| State checked the fix | `date_correction_verified` | `verified_date` | "Fixed · the state checked <date>" (list rows: "Fixed · state checked"). Only this, or a fix during the visit, earns the word "Fixed", and never on its own |
 | Help given by the inspector | `technical_assistance_given` | `technical_assistance` | |
 | Came from an investigation | `activity_type = REPORT` on the joined visit | `via_investigation` | |
 

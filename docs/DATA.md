@@ -26,7 +26,7 @@ Every row passes a pydantic data contract before it is loaded ([`models.py`](../
 | Accepts subsidies | `accepts_child_care_subsidies` | `accepts_subsidies` | `Y` / `N` |
 | Permit | `type_of_issuance`, `issuance_date` | `issuance_type`, `issuance_date` | |
 | Permit status (active or inactive) | `operation_status` | `operation_status` | A change sends an alert |
-| Corrective action · adverse action · temporarily closed · conditions on permit | `corrective_action`, `adverse_action`, `temporarily_closed`, `conditions_on_permit` | same names | `YES` / `NO`; a change sends an alert. Plain-English meanings are quoted in [`OFFICIAL_SOURCES.md`](OFFICIAL_SOURCES.md) §6 |
+| Corrective action · adverse action · temporarily closed · conditions on permit | `corrective_action`, `adverse_action`, `temporarily_closed`, `conditions_on_permit` | same names | `YES` / `NO`; a change sends an alert. What the app says for each, and the official meanings, are in [`OFFICIAL_SOURCES.md`](OFFICIAL_SOURCES.md) §6 |
 | "State record" link | `operation_id` | `operation_id` | `https://childcare.hhs.texas.gov/Public/OperationDetails?operationId=<id>` |
 
 ## A visit (`core.inspections`)

@@ -6,7 +6,7 @@
  ┌──────────────┐   ┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
  │ 1. FIND      │──▶│ 2. READ          │──▶│ 3. WATCH         │──▶│ 4. ACT           │
  │ Map + search │   │ The state record │   │ "Watch this      │   │ Rights request   │
- │ near me / in │   │ in plain English │   │  daycare" → push │   │ Tour questions   │
+ │ near me / in │   │ made easy to read│   │  daycare" → push │   │ Tour questions   │
  │ the district │   │ + inspector note │   │  alerts on new   │   │ Report a concern │
  └──────────────┘   └──────────────────┘   │  state findings  │   └──────────────────┘
                                            └──────────────────┘

@@ -4,7 +4,9 @@
 
 # Daycare Watch
 
-**See what Texas state inspectors found at a daycare, in plain English, and get an alert when the state posts something new.**
+**Find the right daycare for your family.**
+
+See what Texas inspectors found at any daycare, and get a heads-up when they post something new.
 
 ### [Try it: daycare-watch.vercel.app](https://daycare-watch.vercel.app)
 No sign-in. Real Texas state records. Works on any phone or computer.
@@ -31,7 +33,7 @@ The app never calls a daycare safe or unsafe, and never scores, grades, or ranks
 
 1. Open **[daycare-watch.vercel.app](https://daycare-watch.vercel.app)** on any phone or computer.
 2. Search a name, city, or ZIP in TX-04, for example `Montessori`, `Rockwall`, or `75034`.
-3. Open a daycare: its latest state visit in plain English, each finding with the inspector's own words, and a link to the official state record.
+3. Open a daycare: what the state found at its latest visit, each finding with the inspector's own words, and a link to the official state record.
 4. Scroll a little to the tabs under the daycare's name and tap **Your rights**: the three requests Texas law already gives parents (your child's records, a drop-in visit, incident video), written and ready to send.
 
 On the iPhone app, **Watch this daycare** turns on a push alert for the next time the state posts something about it.
@@ -55,7 +57,7 @@ flowchart LR
   APP -- "SQL functions only" --> DB
 ```
 
-The plain-English summary only shortens the inspector's first sentence; a test over all 133,739 findings in the state's file checks that it never adds a word or a number. Each stage, its guarantee, and its test are in [`docs/METHODS.md`](docs/METHODS.md).
+The one-line summary only shortens the inspector's first sentence; a test over all 133,739 findings in the state's file checks that it never adds a word or a number. Each stage, its guarantee, and its test are in [`docs/METHODS.md`](docs/METHODS.md).
 
 ## What the data shows
 

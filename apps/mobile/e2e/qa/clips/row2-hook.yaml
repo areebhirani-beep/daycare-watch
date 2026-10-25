@@ -1,0 +1,6 @@
+# Clip row 2: a cold launch to the welcome screen; the 3D view and its caption settle, no taps.
+appId: com.areebhirani.daycare-watch
+---
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 1000, optional: true }
+- launchApp
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 10000, optional: true }

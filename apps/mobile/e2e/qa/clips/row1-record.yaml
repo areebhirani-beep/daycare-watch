@@ -1,0 +1,8 @@
+# Clip row 1: the state's own record (4 s), the same visit written plainly (4 s), then the alert beat (3 s).
+appId: com.areebhirani.daycare-watch
+---
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 4000, optional: true }
+- tapOn: "^Next$"
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 4500, optional: true }
+- tapOn: "^Next$"
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 3500, optional: true }

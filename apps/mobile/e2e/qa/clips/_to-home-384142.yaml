@@ -1,0 +1,14 @@
+# From Home, open Frisco Home Child Care (384142), a licensed child-care home, by search.
+appId: com.areebhirani.daycare-watch
+---
+- tapOn: "Search daycares, cities, ZIP"
+- inputText: "Frisco Home Child Care"
+- extendedWaitUntil:
+    visible: "Frisco Home Child Care\\. .*"
+    timeout: 15000
+- hideKeyboard
+- tapOn: "Frisco Home Child Care\\. .*"
+- extendedWaitUntil:
+    visible: "Watch this daycare|Watching.*"
+    timeout: 20000
+- waitForAnimationToEnd

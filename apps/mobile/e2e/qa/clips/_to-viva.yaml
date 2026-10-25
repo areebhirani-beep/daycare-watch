@@ -1,0 +1,10 @@
+# After _to-home.yaml at the Frisco test point (which watches a daycare there), relaunch beside Viva World
+# School (1459611) so Home opens with it closest and its place page still shows "Watch this daycare".
+appId: com.areebhirani.daycare-watch
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: "Viva World School.*"
+    timeout: 30000
+- waitForAnimationToEnd

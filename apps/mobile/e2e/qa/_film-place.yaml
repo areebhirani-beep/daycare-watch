@@ -34,7 +34,7 @@ appId: com.areebhirani.daycare-watch
 - waitForAnimationToEnd
 - tapOn: "Your rights"
 - extendedWaitUntil:
-    visible: "Drop in any time they.re open"
+    visible: "Drop in any time they.re open.*"
     timeout: 10000
 - waitForAnimationToEnd
 - scroll

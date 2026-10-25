@@ -1,0 +1,13 @@
+# Fresh install to the first How it works beat, before the clip recording starts.
+appId: com.areebhirani.daycare-watch
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Get started"
+    timeout: 60000
+- tapOn: "Get started"
+- extendedWaitUntil:
+    visible: "Inspectors write down what they find.*"
+    timeout: 15000
+- waitForAnimationToEnd

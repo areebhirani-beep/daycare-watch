@@ -1,0 +1,8 @@
+# Open Viva World School's place page from Home (after _to-viva.yaml).
+appId: com.areebhirani.daycare-watch
+---
+- tapOn: "Viva World School.*"
+- extendedWaitUntil:
+    visible: "Watch this daycare"
+    timeout: 20000
+- waitForAnimationToEnd

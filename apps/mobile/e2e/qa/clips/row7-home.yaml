@@ -1,0 +1,10 @@
+# Clip row 7: a licensed child-care home's place page. The map shows an area circle and the line shows
+# the ZIP only, never the street or a photo. Hold, then one slow scroll into the record.
+appId: com.areebhirani.daycare-watch
+---
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 5000, optional: true }
+- swipe:
+    start: 50%, 75%
+    end: 50%, 45%
+    duration: 1500
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 5000, optional: true }

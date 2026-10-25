@@ -1,0 +1,6 @@
+# Wipe the app and leave it closed, so the clip can open on a cold launch.
+appId: com.areebhirani.daycare-watch
+---
+- launchApp:
+    clearState: true
+- stopApp

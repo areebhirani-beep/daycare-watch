@@ -1,0 +1,48 @@
+# Fresh install through onboarding (alerts not now) to Home, before the clip recording starts. Set the
+# simulator's location first; Home lists the daycares nearest to it.
+appId: com.areebhirani.daycare-watch
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Get started"
+    timeout: 60000
+- tapOn: "Get started"
+- extendedWaitUntil:
+    visible: "Inspectors write down what they find.*"
+    timeout: 15000
+- repeat:
+    while:
+      visible: "^Next$"
+    commands:
+      - tapOn: "^Next$"
+- tapOn:
+    text: "Find your daycare"
+    optional: true
+- extendedWaitUntil:
+    visible: "Use my location"
+    timeout: 10000
+- tapOn: "Use my location"
+- runFlow:
+    when:
+      visible: "Allow While Using App"
+    commands:
+      - tapOn: "Allow While Using App"
+- extendedWaitUntil:
+    visible: ".*, [0-9.]+ mi.*"
+    timeout: 20000
+- waitForAnimationToEnd
+- tapOn: ".*, [0-9.]+ mi.*"
+- tapOn: "Watch this daycare"
+- extendedWaitUntil:
+    visible: "Turn on alerts"
+    timeout: 10000
+- tapOn: "Not now"
+- extendedWaitUntil:
+    visible: "Explore the map"
+    timeout: 10000
+- tapOn: "Explore the map"
+- extendedWaitUntil:
+    visible: "Daycares near you"
+    timeout: 30000
+- waitForAnimationToEnd

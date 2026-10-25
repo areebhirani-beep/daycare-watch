@@ -1,0 +1,35 @@
+# Clip row 5: Home beside Viva World School (1459611) -> its place page: "3 problems found at the Oct 5
+# visit" -> Problems -> the pool gate card, "Fix due Oct 30, not yet checked". The hero goes straight to
+# the 3D view from above: Viva's street picture is Apple's name match and hasn't been checked by hand.
+appId: com.areebhirani.daycare-watch
+---
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 3000, optional: true }
+- tapOn: "Viva World School.*"
+- extendedWaitUntil:
+    visible: "Watch this daycare|Watching.*"
+    timeout: 20000
+- swipe:
+    start: 85%, 15%
+    end: 10%, 15%
+- extendedWaitUntil:
+    visible: "3D view.*"
+    timeout: 5000
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 8000, optional: true }
+# Centered, so the tab isn't under the Watch bar when it's tapped.
+- scrollUntilVisible:
+    element: "Problems [0-9]+"
+    direction: DOWN
+    speed: 30
+    centerElement: true
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 1000, optional: true }
+- tapOn: "Problems [0-9]+"
+- extendedWaitUntil:
+    visible: "Inspection · 3 problems"
+    timeout: 10000
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 1500, optional: true }
+# Lift the pool gate card clear of the Watch bar.
+- swipe:
+    start: 50%, 70%
+    end: 50%, 45%
+    duration: 1200
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 9000, optional: true }

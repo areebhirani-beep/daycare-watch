@@ -1,0 +1,34 @@
+# Clip row 6: Watch on Viva World School's page, alerts allowed, then the app goes to the background and
+# the replayed real alert for the Oct 5 visit arrives (clip.sh pushes it with PUSH/PUSH_AT); tap it and
+# hold on the alert screen.
+appId: com.areebhirani.daycare-watch
+---
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 2000, optional: true }
+- tapOn: "Watch this daycare"
+- runFlow:
+    when:
+      visible: "Turn on alerts"
+    commands:
+      - tapOn: "Turn on alerts"
+- tapOn:
+    text: "^Allow$"
+    optional: true
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible: "You’re watching Viva World School"
+    timeout: 15000
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 2500, optional: true }
+- tapOn: "Done"
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 1500, optional: true }
+- pressKey: Home
+- extendedWaitUntil:
+    visible: "Replay of a real state record.*"
+    timeout: 30000
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 2500, optional: true }
+- tapOn:
+    text: "Replay of a real state record.*"
+    index: 0
+- extendedWaitUntil:
+    visible: "Open full record"
+    timeout: 20000
+- extendedWaitUntil: { visible: "zz-hold-zz", timeout: 5000, optional: true }

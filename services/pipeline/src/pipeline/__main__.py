@@ -34,7 +34,7 @@ def main(argv: list[str] | None = None) -> int:
     replays.add_argument("--replay", type=int, metavar="NON_COMPLIANCE_ID",
                          help="resend a real past finding as a labelled replay, then exit")
     replays.add_argument("--replay-latest", type=int, metavar="OPERATION_ID",
-                         help="replay the newest real finding at this daycare, then exit")
+                         help="replay every finding from the newest visit at this daycare, then exit")
     sync.add_argument("--dry-run", action="store_true", help="do everything, then roll back; no pushes")
     sync.add_argument("--no-notify", action="store_true", help="skip sending pushes")
     sub.add_parser("backfill", help="load full history without creating alert events")

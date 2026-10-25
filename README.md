@@ -190,7 +190,7 @@ Run on Oct 25 2026. Details: [`docs/TESTING.md`](docs/TESTING.md) · every user 
 | Suite | Result | Command |
 |---|---|---|
 | Database (pgTAP): schema, row-level security, every RPC, views, photos rule, search | **177 tests in 11 files, all pass** | `supabase test db` |
-| Pipeline (pytest + hypothesis) | **264 tests, all pass (26 need the local database) · 92% coverage** | `cd services/pipeline && uv run pytest` |
+| Pipeline (pytest + hypothesis) | **266 tests, all pass (26 need the local database) · 92% coverage** | `cd services/pipeline && uv run pytest` |
 | Pipeline static checks | ruff + `mypy --strict` clean | `uv run ruff check . && uv run mypy --strict src` |
 | App unit (Jest) | **37 tests, all pass** | `cd apps/mobile && npx jest` |
 | App end-to-end (Maestro) | 11 flows, including find-to-alert and the largest text size | `maestro test apps/mobile/e2e/journey-find-watch.yaml` |

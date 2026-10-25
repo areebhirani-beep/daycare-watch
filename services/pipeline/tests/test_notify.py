@@ -203,7 +203,7 @@ def test_replay_unknown_finding_exits() -> None:
 @pytest.mark.skipif(not DB, reason="DATABASE_URL not set")
 def test_replay_latest_picks_newest_finding_at_the_daycare(capsys: pytest.CaptureFixture[str]) -> None:
     from pipeline import __main__ as cli
-    from pipeline.notify import latest_finding
+    from pipeline.notify import latest_visit_findings
 
     assert DB
     with psycopg.connect(DB) as conn:
@@ -214,17 +214,24 @@ def test_replay_latest_picks_newest_finding_at_the_daycare(capsys: pytest.Captur
         newest = conn.execute("""select max(activity_date) from core.violations where operation_id = %s""",
                               (op,)).fetchone()
         before = conn.execute("select count(*) from core.change_events").fetchone()
-    nc = latest_finding(Settings(DB, None, None), op)
+    ids = latest_visit_findings(Settings(DB, None, None), op)
     with psycopg.connect(DB) as conn:
-        picked = conn.execute("select operation_id, activity_date from core.violations where non_compliance_id = %s",
-                              (nc,)).fetchone()
-    assert newest and picked == (op, newest[0])
+        picked = conn.execute("""select distinct operation_id, activity_id, activity_date from core.violations
+                                 where non_compliance_id = any(%s)""", (ids,)).fetchall()
+        (activity_id,) = {p[1] for p in picked}
+        (on_visit,) = conn.execute("select count(*) from core.violations where activity_id = %s",
+                                   (activity_id,)).fetchone() or (0,)
+    assert newest and len(picked) == 1 and (picked[0][0], picked[0][2]) == (op, newest[0])
+    assert len(ids) == on_visit  # every finding from that visit, so the push count matches the alert screen
     try:
         cli.main(["sync", "--replay-latest", str(op), "--dry-run"])
     finally:
         structlog.reset_defaults()
     out = json.loads(capsys.readouterr().out)
-    assert out["non_compliance_id"] == nc and out["operation_id"] == op and out["dry_run"] is True
+    assert out["non_compliance_ids"] == ids and out["operation_id"] == op and out["dry_run"] is True
+    for m in out["messages"]:
+        n = len(ids)
+        assert f"posted {n} new finding{'s' if n > 1 else ''} from a visit" in m["body"]
     with psycopg.connect(DB) as conn:
         assert conn.execute("select count(*) from core.change_events").fetchone() == before
 

@@ -53,11 +53,11 @@ Run it right after section 1 step 6 (`db push`), before step 8, and before the f
 
 ## 4. Replay a real finding on the cloud (for filming)
 
-Before you start, the phone must be signed in with notifications allowed (so `register_device` has stored its token), and it must be watching the daycare you name below. `--replay-latest` picks that daycare's newest real finding by itself, and it refuses cleanly if the daycare has no findings. Example: 1459611 (Viva World School) replays finding 1022540297; 1304920 (Childrens Lighthouse of McKinney) also works.
+Before you start, the phone must be signed in with notifications allowed (so `register_device` has stored its token), and it must be watching the daycare you name below. `--replay-latest` picks that daycare's newest visit with findings by itself and replays every finding from it as one push. It refuses cleanly if the daycare has no findings. Example: 1459611 (Viva World School) replays the Oct 5 visit's three findings (1022298011, 1022378716, 1022540297); 1304920 (Childrens Lighthouse of McKinney) also works.
 
 | # | Command | What it does |
 |---|---|---|
-| 1 | `! (cd services/pipeline && export PGPASSWORD="$(security find-generic-password -s daycare-watch-db -w)" DATABASE_URL="$(cat ../../supabase/.temp/pooler-url)" && .venv/bin/python -m pipeline sync --replay-latest <OPERATION_ID> && sleep 20 && .venv/bin/python -m pipeline receipts)` | Adds a new replay event pointing at that daycare's newest real finding, sends the push, then checks Expo's delivery receipt. Expect `recipients 1`, `push_ok 1`, `push_errors 0`, then `delivered_to_provider` |
+| 1 | `! (cd services/pipeline && export PGPASSWORD="$(security find-generic-password -s daycare-watch-db -w)" DATABASE_URL="$(cat ../../supabase/.temp/pooler-url)" && .venv/bin/python -m pipeline sync --replay-latest <OPERATION_ID> && sleep 20 && .venv/bin/python -m pipeline receipts)` | Adds replay events for every finding from that daycare's newest visit (listed in `event_ids` and `non_compliance_ids`), sends them as one push, then checks Expo's delivery receipt. Expect `recipients 1`, `push_ok 1`, `push_errors 0`, then `delivered_to_provider` |
 
 Every run creates a new event, so you can re-run it for retakes. `EXPO_ACCESS_TOKEN` is not needed unless "enhanced push security" is turned on in the Expo account; leave that setting off.
 

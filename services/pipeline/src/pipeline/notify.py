@@ -251,28 +251,35 @@ returning id, operation_id, source_date
 """
 
 
-def replay(settings: Settings, non_compliance_id: int, expo: Expo | None = None,
+def replay(settings: Settings, non_compliance_id: int | Sequence[int], expo: Expo | None = None,
            dry_run: bool = False) -> dict[str, Any]:
-    """Resend a real past finding to everyone watching its daycare, labelled as a replay.
+    """Resend real past findings to everyone watching their daycare, labelled as a replay.
 
-    Each call is a new event (replays are never deduped against each other). A dry run builds the
+    Findings from one visit arrive as one push, as they would on the night the state posted them.
+    Each call makes new events (replays are never deduped against each other). A dry run builds the
     exact pushes, then rolls back: no event is kept, Expo is never called, no token is touched.
     """
+    ids = [non_compliance_id] if isinstance(non_compliance_id, int) else list(non_compliance_id)
     with connect(settings.require_db()) as conn:
         conn.execute("begin")
-        row = conn.execute(REPLAY_INSERT, (non_compliance_id,)).fetchone()
-        if row is None:
-            conn.rollback()
-            raise SystemExit(f"no finding with non_compliance_id {non_compliance_id} in core.violations")
-        event_id, operation_id, source_date = row
-        groups = pending_groups(conn, [event_id])
+        rows = []
+        for nc in ids:
+            row = conn.execute(REPLAY_INSERT, (nc,)).fetchone()
+            if row is None:
+                conn.rollback()
+                raise SystemExit(f"no finding with non_compliance_id {nc} in core.violations")
+            rows.append(row)
+        event_ids = [r[0] for r in rows]
+        _, operation_id, source_date = rows[0]
+        groups = pending_groups(conn, event_ids)
         result: dict[str, Any] = {
-            "event_id": event_id, "operation_id": operation_id, "non_compliance_id": non_compliance_id,
+            "event_id": event_ids[0], "event_ids": event_ids, "operation_id": operation_id,
+            "non_compliance_id": ids[0], "non_compliance_ids": ids,
             "source_date": source_date, "dry_run": dry_run, "recipients": len(groups),
             "messages": [{**m, "to": m["to"][:22] + "…"} for g in groups for m in g.messages()]}
         if dry_run:
             conn.rollback()
-            result["event_id"] = None
+            result["event_id"], result["event_ids"] = None, []
         else:
             conn.commit()
             result.update(send_groups(conn, expo or Expo(settings.expo_access_token), groups))
@@ -280,29 +287,34 @@ def replay(settings: Settings, non_compliance_id: int, expo: Expo | None = None,
     return result
 
 
-LATEST_FINDING = """
-select non_compliance_id from core.violations where operation_id = %s
-order by activity_date desc nulls last, non_compliance_id desc limit 1
+LATEST_VISIT_FINDINGS = """
+with newest as (
+  select activity_id from core.violations where operation_id = %(op)s
+  order by activity_date desc nulls last, non_compliance_id desc limit 1
+)
+select v.non_compliance_id from core.violations v, newest n
+where v.operation_id = %(op)s and v.activity_id is not distinct from n.activity_id
+order by v.non_compliance_id
 """
 
 
-def latest_finding(settings: Settings, operation_id: int) -> int:
-    """The newest real finding the state posted for this daycare; exits with a reason if it has none."""
+def latest_visit_findings(settings: Settings, operation_id: int) -> list[int]:
+    """Every finding from the newest visit with findings at this daycare; exits with a reason if it has none."""
     with connect(settings.require_db()) as conn:
         known = conn.execute("select 1 from core.daycares where operation_id = %s", (operation_id,)).fetchone()
-        row = conn.execute(LATEST_FINDING, (operation_id,)).fetchone()
+        rows = conn.execute(LATEST_VISIT_FINDINGS, {"op": operation_id}).fetchall()
     if known is None:
         raise SystemExit(f"no daycare with operation_id {operation_id} in core.daycares")
-    if row is None:
+    if not rows:
         raise SystemExit(f"daycare {operation_id} has no findings on record, so there is nothing real to replay; "
                          "pick a daycare with at least one finding")
-    return int(row[0])
+    return [int(r[0]) for r in rows]
 
 
 def replay_latest(settings: Settings, operation_id: int, expo: Expo | None = None,
                   dry_run: bool = False) -> dict[str, Any]:
-    """Replay the newest real finding at a daycare, so a tester can watch any daycare and get a push."""
-    return replay(settings, latest_finding(settings, operation_id), expo, dry_run)
+    """Replay the newest visit's findings at a daycare as one push, so the alert's count matches the visit."""
+    return replay(settings, latest_visit_findings(settings, operation_id), expo, dry_run)
 
 
 def receipts_now(settings: Settings, min_age_minutes: int = 0, expo: Expo | None = None) -> dict[str, Any]:

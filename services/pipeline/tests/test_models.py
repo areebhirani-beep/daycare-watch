@@ -15,6 +15,7 @@ from pipeline.models import (
     ContractError,
     Operation,
     Violation,
+    restore_lost_apostrophes,
     restore_lost_chars,
     validate_rows,
 )
@@ -133,3 +134,19 @@ def test_names_restore_only_certain_lost_characters(state_name: str, shown: str)
 @given(st.text().filter(lambda t: "?" not in t))
 def test_a_name_without_a_question_mark_is_never_changed(name: str) -> None:
     assert restore_lost_chars(name) == name
+
+
+def test_inspector_text_gets_back_only_its_lost_apostrophes(viols_raw: list[dict[str, str]]) -> None:
+    raw = {r["non_compliance_id"]: r for r in viols_raw}
+    narrative = raw["1022596137"]["narrative"]  # real record: "...scratched the child?s arm..."
+    assert "child?s arm" in narrative
+    v = Violation.model_validate(raw["1022596137"])
+    assert v.narrative == narrative.replace("child?s", "child's")
+    assert v.narrative is not None and "?" not in v.narrative  # both "?" in this record were "child?s"
+
+
+@given(st.text())
+def test_apostrophe_repair_only_ever_swaps_question_marks(text: str) -> None:
+    fixed = restore_lost_apostrophes(text)
+    assert fixed is not None and len(fixed) == len(text)
+    assert all(a == b or (a == "?" and b == "'") for a, b in zip(text, fixed, strict=True))

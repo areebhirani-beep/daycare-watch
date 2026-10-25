@@ -81,10 +81,11 @@ ReqStr = Annotated[str, Field(min_length=1)]
 # The state's file has a literal "?" where a non-ASCII character was lost in about 70 daycare
 # names. Only patterns where the lost character is certain are restored; anything else (one name
 # today) is left exactly as the state wrote it. The raw row in staging.operations is untouched.
+_LOST_APOSTROPHE = (re.compile(r"(?<=[A-Za-z])\?(?=[sS]\b)"), "'")  # "Children?s", "KID?S"
 _LOST_CHARS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r" \? "), " - "),                          # "AlphaBEST @ Allen ? Frisco": a dash
     (re.compile(r"\bO\?(?=[A-Z])"), "O'"),                # "O?Dell"
-    (re.compile(r"(?<=[A-Za-z])\?(?=[sS]\b)"), "'"),       # "Children?s", "KID?S"
+    _LOST_APOSTROPHE,
     (re.compile(r"\b(Peque)\?(?=(?:o|a|os|as)\b)"), r"\1ñ"),  # Spanish: Pequeño, Pequeñas
     (re.compile(r"\b(Trevi)\?(?=o\b)"), r"\1ñ"),          # Treviño
 ]
@@ -96,7 +97,14 @@ def restore_lost_chars(name: str) -> str:
     return name
 
 
+def restore_lost_apostrophes(text: str | None) -> str | None:
+    """The one repair made to an inspector's words: "child?s" back to "child's". Nothing else changes."""
+    return None if text is None else _LOST_APOSTROPHE[0].sub(_LOST_APOSTROPHE[1], text)
+
+
 Name = Annotated[str, Field(min_length=1), AfterValidator(restore_lost_chars)]
+Narrative = Annotated[str | None, BeforeValidator(_blank_to_none), AfterValidator(restore_lost_apostrophes)]
+RuleText = Annotated[str, Field(min_length=1), AfterValidator(restore_lost_apostrophes)]
 
 
 class _Row(BaseModel):
@@ -117,12 +125,12 @@ class Violation(_Row):
     activity_id: int
     section_id: int
     non_compliance_id: int
-    standard_number_description: ReqStr
+    standard_number_description: RuleText
     standard_risk_level: str
     corrected_at_inspection: YN
     corrected_date: SourceDate
     date_correction_verified: SourceDateOpt = None
-    narrative: StrOpt = None
+    narrative: Narrative = None
     technical_assistance_given: YESNO
 
     @field_validator("standard_risk_level")

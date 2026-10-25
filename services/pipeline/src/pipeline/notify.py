@@ -54,7 +54,9 @@ def fmt_date(d: date) -> str:
 
 
 def display_name(name: str) -> str:
-    """The name as the state lists it, title-cased only when the source is ALL CAPS."""
+    """The name as the state lists it, with runs of spaces collapsed for display, title-cased only when
+    the source is ALL CAPS. The stored name stays verbatim."""
+    name = " ".join(name.split())
     return name.title() if name.isupper() else name
 
 

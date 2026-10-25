@@ -73,6 +73,7 @@ def test_message_payload_matches_contract() -> None:
 def test_display_name_and_date() -> None:
     assert display_name("KIDS R KIDS #12") == "Kids R Kids #12"
     assert display_name("Read Institute of Texas") == "Read Institute of Texas"
+    assert display_name("Childrens Lighthouse of  McKinney") == "Childrens Lighthouse of McKinney"  # real record
     assert fmt_date(date(2026, 10, 3)) == "Oct 3, 2026"
 
 

@@ -27,15 +27,31 @@ from pipeline.notify import (
 )
 
 
-def group(kind: str, before: Any = None, after: Any = None, n: int = 1, replay: bool = False) -> Group:
+def group(kind: str, before: Any = None, after: Any = None, n: int = 1, replay: bool = False,
+          activity_type: str | None = "INSPECTION", self_report: bool | None = None) -> Group:
     return Group("u", 1206518, kind, "Tuck Street Early Education Center", list(range(1, n + 1)), replay,
-                 date(2026, 8, 12), before, after, 904 if kind == "new_violation" else None, ["ExponentPushToken[a]"])
+                 date(2026, 8, 12), before, after, 904 if kind == "new_violation" else None, ["ExponentPushToken[a]"],
+                 activity_type, self_report)
 
 
 def test_new_findings_copy_singular_and_plural() -> None:
     assert group("new_violation").body() == (
         "The state posted 1 new finding from a visit on Aug 12, 2026. Tap to read what inspectors wrote.")
     assert "posted 3 new findings" in group("new_violation", n=3).body()
+
+
+@pytest.mark.parametrize(
+    ("activity_type", "self_report", "text"),
+    [
+        ("INSPECTION", None, "from a visit on Aug 12, 2026. Tap to read what inspectors wrote."),
+        ("REPORT", True, "from the daycare's own report on Aug 12, 2026. Tap to read what the state wrote."),
+        ("REPORT", False, "from a report on Aug 12, 2026. Tap to read what the state wrote."),
+        ("ASSESSMENT", None, "from an assessment on Aug 12, 2026. Tap to read what the state wrote."),
+        (None, None, "from a state record on Aug 12, 2026. Tap to read what the state wrote."),
+    ],
+)
+def test_only_an_inspection_is_called_a_visit(activity_type: str | None, self_report: bool | None, text: str) -> None:
+    assert group("new_violation", activity_type=activity_type, self_report=self_report).body().endswith(text)
 
 
 def test_replay_is_labelled() -> None:
@@ -273,3 +289,35 @@ def test_receipts_cli_reports_latest_sends(capsys: pytest.CaptureFixture[str]) -
     finally:
         structlog.reset_defaults()  # the CLI binds structlog to pytest's captured stderr
     assert '"receipts_checked": 0' in capsys.readouterr().out
+
+
+@pytest.mark.db
+@pytest.mark.skipif(not DB, reason="DATABASE_URL not set")
+def test_a_self_report_finding_is_never_called_a_visit() -> None:
+    assert DB
+    with psycopg.connect(DB) as conn:
+        tx = conn.transaction()
+        tx.__enter__()
+        try:
+            uid = uuid.uuid4()
+            conn.execute("insert into auth.users (id, aud, role) values (%s, 'authenticated', 'authenticated')",
+                         (uid,))
+            # A real finding the daycare itself reported to the state (activity_type REPORT, self_report Y).
+            row = conn.execute("""select v.non_compliance_id, v.operation_id from core.violations v
+                                  join core.inspections i using (activity_id)
+                                  where i.activity_type = 'REPORT' and i.self_report
+                                  order by v.activity_date desc, v.non_compliance_id limit 1""").fetchone()
+            assert row
+            conn.execute("insert into app.watches (user_id, operation_id) values (%s, %s)", (uid, row[1]))
+            conn.execute("insert into app.devices (expo_push_token, user_id, platform) values "
+                         "('ExponentPushToken[self]', %s, 'ios')", (uid,))
+            (eid,) = conn.execute("""insert into core.change_events (operation_id, kind, ref_id, source_date, after)
+                                     select operation_id, 'new_violation', non_compliance_id::text, activity_date,
+                                       jsonb_build_object('activity_id', activity_id)
+                                     from core.violations where non_compliance_id = %s returning id""",
+                                  (row[0],)).fetchone() or (None,)
+            (g,) = pending_groups(conn, [eid])
+            assert (g.activity_type, g.self_report) == ("REPORT", True)
+            assert "from the daycare's own report on" in g.body() and "visit" not in g.body()
+        finally:
+            tx.__exit__(psycopg.Rollback, psycopg.Rollback(), None)

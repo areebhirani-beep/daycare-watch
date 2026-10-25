@@ -1,7 +1,8 @@
 """Stage 9, notify: change events x watchers -> Expo Push API.
 
 - Only events detected after the parent started watching, never backfill events.
-- New findings from one visit become one push per parent ("2 new findings from a visit on ...").
+- New findings from one visit become one push per parent ("2 new findings from a visit on ...");
+  findings from a report or an assessment say so, since only an inspection is a visit.
 - app.notifications (user_id, event_id) is claimed before sending, so a re-run never double-sends.
 - Tickets are checked for errors now; receipts are checked on a later run. Tokens Expo reports
   as DeviceNotRegistered are disabled.
@@ -32,7 +33,18 @@ BATCH = 100
 RECEIPT_BATCH = 1000
 
 # Alert copy, agreed with the app's alert screen. Plain statements of what the state posted.
-NEW_FINDINGS = "The state posted {n} new {noun} from a visit on {date}. Tap to read what inspectors wrote."
+NEW_FINDINGS = "The state posted {n} new {noun} from {source} on {date}. Tap to read what {who} wrote."
+
+
+def finding_source(activity_type: str | None, self_report: bool | None) -> tuple[str, str]:
+    """What the findings came from, in the state's own terms: only an INSPECTION is a visit."""
+    if activity_type == "INSPECTION":
+        return "a visit", "inspectors"
+    if activity_type == "REPORT":
+        return ("the daycare's own report" if self_report else "a report"), "the state"
+    if activity_type == "ASSESSMENT":
+        return "an assessment", "the state"
+    return "a state record", "the state"
 FLAG_COPY: dict[str, tuple[str, str]] = {
     "corrective_action": ("The state placed this daycare under corrective action.",
                           "The state lists corrective action at this daycare as ended."),
@@ -77,6 +89,8 @@ class Group:
     after: dict[str, Any] | None
     activity_id: int | None
     tokens: list[str] = field(default_factory=list)
+    activity_type: str | None = None
+    self_report: bool | None = None
 
     def body(self) -> str:
         text = self._text()
@@ -90,7 +104,9 @@ class Group:
         if self.kind == "new_violation":
             n = len(self.event_ids)
             when = fmt_date(self.source_date) if self.source_date else "a recent date"
-            return NEW_FINDINGS.format(n=n, noun="finding" if n == 1 else "findings", date=when)
+            source, who = finding_source(self.activity_type, self.self_report)
+            return NEW_FINDINGS.format(n=n, noun="finding" if n == 1 else "findings", source=source, date=when,
+                                       who=who)
         if self.kind == "status_change":
             return STATUS_COPY[str(after.get("operation_status"))]
         if self.kind == "capacity_change":
@@ -110,15 +126,17 @@ class Group:
 PENDING_SQL = """
 select w.user_id, e.id as event_id, e.operation_id, e.kind::text as kind, e.is_replay, e.source_date,
        e.before, e.after, (e.after ->> 'activity_id')::bigint as activity_id, d.name,
+       i.activity_type, i.self_report,
        array_agg(dv.expo_push_token order by dv.last_seen desc) as tokens
 from core.change_events e
 join app.watches w on w.operation_id = e.operation_id and w.created_at <= e.detected_at
 join app.devices dv on dv.user_id = w.user_id and dv.disabled_at is null
 join core.daycares d on d.operation_id = e.operation_id
+left join core.inspections i on i.activity_id = (e.after ->> 'activity_id')::bigint
 where not e.is_backfill
   and (%(event_ids)s::bigint[] is null or e.id = any(%(event_ids)s::bigint[]))
   and not exists (select 1 from app.notifications n where n.user_id = w.user_id and n.event_id = e.id)
-group by w.user_id, e.id, d.name
+group by w.user_id, e.id, d.name, i.activity_type, i.self_report
 order by e.id
 """
 
@@ -137,7 +155,7 @@ def pending_groups(conn: Conn, event_ids: Sequence[int] | None = None) -> list[G
         if g is None:
             groups[key] = Group(r["user_id"], r["operation_id"], r["kind"], r["name"], [r["event_id"]],
                                 r["is_replay"], r["source_date"], r["before"], r["after"], r["activity_id"],
-                                list(r["tokens"]))
+                                list(r["tokens"]), r["activity_type"], r["self_report"])
         else:
             g.event_ids.append(r["event_id"])
     return list(groups.values())

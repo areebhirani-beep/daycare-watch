@@ -74,7 +74,7 @@ Every number below is inside TX-04 by map point (PostGIS point-in-polygon agains
 | Time between inspections at one daycare | Median 66 days, 90th percentile 330 days | Alerts are rare for any one family, like a smoke alarm. That is correct, not a weakness |
 | Statewide table sizes | activities about 205,000 rows · violations about 134,000 rows | Small for Postgres. A full nightly download and diff is cheap |
 | How the state publishes | operations: row-level `:updated_at` changes (about 300 to 450 rows a day) · activities and violations: full reload nightly, about 09:00 UTC | Operations sync incrementally by watermark. Activities and violations sync by full download and ID + row-hash diff |
-| TX-04 Licensed Centers with a usable street photo | 34 of 209 with an exact address match | Most place pages show the map and the record without a photo, and that page has to stand on its own |
+| TX-04 Licensed Centers with a usable street photo | 13 of 209 with an exact address match (most street imagery here is dashcam looking down the road, which is not kept) | Most place pages show the map and the record without a photo, and that page has to stand on its own |
 
 **More signal from the same official source (no scraping):** beyond new violations, the operations table changes daily, so we also alert on license status changes, corrective or adverse action, temporary closure, conditions on the permit, and capacity changes. Every daycare's page also gets an area comparison, and the district gets a weekly "what inspectors found this week" pulse.
 
@@ -91,7 +91,7 @@ Every number below is inside TX-04 by map point (PostGIS point-in-polygon agains
 | 7 | **Geocode + district** | Census Geocoder for daycares without state coordinates (exact or non-exact match kept). `in_district` set by PostGIS `ST_Covers` against the TX-04 polygon; county is a fallback only and never labelled TX-04 | Real Frisco, Sherman, and Paris daycares inside, real Dallas ones outside |
 | 8 | **Aggregate** | `REFRESH MATERIALIZED VIEW` for area medians, district totals, and the weekly pulse | Totals reconcile with core |
 | 9 | **Notify** | Events × watchers → Expo Push API (batched, with receipts checked; dead tokens pruned). Dedupe key per (user, event). Replay mode labelled "Replay of a real state record from <date>". | A real push on an iPhone (verified Oct 24 2026: replay event 43, receipt delivered_to_provider). Android push needs a standalone build |
-| 10 | **Photos** | Mapillary street photos for TX-04 active Licensed Centers with an exact address match only: within 50 m, no panoramas, camera facing the building, taken after the permit date and within 6 years, at most 3. No token or a Mapillary outage never fails the run | Recorded real Mapillary answers in `fixtures/mapillary/` |
+| 10 | **Photos** | Mapillary street photos for TX-04 active Licensed Centers with an exact address match only: within 50 m, no panoramas, camera facing the building and sideways to its direction of travel (no dashcam views down the road), no repeat frames, taken after the permit date and within 6 years, at most 3. No token or a Mapillary outage never fails the run | Recorded real Mapillary answers in `fixtures/mapillary/` |
 | 11 | **Log** | `ops.sync_runs`: counts per stage, newest source date, join rate, duration, error | The app shows "Last checked with the state" |
 
 ## 6. Database (core tables)

@@ -62,7 +62,7 @@ Every row passes a pydantic data contract before it is loaded ([`models.py`](../
 | In TX-04 | The map point inside the CD119 polygon (PostGIS `ST_Covers`). The state's county field is never used to claim the district | [`load.py`](../services/pipeline/src/pipeline/load.py) |
 | Area comparison | Median findings in 24 months for the same daycare type in the same county | `core.area_medians` (materialized view) |
 | Alerts | A new finding, a permit status change, a capacity change, or a change in any enforcement flag, found by diffing each night's state files | `core.change_events`; [`load.py`](../services/pipeline/src/pipeline/load.py), [`notify.py`](../services/pipeline/src/pipeline/notify.py) |
-| Street photos | Up to 3 Mapillary images within 50 m of an exactly matched Licensed Center whose camera faces the building. A photo is kept only if it was taken on or after the daycare's permit `issuance_date` and within the last 6 years, so it shows this daycare and today's street. No panoramas | [`photos.py`](../services/pipeline/src/pipeline/photos.py) |
+| Street photos | Up to 3 Mapillary images within 50 m of an exactly matched Licensed Center whose camera faces the building and looks sideways from its direction of travel, so dashcam frames looking down the road are dropped. Frames from the same moment and angle count once. A photo is kept only if it was taken on or after the daycare's permit `issuance_date` and within the last 6 years, so it shows this daycare and today's street. No panoramas | [`photos.py`](../services/pipeline/src/pipeline/photos.py) |
 
 ## Freshness
 

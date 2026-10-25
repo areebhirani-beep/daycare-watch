@@ -128,7 +128,7 @@ flowchart TB
 | Diff | Re-running a sync creates 0 new events | Idempotency test |
 | Classify | Every finding gets a category from fixed rules on the state's rule number. The plain summary only shortens the inspector's words | `test_classify.py`, 100% coverage, checked against all 133,739 findings in the state file |
 | Notify | One push per parent per event. A replay of a real past finding is labelled "Replay of a real state record from <date>" | `test_notify.py` round trip with receipts |
-| Photos | Only Licensed Centers with an exact address match; no panoramas; camera facing the building; taken after the permit and within 6 years | `test_photos.py` on recorded real API answers |
+| Photos | Only Licensed Centers with an exact address match; no panoramas; camera facing the building and sideways to the road, never a dashcam view down it; taken after the permit and within 6 years | `test_photos.py` on recorded real API answers |
 
 More in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -149,7 +149,7 @@ More in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 | Daycares with a map point | 13,024 (577 from state coordinates, 12,447 from the Census Geocoder) |
 | Census match quality | 10,991 exact · 1,456 non-exact (address matched with corrections) |
 | Active daycares inside TX-04 by map point | at least 379 (330 exact, 28 non-exact, 21 state coordinates). 23 more fall back to county only and are never labelled TX-04 |
-| TX-04 centers with a usable street photo | 34 of 209 Licensed Centers with an exact address match |
+| TX-04 centers with a usable street photo | 13 of 209 Licensed Centers with an exact address match |
 | RPC latency, p95 on the full dataset | nearest daycares 7.5 ms · search 30 ms · daycare record 1 ms |
 
 **Inside TX-04 only** (the 379 active daycares placed in the district by map point; 13 complete weeks, Jul 20 to Oct 18 2026):
@@ -189,7 +189,7 @@ Run on Oct 25 2026. Details: [`docs/TESTING.md`](docs/TESTING.md) · every user 
 | Suite | Result | Command |
 |---|---|---|
 | Database (pgTAP): schema, row-level security, every RPC, views, photos rule, search | **177 tests in 11 files, all pass** | `supabase test db` |
-| Pipeline (pytest + hypothesis) | **244 tests, all pass · 92% coverage** | `cd services/pipeline && uv run pytest` |
+| Pipeline (pytest + hypothesis) | **255 tests, all pass · 92% coverage** | `cd services/pipeline && uv run pytest` |
 | Pipeline static checks | ruff + `mypy --strict` clean | `uv run ruff check . && uv run mypy --strict src` |
 | App unit (Jest) | **37 tests, all pass** | `cd apps/mobile && npx jest` |
 | App end-to-end (Maestro) | 11 flows, including find-to-alert and the largest text size | `maestro test apps/mobile/e2e/journey-find-watch.yaml` |
@@ -255,7 +255,7 @@ daycare-watch/
 | Next | Why |
 |---|---|
 | Android push from a standalone build | Expo Go on Android cannot receive remote pushes |
-| Nightly photo refresh as street-level coverage grows | Today 34 of 209 TX-04 centers have a recent photo facing the building |
+| Nightly photo refresh as street-level coverage grows | Today 13 of 209 TX-04 centers have a recent side view of the building |
 | Spanish | So a parent who reads Spanish first gets the same plain-English summaries and rights, in Spanish |
 | Any Texas district, not only TX-04 | The pipeline already loads the whole state; only the district boundary is TX-04 |
 | Track the federal Kairo Act (H.R. 2425) | If it becomes law, add its rights next to the Texas ones |

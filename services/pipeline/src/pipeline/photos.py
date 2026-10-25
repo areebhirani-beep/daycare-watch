@@ -4,8 +4,13 @@ Only active Licensed Centers whose point is an exact Census match and inside the
 query; home daycares and approximate points never do (daycare_record also refuses to show photos
 for them). For each center one Graph API call lists the images in a box of +-RADIUS_M around the
 point. An image is kept when it lies within RADIUS_M, is not a panorama (a flat crop of an
-equirectangular image reads as broken), and its camera points at the daycare within +-FACING_MAX.
-Up to MAX_PHOTOS are kept: those facing within +-FACING_PREFERRED first, then newest, then nearest.
+equirectangular image reads as broken), its camera points at the daycare within +-FACING_MAX, and
+the camera looks sideways from its own direction of travel (SIDEWAYS_MIN..SIDEWAYS_MAX degrees).
+Most street imagery here is dashcam: the Census point sits on the street, so a forward camera
+"faces" it while showing only the road ahead. The direction of travel comes from the same
+sequence's frames a few seconds before and after; an image with no such neighbors is not kept.
+Up to MAX_PHOTOS are kept: those facing within +-FACING_PREFERRED first, then newest, then nearest,
+skipping a frame taken within SAME_SHOT_S of a kept one and pointing within SAME_SHOT_DEG of it.
 A photo older than the daycare's permit may show a different business, and one older than
 MAX_AGE_YEARS may show a different street, so neither is kept.
 
@@ -40,7 +45,12 @@ MAX_PHOTOS = 3
 FACING_MAX = 60.0
 FACING_PREFERRED = 45.0
 MAX_AGE_YEARS = 6
+SIDEWAYS_MIN, SIDEWAYS_MAX = 45.0, 135.0
+TRACK_WINDOW_MS = 10_000
+TRACK_MIN_M, TRACK_MAX_M = 1.0, 80.0
+SAME_SHOT_S, SAME_SHOT_DEG = 60.0, 30.0
 MAX_ATTEMPTS = 4
+LIMIT = 2000  # the API's maximum; below it the same box came back as 92, 79, and 39 different images
 EARTH_M = 6_371_008.8
 
 TARGETS = """
@@ -101,23 +111,61 @@ def not_before(issuance_date: date | None, now: datetime) -> datetime:
     return oldest
 
 
+def _position(img: dict[str, Any]) -> tuple[float, float] | None:
+    geom = img.get("computed_geometry") or img.get("geometry") or {}
+    coords = geom.get("coordinates") if isinstance(geom, dict) else None
+    return (float(coords[1]), float(coords[0])) if coords else None
+
+
+def travel_heading(img: dict[str, Any], images: list[dict[str, Any]]) -> float | None:
+    """The camera's direction of travel: from the nearest-in-time frame before it to the one after.
+
+    Neighbors are frames taken within TRACK_WINDOW_MS and TRACK_MIN_M..TRACK_MAX_M away. With only
+    one side present, the image itself is the other end. None when there is no neighbor at all.
+    """
+    here, t = _position(img), img.get("captured_at")
+    if here is None or t is None:
+        return None
+    before: tuple[int, tuple[float, float]] | None = None
+    after: tuple[int, tuple[float, float]] | None = None
+    for other in images:
+        there, ot = _position(other), other.get("captured_at")
+        if other is img or there is None or ot is None:
+            continue
+        dt = int(ot) - int(t)
+        if dt == 0 or abs(dt) > TRACK_WINDOW_MS:
+            continue
+        if not TRACK_MIN_M <= distance_m(*here, *there) <= TRACK_MAX_M:
+            continue
+        if dt < 0 and (before is None or dt > before[0]):
+            before = (dt, there)
+        elif dt > 0 and (after is None or dt < after[0]):
+            after = (dt, there)
+    start = before[1] if before else here
+    end = after[1] if after else here
+    return None if start == end else bearing(*start, *end)
+
+
 def candidates(
     images: Iterable[dict[str, Any]], lat: float, lng: float, oldest: datetime | None = None
 ) -> list[Photo]:
-    """Images that show the daycare as it is: close enough, flat, facing it, and not older than `oldest`."""
+    """Images that show the daycare as it is: close, flat, facing it from the side, not older than `oldest`."""
+    images = list(images)
     out: list[Photo] = []
     for img in images:
-        geom = img.get("computed_geometry") or img.get("geometry") or {}
-        coords = geom.get("coordinates") if isinstance(geom, dict) else None
+        pos = _position(img)
         angle = img.get("computed_compass_angle", img.get("compass_angle"))
-        if img.get("is_pano") or not coords or angle is None or img.get("captured_at") is None:
+        if img.get("is_pano") or pos is None or angle is None or img.get("captured_at") is None:
             continue
-        ilng, ilat = float(coords[0]), float(coords[1])
+        ilat, ilng = pos
         dist = distance_m(ilat, ilng, lat, lng)
         if dist > RADIUS_M:
             continue
         delta = angle_delta(float(angle), bearing(ilat, ilng, lat, lng))
         if delta > FACING_MAX:
+            continue
+        heading = travel_heading(img, images)
+        if heading is None or not SIDEWAYS_MIN <= angle_delta(float(angle), heading) <= SIDEWAYS_MAX:
             continue
         captured = datetime.fromtimestamp(int(img["captured_at"]) / 1000, tz=UTC)
         if oldest is not None and captured < oldest:
@@ -126,11 +174,21 @@ def candidates(
     return out
 
 
+def _same_shot(a: Photo, b: Photo) -> bool:
+    """Frames from one pass, seconds apart, pointing the same way: the second adds nothing."""
+    return (abs((a.captured_at - b.captured_at).total_seconds()) < SAME_SHOT_S
+            and angle_delta(a.compass_angle, b.compass_angle) < SAME_SHOT_DEG)
+
+
 def choose(photos: list[Photo]) -> list[Photo]:
-    """Facing within +-FACING_PREFERRED first, then newest, then nearest; at most MAX_PHOTOS."""
+    """Facing within +-FACING_PREFERRED first, then newest, then nearest; at most MAX_PHOTOS, no repeats."""
     ranked = sorted(photos, key=lambda p: (p.facing_delta > FACING_PREFERRED, -p.captured_at.timestamp(),
                                            p.distance_m))
-    return ranked[:MAX_PHOTOS]
+    picked: list[Photo] = []
+    for p in ranked:
+        if len(picked) < MAX_PHOTOS and not any(_same_shot(p, q) for q in picked):
+            picked.append(p)
+    return picked
 
 
 class Mapillary:
@@ -139,7 +197,7 @@ class Mapillary:
         self._headers = {"Authorization": f"OAuth {token}"}
 
     def images_near(self, lat: float, lng: float) -> list[dict[str, Any]]:
-        params: dict[str, str | int] = {"bbox": bbox(lat, lng), "fields": FIELDS, "limit": 100}
+        params: dict[str, str | int] = {"bbox": bbox(lat, lng), "fields": FIELDS, "limit": LIMIT}
         for attempt in range(1, MAX_ATTEMPTS + 1):
             resp = self._http.get(GRAPH_IMAGES, params=params, headers=self._headers)
             if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_ATTEMPTS:
@@ -152,17 +210,23 @@ class Mapillary:
 
 
 class Recorded:
-    """Answers saved by `photos --record-dir`, replayed by operation_id; a center with no file was not queried."""
+    """Answers saved by `photos --record-dir`, replayed by point; a point with no file was not queried.
+
+    Centers that share an address share a point, and each saved answer for it is a partial sample,
+    so the replay is every distinct image seen at that point.
+    """
 
     def __init__(self, directory: Path) -> None:
-        self._by_point: dict[tuple[float, float], list[dict[str, Any]]] = {}
-        for path in directory.glob("*.json"):
+        self._by_point: dict[tuple[float, float], dict[str, dict[str, Any]]] = {}
+        for path in sorted(directory.glob("*.json")):
             rec = json.loads(path.read_text())
-            self._by_point[(round(rec["lat"], 7), round(rec["lng"], 7))] = list(rec["data"])
+            seen = self._by_point.setdefault((round(rec["lat"], 7), round(rec["lng"], 7)), {})
+            for img in rec["data"]:
+                seen.setdefault(str(img["id"]), img)
 
     def images_near(self, lat: float, lng: float) -> list[dict[str, Any]]:
         try:
-            return self._by_point[(round(lat, 7), round(lng, 7))]
+            return list(self._by_point[(round(lat, 7), round(lng, 7))].values())
         except KeyError:
             raise httpx.HTTPError(f"no recorded answer at {lat:.5f},{lng:.5f}") from None
 
@@ -183,6 +247,8 @@ def fill(
 ) -> dict[str, Any]:
     """Query every target, keep the best photos, and report coverage. Commits per center.
 
+    Centers at the same point (one address, several permits) share one query, so they show the same photos.
+
     A dry run queries and selects exactly the same way but writes nothing, so coverage can be
     measured on a database that has no core.daycare_photos yet.
     """
@@ -190,9 +256,11 @@ def fill(
     now = datetime.now(UTC)
     counts: dict[str, Any] = {"photos_targets": len(targets), "photos_queried": 0, "photos_failed": 0,
                               "photos_seen": 0, "photos_kept": 0, "photos_centers_with_photo": 0}
+    answers: dict[tuple[float, float], list[dict[str, Any]]] = {}
     for op, lat, lng, issued in targets:
+        key = (round(lat, 7), round(lng, 7))
         try:
-            images = api.images_near(lat, lng)
+            images = answers[key] if key in answers else answers.setdefault(key, api.images_near(lat, lng))
         except httpx.HTTPError as exc:
             counts["photos_failed"] += 1
             log.warning("photos.request_failed", operation_id=op, error=type(exc).__name__)

@@ -1,7 +1,7 @@
 """Photos: geometry, the skip-without-token path, and (with a local DB) the fill + coverage plumbing.
 
 Selection on real Mapillary images is tested against recorded API responses in fixtures/mapillary/
-once they are captured; no image record here is invented.
+(captured by the daily-sync photos run); no image record here is invented.
 """
 
 from __future__ import annotations
@@ -17,7 +17,17 @@ import psycopg
 import pytest
 
 from pipeline import photos
-from pipeline.photos import Mapillary, angle_delta, bbox, bearing, candidates, choose, distance_m, not_before
+from pipeline.photos import (
+    Mapillary,
+    angle_delta,
+    bbox,
+    bearing,
+    candidates,
+    choose,
+    distance_m,
+    not_before,
+    travel_heading,
+)
 
 RECORDED = Path(__file__).parent.parent / "fixtures" / "mapillary"
 
@@ -87,6 +97,9 @@ def test_recorded_responses_obey_the_rules(path: Path) -> None:
     for p in kept:
         assert p.distance_m <= photos.RADIUS_M and p.facing_delta <= photos.FACING_MAX
         assert not by_id[p.image_id].get("is_pano")
+        heading = travel_heading(by_id[p.image_id], rec["data"])
+        assert heading is not None
+        assert photos.SIDEWAYS_MIN <= angle_delta(p.compass_angle, heading) <= photos.SIDEWAYS_MAX
     # Preferred-facing photos always come before wider ones, newest first within each group.
     keys = [(p.facing_delta > photos.FACING_PREFERRED, -p.captured_at.timestamp()) for p in kept]
     assert keys == sorted(keys)
@@ -107,22 +120,64 @@ def test_not_before_is_the_later_of_permit_and_six_years() -> None:
     assert not_before(None, datetime(2028, 2, 29, tzinfo=UTC)) == datetime(2022, 2, 28, tzinfo=UTC)
 
 
-def test_recorded_plano_center_keeps_three_new_facing_photos() -> None:
-    rec = _recorded("241227")  # Messiah Lutheran Lambs, Plano: 42 images within the box
+def _along_road(rec: dict[str, Any], image_id: str) -> float:
+    img = next(i for i in rec["data"] if str(i["id"]) == image_id)
+    heading = travel_heading(img, rec["data"])
+    assert heading is not None
+    return angle_delta(float(img["computed_compass_angle"]), heading)
+
+
+@pytest.mark.parametrize(("op", "was_kept"), [
+    # Messiah Lutheran Lambs, Plano: the three Oct 2026 frames the facing rule alone used to keep
+    ("241227", ["1745539040910477", "1088186357444605", "1007654932346439"]),
+    # The Goddard School Frisco West: two frames 1 s apart looking straight down the street
+    ("1491391", ["25180809851546196", "1185325416404177"]),
+])
+def test_recorded_dashcam_frames_are_dropped(op: str, was_kept: list[str]) -> None:
+    rec = _recorded(op)
+    for image_id in was_kept:
+        delta = _along_road(rec, image_id)
+        assert delta < photos.SIDEWAYS_MIN or delta > photos.SIDEWAYS_MAX  # looking along the road
+    assert candidates(rec["data"], rec["lat"], rec["lng"]) == []
+
+
+def test_recorded_side_view_photos_are_kept() -> None:
+    rec = _recorded("1396589")  # The Nest School Plano: a side camera driving past on Dec 5 2023
     kept = choose(candidates(rec["data"], rec["lat"], rec["lng"], not_before(None, NOW)))
-    assert [p.image_id for p in kept] == ["1745539040910477", "1088186357444605", "1007654932346439"]
-    assert all(p.captured_at.date() == date(2026, 10, 17) and p.facing_delta <= 45 for p in kept)
+    assert [p.image_id for p in kept] == ["808869684405055", "794245349258249", "2412976785563492"]
+    assert all(p.captured_at.date() == date(2023, 12, 5) for p in kept)
+    assert all(photos.SIDEWAYS_MIN <= _along_road(rec, p.image_id) <= photos.SIDEWAYS_MAX for p in kept)
+
+
+def test_choose_skips_frames_from_the_same_moment_and_angle() -> None:
+    rec = _recorded("1396589")
+    every = candidates(rec["data"], rec["lat"], rec["lng"])
+    kept = choose(every)
+    assert len(every) > len(kept)  # the same pass offered more frames than it adds
+    for i, a in enumerate(kept):
+        for b in kept[i + 1:]:
+            close_in_time = abs((a.captured_at - b.captured_at).total_seconds()) < photos.SAME_SHOT_S
+            assert not (close_in_time and angle_delta(a.compass_angle, b.compass_angle) < photos.SAME_SHOT_DEG)
+
+
+def test_travel_heading_needs_a_neighbor_frame() -> None:
+    rec = _recorded("1396589")
+    lone = dict(next(i for i in rec["data"] if str(i["id"]) == "808869684405055"))
+    assert travel_heading(lone, [lone]) is None
+    assert candidates([lone], rec["lat"], rec["lng"]) == []
 
 
 def test_recorded_old_photo_is_dropped_by_age() -> None:
-    rec = _recorded("1508243")  # Frisco: its one usable photo is from Jul 2019
-    assert [p.image_id for p in choose(candidates(rec["data"], rec["lat"], rec["lng"]))] == ["147745507366382"]
+    rec = _recorded("216581")  # its only side views are from Jul 2014
+    kept = choose(candidates(rec["data"], rec["lat"], rec["lng"]))
+    assert [p.image_id for p in kept] == ["465263094805183"]
+    assert all(p.captured_at.year == 2014 for p in kept)
     assert candidates(rec["data"], rec["lat"], rec["lng"], not_before(None, NOW)) == []
 
 
 def test_recorded_photo_before_the_permit_is_dropped() -> None:
-    rec = _recorded("241227")
-    assert candidates(rec["data"], rec["lat"], rec["lng"], not_before(date(2026, 10, 18), NOW)) == []
+    rec = _recorded("1396589")
+    assert candidates(rec["data"], rec["lat"], rec["lng"], not_before(date(2023, 12, 6), NOW)) == []
 
 
 def test_recorded_panoramas_are_never_kept() -> None:
@@ -151,13 +206,15 @@ def test_fill_queries_only_exact_tx04_centers_and_reports_coverage(tmp_path: Pat
         tx = conn.transaction()
         tx.__enter__()
         try:
-            (expected,) = conn.execute(f"select count(*) from ({photos.TARGETS}) t").fetchone() or (0,)
+            (expected, points) = conn.execute(f"""select count(*), count(distinct (round(lat::numeric, 7),
+                round(lng::numeric, 7))) from ({photos.TARGETS}) t""").fetchone() or (0, 0)
             homes_or_approx = conn.execute(f"""select count(*) from ({photos.TARGETS}) t join core.daycares d
                 using (operation_id) where d.operation_type <> 'Licensed Center'
                 or d.geocode_quality <> 'exact'""").fetchone()
             assert homes_or_approx == (0,)
             counts = photos.fill(conn, api, record_dir=tmp_path)
-            assert counts["photos_targets"] == expected == len(asked) == counts["photos_queried"]
+            assert counts["photos_targets"] == expected == counts["photos_queried"]
+            assert len(asked) == len(set(asked)) == points  # one request per point, shared addresses once
             assert counts["photos_kept"] == 0 and counts["photos_failed"] == 0
             assert len(list(tmp_path.glob("*.json"))) == expected
             cov = photos.coverage(conn)
@@ -209,3 +266,16 @@ def test_recorded_answers_replay_through_fill(tmp_path: Path) -> None:
 def test_recorded_missing_point_is_a_failed_request(tmp_path: Path) -> None:
     with pytest.raises(httpx.HTTPError, match="no recorded answer"):
         photos.Recorded(tmp_path).images_near(33.15, -96.82)
+
+
+def test_recorded_shared_point_replays_every_image_seen_there(tmp_path: Path) -> None:
+    # Three permits at one address: the same box came back with 92, 79, and 39 images.
+    ops = ["1529028", "232962", "1527897"]
+    recs = [_recorded(op) for op in ops]
+    assert len({(r["lat"], r["lng"]) for r in recs}) == 1
+    union = {str(i["id"]) for r in recs for i in r["data"]}
+    for op in ops:
+        (tmp_path / f"{op}.json").write_text((RECORDED / f"{op}.json").read_text())
+    replay = photos.Recorded(tmp_path).images_near(recs[0]["lat"], recs[0]["lng"])
+    assert {str(i["id"]) for i in replay} == union
+    assert len(replay) == len(union) > max(len(r["data"]) for r in recs)

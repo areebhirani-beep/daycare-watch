@@ -7,7 +7,7 @@ Every number below came from running the command next to it on **Oct 25 2026**. 
 | Suite | Result | Command |
 |---|---|---|
 | Database (pgTAP): schema, row-level security allow and deny, every RPC, views, visits, geocode quality, photos rule, search | **177 tests in 11 files, all pass** | `supabase test db` |
-| Pipeline (pytest + hypothesis) | **244 tests, all pass · 92% line coverage** (classify 100%, load 98%, notify 92%, photos 99%) | `cd services/pipeline && DATABASE_URL=... uv run pytest --cov=pipeline` |
+| Pipeline (pytest + hypothesis) | **255 tests, all pass · 92% line coverage** (classify 100%, load 98%, notify 92%, photos 98%) | `cd services/pipeline && DATABASE_URL=... uv run pytest --cov=pipeline` |
 | Pipeline static checks | ruff clean · `mypy --strict` clean on 13 modules | `uv run ruff check . && uv run mypy --strict src` |
 | Mobile unit (Jest) | **37 tests in 7 suites, all pass** | `cd apps/mobile && npx jest` |
 | Mobile end-to-end (Maestro) | 11 flows, including the full find-to-alert journey and the largest accessibility text size | `maestro test apps/mobile/e2e/journey-find-watch.yaml` |

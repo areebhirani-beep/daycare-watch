@@ -3,7 +3,8 @@
   "operations_source": "data.texas.gov dataset bc5r-88dy (HHSC Child Care Regulation operations), snapshot services/pipeline/.cache/bc5r-88dy.csv, captured 2026-10-24",
   "coord_source": {
     "state": "lat/lng copied verbatim from the operation's location_address_geo '(lat, lng)'",
-    "census": "U.S. Census Geocoder https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?benchmark=Public_AR_Current&format=json, queried 2026-10-24 with the state-listed address_line, city, TX and 5-digit ZIP; first (only) match"
+    "census": "U.S. Census Geocoder https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?benchmark=Public_AR_Current&format=json, queried 2026-10-24 with the state-listed address_line, city, TX and 5-digit ZIP; first (only) match",
+    "privacy": "Home daycares (Listed Family Homes): street withheld and lat/lng rounded to 2 decimals (about 1 km), as the app shows them; each still lands on the same side of the boundary"
   },
   "polygon": "data/tx04_cd119.geojson",
   "points": [

@@ -610,7 +610,7 @@ function TopProblems({
       ))}
       <Pressable accessibilityRole="button" onPress={onSeeAll} style={({ pressed }) => [styles.more, pressed && { opacity: 0.6 }]}>
         <Text variant="subhead" style={{ flex: 1 }}>
-          {total > items.length ? `See all ${total} from the past 2 years` : 'See the details'}
+          {total > items.length ? `See all ${total} from the past 2\u00A0years` : 'See the details'}
         </Text>
         <Glyph name="chevronRight" size={13} color={c.textSecondary} weight="bold" />
       </Pressable>

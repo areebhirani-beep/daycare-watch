@@ -29,7 +29,7 @@ export function Disclosure({ title, detail, children }: { title: string; detail?
         <View style={{ flex: 1 }}>
           <Text variant="subhead">{title}</Text>
           {detail && !open ? (
-            <Text variant="callout" tone="secondary" numberOfLines={1}>
+            <Text variant="callout" tone="secondary" numberOfLines={2}>
               {detail}
             </Text>
           ) : null}

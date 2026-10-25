@@ -51,6 +51,16 @@ Run it right after section 1 step 6 (`db push`), before step 8, and before the f
 | 5 | `! cd apps/mobile && npx eas-cli credentials` → Android → **Google Service Account / FCM V1** → upload the service-account JSON from Firebase → Project settings → Service accounts | Lets Expo deliver pushes to Android |
 | 6 | `! cd apps/mobile && npx eas-cli build --profile preview --platform all` | TestFlight + Android internal builds (mobile owns the profiles) |
 
+## 4. Replay a real finding on the cloud (for filming)
+
+Before you start, the filming build must be signed in on the phone, with notifications allowed (so `register_device` has stored its token), and it must be watching **1304920** (Childrens Lighthouse of McKinney). Finding 1022333084 is that daycare's newest real finding (High, Sep 29 2026) and has been in the cloud since the first backfill. To watch a different daycare, ask pipeline for its newest finding id and swap it in.
+
+| # | Command | What it does |
+|---|---|---|
+| 1 | `! (cd services/pipeline && export PGPASSWORD="$(security find-generic-password -s daycare-watch-db -w)" DATABASE_URL="$(cat ../../supabase/.temp/pooler-url)" && .venv/bin/python -m pipeline sync --replay 1022333084 && sleep 20 && .venv/bin/python -m pipeline receipts)` | Adds a new replay event pointing at that real finding, sends the push, then checks Expo's delivery receipt. Expect `recipients 1`, `push_ok 1`, `push_errors 0`, then `delivered_to_provider` |
+
+Every run creates a new event, so you can re-run it for retakes. `EXPO_ACCESS_TOKEN` is not needed unless "enhanced push security" is turned on in the Expo account; leave that setting off.
+
 ## Checklist to send back to integrator
 - [ ] Project ref: ________
 - [ ] `supabase db push` ok, `supabase test db --linked` ok

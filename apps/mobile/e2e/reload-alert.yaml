@@ -1,4 +1,7 @@
 appId: com.areebhirani.daycare-watch
+# EVENT_ID: the replayed event to open (maestro test -e EVENT_ID=17 ...; journey.sh looks it up).
+env:
+  EVENT_ID: ${EVENT_ID}
 ---
 - stopApp
 - openLink: exp+daycare-watch://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081&__expo_disable_onboarding=1
@@ -10,7 +13,7 @@ appId: com.areebhirani.daycare-watch
 - extendedWaitUntil:
     visible: "Find a daycare"
     timeout: 90000
-- openLink: daycarewatch://alert/45
+- openLink: daycarewatch://alert/${EVENT_ID}
 - runFlow:
     when:
       visible: "Open"

@@ -76,11 +76,12 @@ Rows are tested cold, by someone who did not write the UI.
 
 | # | Case | Method | Status | Evidence | Owner if it fails |
 |---|---|---|---|---|---|
-| W1 | Search, desktop width (1440 px) | Chrome | PENDING | | pipeline |
-| W2 | Place page, desktop width | Chrome | PENDING | | pipeline |
-| W3 | Rights, desktop width | Chrome | PENDING | | pipeline |
-| W4 | Search, place, rights at phone width (390 px) | Chrome | PENDING | | pipeline |
-| W5 | No anonymous sign-in on web | Chrome network log (no `/auth/v1/signup`) | PENDING | | pipeline |
+| W1 | Search, desktop width (1440 px) | Chrome | FAIL (D20) | local export renders blank; deploy pending | mobile |
+| W2 | Place page, desktop width | Chrome | FAIL (D20) | local export renders blank; deploy pending | mobile |
+| W3 | Rights, desktop width | Chrome | FAIL (D20) | local export renders blank; deploy pending | mobile |
+| W4 | Search, place, rights at phone width (390 px) | Chrome | FAIL (D20) | local export renders blank; deploy pending | mobile |
+| W5 | No anonymous sign-in on web | Chrome network log (no `/auth/v1/signup`) | PENDING (needs D20) | | pipeline |
+| W6 | Web bundle carries no street-photo code or keys | `grep` of the web export for `MLY\|`, the Mapillary env var, `graph.mapillary.com`, the token value, `service_role` | PASS | all 0; control: the API URL found 1× | mobile |
 
 ## Failures filed
 
@@ -90,7 +91,7 @@ Rows are tested cold, by someone who did not write the UI.
 | D2 | U2 | mobile | 01:34 Oct 25 | [D2-location-off-label](qa/D2-location-off-label.jpg) | Med · bad-day lens · FIXED, re-tested PASS 02:16 (u01, u03) |
 | D3 | U13 | design | 01:46 Oct 25 | [D3-home-circle-centered](qa/D3-home-circle-centered.jpg) | WITHDRAWN: circle snaps to a 0.005° grid, 282 m off the house; DB now also rounds home points |
 | D4 | U16 | design | 01:46 Oct 25 | [D4-approx-caption](qa/D4-approx-caption.jpg) | Med · Apple-designer lens · FIXED, re-tested PASS 03:06 (u14-place) |
-| D5 | U12 | design | 01:46 Oct 25 | | Low · Apple-engineer lens: Esri credit shows over a blank hero before tiles load |
+| D5 | U12 | design | 01:46 Oct 25 | | Low · Apple-engineer lens: Esri credit shows over a blank hero before tiles load · FIXED 03:10 (credit renders after the first tile’s onLoad, `MapSnapshot.tsx:87-144`); on screen with tiles: credit shown (u03) |
 | D6 | M1 | mobile + design | 01:52 Oct 25 | `PlacePage.tsx:144` | Med · Apple-designer lens: Watch confirm pops to 1.05 · FIXED 01:57, verified in source |
 | D7 | M1, M2 | mobile + design | 01:52 Oct 25 | `RecordStrip.tsx:237` | Med · Apple-designer lens: ZoomIn over up to 20 dots (~960 ms) · FIXED 01:57, verified in source |
 | D8 | M2 | mobile + design | 01:52 Oct 25 | `NumberCard.tsx:78` | Low · Apple-designer lens: 700 ms ring fill · FIXED 01:57, verified in source |
@@ -105,3 +106,4 @@ Rows are tested cold, by someone who did not write the UI.
 | D17 | U12, U14 | mobile + design | 02:31 Oct 25 | [u14-zero-0](qa/u14-zero-0.jpg) | Med · parent + CAC-judge lens: 3D view (page one) has no pin; can’t tell which building · FIXED 02:33 by design (pin on the 3D view), re-tested PASS (1396589, 1459611) |
 | D18 | U30 | mobile | 02:37 Oct 25 | `maestro hierarchy` | WITHDRAWN 02:38: search pill missing only from the XCUITest snapshot at the half sheet; present at peek and on mobile’s sim |
 | D19 | M4 | design + mobile | 03:02 Oct 25 | [D19](qa/D19-reduce-motion-caption.jpg) | Med · Apple-engineer lens: under Reduce Motion the Esri still is captioned "3D view · Apple Maps", uncredited · FIXED 03:05 (final: 3D view kept, drift stopped; mobile’s gallery gate removed), re-tested PASS with pixel check |
+| D20 | W1–W4 | design (mobile backup) | 03:13 Oct 25 | | High · CAC-judge lens: the web build is blank on every route. Console: `codegenNativeComponent is not a function` (react-native-maps). `FlyoverHero.tsx:3` imports react-native-maps and has no `.web` variant; onboarding and the place page import it · OPEN |

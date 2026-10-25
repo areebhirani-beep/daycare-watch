@@ -208,7 +208,7 @@ The record is **one answer and a list of rows**, like Apple Weather's 10-day for
 
 ```
 3 problems found at the Oct 5 visit        largeTitle 28, the answer
-Fixes due Oct 30 · no state check on record yet   callout 15, grey (tail never splits)
+Fixes due Oct 30 · no state check on record yet   callout 15, grey (last three words never split)
 (◉) <the problem, in plain words>  Serious  top 2 problems: CategoryIcon 36, tag on High only
  See all 9 from the past 2 years        >
 Past 2 years

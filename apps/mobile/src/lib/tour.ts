@@ -32,7 +32,7 @@ export function buildTourQuestions(findings: Finding[], now = new Date()): TourQ
     const open = list.filter((f) => !isFixed(f)).length;
     const fact = [
       `Inspectors cited ${plural(list.length, `${categoryLabel(cat).toLowerCase()} finding`)} in the last 2 years, most recently ${formatDate(latest.date)}.`,
-      open > 0 ? `Of those, ${open} ${open === 1 ? 'is' : 'are'} not yet verified fixed by the state.` : null,
+      open > 0 ? `Of those, ${open} ${open === 1 ? 'is' : 'are'} not yet verified by the state.` : null,
     ]
       .filter(Boolean)
       .join(' ');

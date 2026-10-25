@@ -1,0 +1,46 @@
+appId: com.areebhirani.daycare-watch
+# Screens for design review: find + pin callout, record, watching, rights, alert. Light mode.
+---
+- launchApp
+- runFlow:
+    when:
+      visible: "Skip"
+    commands:
+      - tapOn: "Skip"
+- extendedWaitUntil:
+    visible: "Name, city, or ZIP"
+    timeout: 20000
+- extendedWaitUntil:
+    visible: ".*\\. Last state visit .*"
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/screens/light-find
+- tapOn:
+    point: "47%,34%"
+- runFlow:
+    when:
+      visible: "Open the record"
+    commands:
+      - waitForAnimationToEnd
+      - takeScreenshot: ../../harness/state/screens/light-find-callout
+      - tapOn: "Close"
+- openLink: daycarewatch://daycare/1459611
+- extendedWaitUntil:
+    visible: "The record, last.*"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ../../harness/state/screens/light-record-1
+- scroll
+- takeScreenshot: ../../harness/state/screens/light-record-2
+- openLink: daycarewatch://watching
+- extendedWaitUntil:
+    visible: ".*\\. Latest: .*"
+    timeout: 20000
+- takeScreenshot: ../../harness/state/screens/light-watching
+- openLink: daycarewatch://rights
+- extendedWaitUntil:
+    visible: "Send a request"
+    timeout: 10000
+- takeScreenshot: ../../harness/state/screens/light-rights
+- scroll
+- takeScreenshot: ../../harness/state/screens/light-rights-2

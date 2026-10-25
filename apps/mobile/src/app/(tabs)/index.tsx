@@ -1,31 +1,37 @@
-import { Camera, type CameraRef, GeoJSONSource, Layer, Map } from '@maplibre/maplibre-react-native';
+import { router } from 'expo-router';
 import * as Location from 'expo-location';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, StyleSheet, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DaycareListRow } from '@/components/DaycareListRow';
 import { Icon } from '@/components/Icon';
 import { ListSkeleton } from '@/components/Skeleton';
 import { T } from '@/components/T';
-import { LastChecked, Rule } from '@/components/ui';
-import { useDaycareSearch, useDaycaresNear, useMyWatches } from '@/lib/api';
-import { plural } from '@/lib/format';
+import { Button, LastChecked, Rule } from '@/components/ui';
+import { RecordStrip, StripSkeleton, stripFromRecord } from '@/components/ui/RecordStrip';
+import { SectionHead, Serif } from '@/components/ui/Serif';
+import { useDaycareRecord, useDaycareSearch, useDaycaresNear, useMyWatches } from '@/lib/api';
+import { operationTypeLabel, plural, tidyCase } from '@/lib/format';
+import { isExpoGo } from '@/lib/runtime';
 import type { DaycareRow } from '@/lib/types';
-import { font, minTap, radius, space, TAB_BAR_CLEARANCE, type as typeScale, useColors, useIsDark } from '@/theme';
+import { font, minTap, radius, space, TAB_BAR_CLEARANCE, type as typeScale, useColors } from '@/theme';
+
+// Expo Go has no MapLibre: there, Find is the list alone. The module is required only when it can load.
+const DaycareMap: typeof import('@/components/DaycareMap').DaycareMap | null = isExpoGo
+  ? null
+  : // eslint-disable-next-line @typescript-eslint/no-require-imports
+    (require('@/components/DaycareMap') as typeof import('@/components/DaycareMap')).DaycareMap;
 
 // Default view when location is off: Rockwall, inside TX-04. Camera only, not data.
 const DEFAULT_CENTER = { lat: 32.9312, lng: -96.4597 };
-const STYLE_LIGHT = 'https://tiles.openfreemap.org/styles/positron';
-const STYLE_DARK = 'https://tiles.openfreemap.org/styles/dark';
 
 export default function FindScreen() {
   const c = useColors();
-  const isDark = useIsDark();
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
-  const camera = useRef<CameraRef>(null);
+  const [picked, setPicked] = useState<DaycareRow | null>(null);
   const searching = query.trim().length >= 2;
 
   useEffect(() => {
@@ -43,7 +49,6 @@ export default function FindScreen() {
   const watches = useMyWatches();
   const watchedIds = useMemo(() => new Set(watches.data?.map((d) => d.operation_id)), [watches.data]);
 
-  const shape = useMemo(() => toGeoJSON(near.data ?? [], watchedIds), [near.data, watchedIds]);
   const list = searching ? search.data : near.data;
   const loading = searching ? search.isPending : near.isPending;
 
@@ -69,34 +74,15 @@ export default function FindScreen() {
         </View>
       </View>
 
-      {!searching ? (
+      {!searching && DaycareMap ? (
         <View style={[styles.mapWrap, { borderColor: c.hairline }]}>
-          <Map
-            style={StyleSheet.absoluteFill}
-            mapStyle={isDark ? STYLE_DARK : STYLE_LIGHT}
-            logo={false}
-            attribution
-            attributionPosition={{ bottom: 6, right: 6 }}
-            accessibilityLabel={`Map of ${plural(near.data?.length ?? 0, 'daycare')} near you. The list below has the same daycares.`}
-          >
-            <Camera
-              ref={camera}
-              initialViewState={{ center: [DEFAULT_CENTER.lng, DEFAULT_CENTER.lat], zoom: 10 }}
-              {...(center ? { center: [center.lng, center.lat] as [number, number], zoom: 11.5, duration: 0 } : {})}
-            />
-            <GeoJSONSource id="daycares" data={shape}>
-              <Layer
-                id="pins"
-                type="circle"
-                paint={{
-                  'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 3, 13, 6],
-                  'circle-color': ['case', ['get', 'watched'], c.mapPinWatched, c.mapPin],
-                  'circle-stroke-color': c.surface,
-                  'circle-stroke-width': 1.5,
-                }}
-              />
-            </GeoJSONSource>
-          </Map>
+          <DaycareMap
+            rows={near.data ?? []}
+            watchedIds={watchedIds}
+            center={center}
+            fallbackCenter={DEFAULT_CENTER}
+            onPick={setPicked}
+          />
         </View>
       ) : null}
 
@@ -110,11 +96,11 @@ export default function FindScreen() {
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={
           <View style={styles.listHeader}>
-            <T variant="caption" tone="secondary" accessibilityRole="header">
-              {searching
-                ? `${plural(list?.length ?? 0, 'match', 'matches')}`.toUpperCase()
-                : 'NEAREST FIRST'}
-            </T>
+            <SectionHead
+              first
+              title={searching ? 'Matches' : 'Near you'}
+              aside={list ? plural(list.length, searching ? 'match' : 'daycare', searching ? 'matches' : 'daycares') : undefined}
+            />
           </View>
         }
         ListEmptyComponent={
@@ -136,22 +122,55 @@ export default function FindScreen() {
           </View>
         }
       />
+      {picked && !searching ? <PinCallout d={picked} onClose={() => setPicked(null)} /> : null}
     </View>
   );
 }
 
-function toGeoJSON(rows: DaycareRow[], watched: Set<number>): GeoJSON.FeatureCollection {
-  return {
-    type: 'FeatureCollection',
-    features: rows
-      .filter((d) => d.lat != null && d.lng != null)
-      .map((d) => ({
-        type: 'Feature',
-        id: d.operation_id,
-        geometry: { type: 'Point', coordinates: [d.lng as number, d.lat as number] },
-        properties: { operation_id: d.operation_id, watched: watched.has(d.operation_id) },
-      })),
-  };
+/** The card a pin opens: name, place, and the daycare's own record strip. Paper, hairline, no shadow. */
+function PinCallout({ d, onClose }: { d: DaycareRow; onClose: () => void }) {
+  const c = useColors();
+  const record = useDaycareRecord(d.operation_id);
+  const name = tidyCase(d.name);
+  const place = [
+    operationTypeLabel(d.operation_type),
+    tidyCase(d.city),
+    d.distance_km != null ? `${(d.distance_km * 0.621371).toFixed(1)} mi` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  return (
+    <View
+      style={[styles.callout, { backgroundColor: c.bg, borderTopColor: c.hairline }]}
+      accessibilityViewIsModal
+    >
+      <View style={styles.calloutHead}>
+        <View style={{ flex: 1, gap: space.xxs }}>
+          <Serif variant="heading" accessibilityRole="header" numberOfLines={2}>
+            {name}
+          </Serif>
+          <T variant="footnote" tone="secondary" numberOfLines={1}>
+            {place}
+          </T>
+        </View>
+        <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={styles.close}>
+          <Icon name="close" size={14} color={c.textSecondary} weight="semibold" />
+        </Pressable>
+      </View>
+      {record.data ? (
+        <RecordStrip visits={stripFromRecord(record.data)} variant="compact" showKey={false} labels />
+      ) : (
+        <StripSkeleton variant="compact" />
+      )}
+      <Button
+        label="Open the record"
+        onPress={() => {
+          onClose();
+          router.push(`/daycare/${d.operation_id}`);
+        }}
+      />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -173,6 +192,19 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
   },
+  callout: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: space.xl,
+    paddingTop: space.lg,
+    paddingBottom: TAB_BAR_CLEARANCE - space.xl,
+    gap: space.md,
+  },
+  calloutHead: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  close: { width: minTap, height: minTap, alignItems: 'center', justifyContent: 'center', marginTop: -space.sm, marginRight: -space.md },
   listHeader: { paddingHorizontal: space.xl, paddingTop: space.xl, paddingBottom: space.xs },
   empty: { paddingHorizontal: space.xl, paddingVertical: space.lg },
 });

@@ -2,5 +2,5 @@ appId: com.areebhirani.daycare-watch
 ---
 - tapOn: "Open"
 - extendedWaitUntil:
-    visible: "WHAT INSPECTORS FOUND"
+    visible: "The record, last.*"
     timeout: 20000

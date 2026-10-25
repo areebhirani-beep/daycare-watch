@@ -2,7 +2,8 @@ import * as WebBrowser from 'expo-web-browser';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 
 import { T } from '@/components/T';
-import { RowLink, Rule, SectionLabel, Surface } from '@/components/ui';
+import { RowLink, Rule } from '@/components/ui';
+import { SectionHead } from '@/components/ui/Serif';
 import { space, useColors } from '@/theme';
 
 // Every number and URL here is a verified row in docs/OFFICIAL_SOURCES.md section 1 (Oct 24 2026).
@@ -20,28 +21,28 @@ export default function ReportScreen() {
       </T>
 
       <View style={styles.section}>
-        <SectionLabel>A child is in danger right now</SectionLabel>
-        <Surface>
-          <RowLink title="Call 911" detail="Emergencies and life-threatening situations" onPress={() => void Linking.openURL('tel:911')} />
-        </Surface>
+        <SectionHead title="A child is in danger right now" first />
+        <RowLink flush title="Call 911" detail="Emergencies and life-threatening situations" onPress={() => void Linking.openURL('tel:911')} />
       </View>
 
       <View style={styles.section}>
-        <SectionLabel>Suspected abuse or neglect</SectionLabel>
-        <Surface>
+        <SectionHead title="Suspected abuse or neglect" />
+        <View>
           <RowLink
+            flush
             title="Texas Abuse Hotline"
             detail="1-800-252-5400 · 24 hours a day, 7 days a week"
             onPress={() => void Linking.openURL(`tel:${HOTLINE}`)}
           />
-          <Rule inset={space.xl} />
+          <Rule />
           <RowLink
+            flush
             title="Report online"
             detail="TxAbuseHotline.org · not for urgent situations"
             external
             onPress={() => void WebBrowser.openBrowserAsync(HOTLINE_WEB)}
           />
-        </Surface>
+        </View>
         <T variant="footnote" tone="tertiary">
           The state does not accept anonymous abuse or neglect reports. Deaf or hard of hearing callers can use Relay
           Texas at 7-1-1.
@@ -49,21 +50,23 @@ export default function ReportScreen() {
       </View>
 
       <View style={styles.section}>
-        <SectionLabel>A daycare isn&rsquo;t following the rules</SectionLabel>
-        <Surface>
+        <SectionHead title="A daycare isn’t following the rules" />
+        <View>
           <RowLink
+            flush
             title="Child Care Regulation report form"
             detail="Texas Health and Human Services"
             external
             onPress={() => void WebBrowser.openBrowserAsync(CCR_FORM)}
           />
-          <Rule inset={space.xl} />
+          <Rule />
           <RowLink
+            flush
             title="Local Child Care Regulation office"
             detail="Plano · 469-229-6900 ext. 6901 · weekdays"
             onPress={() => void Linking.openURL(`tel:${PLANO_OFFICE}`)}
           />
-        </Surface>
+        </View>
         <T variant="footnote" tone="tertiary">
           The online form asks for your name. To report anonymously, call your local Child Care Regulation office. The
           form is not for abuse or neglect; use the hotline above.
@@ -75,5 +78,5 @@ export default function ReportScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: space.xl, gap: space.md, paddingBottom: space.section },
-  section: { gap: space.sm, paddingTop: space.md },
+  section: { gap: space.sm },
 });

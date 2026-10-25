@@ -59,8 +59,10 @@ type AlertData = { event_id?: number | string; operation_id?: number | string };
 
 function openFromNotification(n: Notifications.Notification) {
   const data = n.request.content.data as AlertData | undefined;
-  if (data?.event_id != null) router.push(`/alert/${data.event_id}`);
-  else if (data?.operation_id != null) router.push(`/daycare/${data.operation_id}`);
+  if (data?.event_id != null) {
+    const params = data.operation_id != null ? `?operationId=${data.operation_id}` : '';
+    router.push(`/alert/${data.event_id}${params}`);
+  } else if (data?.operation_id != null) router.push(`/daycare/${data.operation_id}`);
 }
 
 /** Opens the alert detail when a parent taps a push, including a cold start from the push. */

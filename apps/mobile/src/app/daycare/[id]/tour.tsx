@@ -35,13 +35,13 @@ export default function TourScreen() {
       {questions.map((q, i) => (
         <View key={i}>
           {i > 0 ? <Rule /> : null}
-          <View style={styles.q} accessible accessibilityLabel={`${q.fact ? `${q.fact} ` : ''}Ask: ${q.question} ${q.followUp ?? ''}`}>
+          <View style={styles.q} accessible accessibilityLabel={`Ask: ${q.question} ${q.fact ?? ''} ${q.followUp ?? ''}`}>
+            <T variant="headline">{q.question}</T>
             {q.fact ? (
               <T variant="footnote" tone="secondary">
                 {q.fact}
               </T>
             ) : null}
-            <T variant="headline">{q.question}</T>
             {q.followUp ? (
               <T variant="callout" tone="secondary">
                 {q.followUp}

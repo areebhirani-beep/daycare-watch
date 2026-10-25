@@ -1,15 +1,14 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Icon } from '@/components/Icon';
 import { T } from '@/components/T';
-import { RowLink, Rule, SectionLabel, Surface } from '@/components/ui';
+import { RowLink, Rule } from '@/components/ui';
+import { InspectorQuote, SectionHead } from '@/components/ui/Serif';
 import { useDaycareRecord } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
 import { FEDERAL_NOTE, LAW_CITE, LAW_NAME, LAW_SCOPE, requestText, type RequestKind, RIGHTS } from '@/lib/rights';
-import { minTap, space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
+import { space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
 
 const REQUESTS: { kind: RequestKind; title: string; detail: string }[] = [
   { kind: 'records', title: 'Request records', detail: 'Your child’s records, inspection reports, policies, training' },
@@ -30,9 +29,10 @@ export default function RightsScreen() {
   }
 
   return (
+    // The inset sits on the screen, not the content, so scrolled text never runs under the status bar.
     <ScrollView
-      style={{ backgroundColor: c.bg }}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + space.md }]}
+      style={{ backgroundColor: c.bg, marginTop: insets.top }}
+      contentContainerStyle={[styles.content, { paddingTop: space.md }]}
     >
       <View style={{ gap: space.sm }}>
         <T variant="largeTitle" accessibilityRole="header">
@@ -44,12 +44,13 @@ export default function RightsScreen() {
       </View>
 
       <View style={styles.section}>
-        <SectionLabel>{daycare ? `Send a request to ${daycare}` : 'Send a request'}</SectionLabel>
-        <Surface>
+        <SectionHead title={daycare ? `Send a request to ${daycare}` : 'Send a request'} first />
+        <View>
           {REQUESTS.map((r, i) => (
             <View key={r.kind}>
-              {i > 0 ? <Rule inset={space.xl} /> : null}
+              {i > 0 ? <Rule /> : null}
               <RowLink
+                flush
                 title={r.title}
                 detail={r.detail}
                 accessibilityHint="Opens the share sheet with a ready-to-send letter citing the law"
@@ -57,35 +58,33 @@ export default function RightsScreen() {
               />
             </View>
           ))}
-        </Surface>
+        </View>
         <T variant="footnote" tone="tertiary">
           Each opens a letter that cites {LAW_CITE}. Fill in the bracketed parts, then send by text or email.
         </T>
       </View>
 
       <View style={styles.section}>
-        <SectionLabel>What the law says</SectionLabel>
+        <SectionHead title="What the law says" />
         {RIGHTS.map((r) => (
           <RightRow key={r.id} title={r.title} plain={r.plain} quote={r.quote} clause={r.clause} />
         ))}
       </View>
 
       <View style={styles.section}>
-        <SectionLabel>Something wrong?</SectionLabel>
-        <Surface>
-          <RowLink title="Report a concern to the state" detail="Official Texas channels" onPress={() => router.push('/report')} />
-        </Surface>
+        <SectionHead title="Something wrong?" />
+        <RowLink flush title="Report a concern to the state" detail="Official Texas channels" onPress={() => router.push('/report')} />
       </View>
 
       <View style={styles.section}>
-        <SectionLabel>About the law</SectionLabel>
+        <SectionHead title="About the law" />
         <T variant="footnote" tone="secondary">
           {LAW_NAME}, {LAW_CITE}. {LAW_SCOPE}
         </T>
       </View>
 
       <View style={styles.section}>
-        <SectionLabel>In Congress</SectionLabel>
+        <SectionHead title="In Congress" />
         <T variant="callout" tone="secondary">
           {FEDERAL_NOTE}
         </T>
@@ -95,47 +94,19 @@ export default function RightsScreen() {
 }
 
 function RightRow({ title, plain, quote, clause }: { title: string; plain: string; quote: string; clause: string }) {
-  const c = useColors();
-  const [open, setOpen] = useState(false);
   return (
     <View style={styles.right}>
       <T variant="headline">{title}</T>
       <T variant="callout" tone="secondary">
         {plain}
       </T>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-        accessibilityLabel={open ? 'Hide the law’s wording' : 'Read the law’s wording'}
-        onPress={() => setOpen((v) => !v)}
-        style={styles.toggle}
-      >
-        <T variant="subhead" tone="accent">
-          The law&rsquo;s words
-        </T>
-        <View style={{ transform: [{ rotate: open ? '180deg' : '0deg' }] }}>
-          <Icon name="chevronDown" size={12} color={c.accent} weight="semibold" />
-        </View>
-      </Pressable>
-      {open ? (
-        <View style={[styles.quote, { backgroundColor: c.sunken, borderLeftColor: c.border }]}>
-          <T variant="callout" selectable>
-            &ldquo;{quote}&rdquo;
-          </T>
-          <T variant="footnote" tone="secondary">
-            {LAW_CITE}
-            {clause}
-          </T>
-        </View>
-      ) : null}
+      <InspectorQuote text={quote} source={`${LAW_CITE}${clause}`} label="The law’s words" />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: space.xl, paddingBottom: TAB_BAR_CLEARANCE },
-  section: { paddingTop: space.xxl, gap: space.sm },
-  right: { paddingVertical: space.sm, gap: space.xxs },
-  toggle: { minHeight: minTap, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, alignSelf: 'flex-start' },
-  quote: { borderLeftWidth: 3, borderRadius: 6, padding: space.md, gap: space.xs },
+  section: { gap: space.md },
+  right: { paddingVertical: space.sm, gap: space.xs },
 });

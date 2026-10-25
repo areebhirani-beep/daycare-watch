@@ -1,20 +1,39 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { FindingRow } from '@/components/FindingRow';
+import { Icon } from '@/components/Icon';
 import { RecordSkeleton } from '@/components/Skeleton';
 import { T } from '@/components/T';
-import { Button, LastChecked, RowLink, Rule, SectionLabel, Surface } from '@/components/ui';
+import { Button, LastChecked, RowLink, Rule, Surface } from '@/components/ui';
+import { SectionHead, Serif } from '@/components/ui/Serif';
 import { useAlertDetail } from '@/lib/api';
 import { formatCheckedAt, formatDate, RISK_EXPLAINER, tidyCase } from '@/lib/format';
 import type { AlertDetail } from '@/lib/types';
-import { space, useColors } from '@/theme';
+import { minTap, space, useColors } from '@/theme';
 
 /** What the state posted → when → what it means → what you can do. */
 export default function AlertScreen() {
-  const { eventId } = useLocalSearchParams<{ eventId: string }>();
+  const { eventId, operationId } = useLocalSearchParams<{ eventId: string; operationId?: string }>();
   const c = useColors();
   const alert = useAlertDetail(Number(eventId));
+
+  // alert_detail returns null for an event this phone can't see: it no longer watches the daycare, or the event is gone.
+  if (alert.isSuccess && !alert.data) {
+    return (
+      <View style={[styles.content, { flex: 1, backgroundColor: c.bg }]}>
+        <T variant="headline">This alert isn&rsquo;t available on this phone.</T>
+        <T variant="callout" tone="secondary">
+          Alerts open only for daycares this phone watches. The daycare&rsquo;s full state record is still public.
+        </T>
+        {operationId ? (
+          <Button label="See the daycare’s record" onPress={() => router.replace(`/daycare/${operationId}`)} />
+        ) : null}
+        <Button label="Go to Watching" kind="secondary" onPress={() => router.replace('/watching')} />
+      </View>
+    );
+  }
 
   if (!alert.data) {
     return (
@@ -36,9 +55,9 @@ export default function AlertScreen() {
   return (
     <ScrollView style={{ backgroundColor: c.bg }} contentContainerStyle={styles.content}>
       {a.is_replay ? (
-        <View style={[styles.replay, { borderColor: c.border }]}>
+        <View style={[styles.replay, { borderLeftColor: c.accent }]}>
           <T variant="footnote" tone="secondary">
-            Replay of a real state record{a.finding ? ` from ${formatDate(a.finding.date)}` : ''}. Shown to demonstrate alerts.
+            Replay of a real state record{a.finding ? ` from ${formatDate(a.finding.date)}` : ''}, shown to demonstrate alerts.
           </T>
         </View>
       ) : null}
@@ -47,9 +66,9 @@ export default function AlertScreen() {
         <T variant="callout" tone="secondary">
           {name}
         </T>
-        <T variant="title" accessibilityRole="header">
+        <Serif variant="title" accessibilityRole="header">
           {headline(a)}
-        </T>
+        </Serif>
         <T variant="footnote" tone="secondary">
           Posted by Texas Health and Human Services · we saw it {formatCheckedAt(a.detected_at)}
         </T>
@@ -57,18 +76,19 @@ export default function AlertScreen() {
 
       {a.finding ? (
         <View style={styles.section}>
-          <SectionLabel>What the state posted</SectionLabel>
-          <FindingRow finding={a.finding} defaultOpen />
+          <SectionHead title="What the state posted" first />
+          <FindingRow finding={a.finding} visitDate={a.finding.date} />
         </View>
       ) : null}
 
       <View style={styles.section}>
-        <SectionLabel>What it means</SectionLabel>
+        <SectionHead title="What it means" first={!a.finding} />
         <T variant="callout">{meaning(a)}</T>
+        {a.kind === 'new_violation' ? <RiskLevels /> : null}
       </View>
 
       <View style={styles.section}>
-        <SectionLabel>What you can do</SectionLabel>
+        <SectionHead title="What you can do" />
         <Surface>
           <RowLink
             title="Ask the director about it"
@@ -94,6 +114,33 @@ export default function AlertScreen() {
 
       <LastChecked />
     </ScrollView>
+  );
+}
+
+function RiskLevels() {
+  const c = useColors();
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={{ gap: space.xs }}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        onPress={() => setOpen((v) => !v)}
+        style={styles.disclose}
+      >
+        <T variant="subhead" tone="accent">
+          More about risk levels
+        </T>
+        <View style={{ transform: [{ rotate: open ? '180deg' : '0deg' }] }}>
+          <Icon name="chevronDown" size={12} color={c.accent} weight="semibold" />
+        </View>
+      </Pressable>
+      {open ? (
+        <T variant="callout" tone="secondary">
+          {RISK_EXPLAINER}
+        </T>
+      ) : null}
+    </View>
   );
 }
 
@@ -124,7 +171,7 @@ function headline(a: AlertDetail): string {
 function meaning(a: AlertDetail): string {
   switch (a.kind) {
     case 'new_violation':
-      return `An inspector found the daycare did not meet a state rule. ${RISK_EXPLAINER} The state posts a finding only after the daycare has had due process.`;
+      return 'An inspector found the daycare did not meet a state rule. The state posts a finding only after the daycare has had due process.';
     case 'corrective_action':
       return a.after?.corrective_action
         ? 'Corrective action in Texas is probation. The state has put this daycare on probation to fix problems it found. The daycare can stay open, has to meet extra conditions, and gets inspected more often, for up to 12 months.'
@@ -146,6 +193,7 @@ function meaning(a: AlertDetail): string {
 
 const styles = StyleSheet.create({
   content: { padding: space.xl, gap: space.lg, paddingBottom: space.section },
-  section: { gap: space.sm, paddingTop: space.md },
-  replay: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 10, padding: space.md },
+  section: { gap: space.md },
+  disclose: { minHeight: minTap, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, alignSelf: 'flex-start' },
+  replay: { borderLeftWidth: 3, paddingLeft: space.md, paddingVertical: space.xxs },
 });

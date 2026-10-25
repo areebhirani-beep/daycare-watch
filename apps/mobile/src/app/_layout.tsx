@@ -1,4 +1,10 @@
 import {
+  Newsreader_400Regular,
+  Newsreader_400Regular_Italic,
+  Newsreader_500Medium,
+  Newsreader_600SemiBold,
+} from '@expo-google-fonts/newsreader';
+import {
   PublicSans_400Regular,
   PublicSans_500Medium,
   PublicSans_600SemiBold,
@@ -28,6 +34,10 @@ export default function RootLayout() {
     PublicSans_500Medium,
     PublicSans_600SemiBold,
     PublicSans_700Bold,
+    Newsreader_400Regular,
+    Newsreader_400Regular_Italic,
+    Newsreader_500Medium,
+    Newsreader_600SemiBold,
   });
 
   useEffect(() => {
@@ -65,6 +75,7 @@ export default function RootLayout() {
             }}
           >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} />
             <Stack.Screen name="daycare/[id]/watch" options={{ presentation: 'modal', title: 'Watch this daycare' }} />
             <Stack.Screen name="daycare/[id]/tour" options={{ title: 'Tour questions' }} />
             <Stack.Screen name="alert/[eventId]" options={{ title: 'New state record' }} />

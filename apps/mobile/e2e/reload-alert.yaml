@@ -17,7 +17,7 @@ appId: com.areebhirani.daycare-watch
     commands:
       - tapOn: "Open"
 - extendedWaitUntil:
-    visible: "WHAT THE STATE POSTED"
+    visible: "What the state posted"
     timeout: 20000
 - takeScreenshot: ../../harness/state/screens/alert-1-detail
 - scroll

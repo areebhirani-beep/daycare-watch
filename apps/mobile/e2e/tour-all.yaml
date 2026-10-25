@@ -31,7 +31,7 @@ appId: com.areebhirani.daycare-watch
 - takeScreenshot: ../../harness/state/screens/${MODE}-rights
 - openLink: daycarewatch://daycare/1459611
 - extendedWaitUntil:
-    visible: "WHAT INSPECTORS FOUND"
+    visible: "The record, last.*"
     timeout: 20000
 - waitForAnimationToEnd
 - takeScreenshot: ../../harness/state/screens/${MODE}-record-1
@@ -52,7 +52,7 @@ appId: com.areebhirani.daycare-watch
 - takeScreenshot: ../../harness/state/screens/${MODE}-report
 - openLink: daycarewatch://alert/45
 - extendedWaitUntil:
-    visible: "WHAT THE STATE POSTED"
+    visible: "What the state posted"
     timeout: 20000
 - waitForAnimationToEnd
 - takeScreenshot: ../../harness/state/screens/${MODE}-alert

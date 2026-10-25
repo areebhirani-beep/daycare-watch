@@ -1,0 +1,106 @@
+appId: com.areebhirani.daycare-watch
+# Design gate screens for one mode. Run through e2e/gate.sh, which sets appearance and text size.
+---
+- launchApp
+- openLink: daycarewatch://onboarding
+- extendedWaitUntil:
+    visible: "Find your daycare"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: ../../harness/state/screens/gate/${MODE}-ob1
+
+- openLink: daycarewatch://onboarding/find
+- tapOn: "Name, city, or ZIP"
+- inputText: "Rockwall"
+- extendedWaitUntil:
+    visible: ".*\\. .*Rockwall.*"
+    timeout: 15000
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: ../../harness/state/screens/gate/${MODE}-ob2
+
+- openLink: daycarewatch://onboarding/alerts?id=1459611
+- extendedWaitUntil:
+    visible: "Example alert.*"
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: ../../harness/state/screens/gate/${MODE}-ob3
+
+- openLink: daycarewatch://
+- extendedWaitUntil:
+    visible: ".*\\. Last state visit .*"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: ../../harness/state/screens/gate/${MODE}-find
+- runFlow:
+    when:
+      true: ${MODE != 'xxxl'}
+    commands:
+      - tapOn:
+          point: "47%,34%"
+      - extendedWaitUntil:
+          visible: "Open the record"
+          timeout: 10000
+      - waitForAnimationToEnd:
+          timeout: 1500
+      - takeScreenshot: ../../harness/state/screens/gate/${MODE}-callout
+      - tapOn: "Close"
+
+- openLink: daycarewatch://daycare/1459611
+- extendedWaitUntil:
+    visible: "The record, last.*"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: ../../harness/state/screens/gate/${MODE}-record-top
+- scrollUntilVisible:
+    element: "What inspectors found"
+    direction: DOWN
+- scroll
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: ../../harness/state/screens/gate/${MODE}-record-findings
+
+- openLink: daycarewatch://watching
+- extendedWaitUntil:
+    visible: ".*\\. Latest: .*"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: ../../harness/state/screens/gate/${MODE}-watching
+
+- openLink: daycarewatch://rights
+- extendedWaitUntil:
+    visible: "Send a request"
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: ../../harness/state/screens/gate/${MODE}-rights
+
+- openLink: daycarewatch://alert/${EVENT_ID}
+- extendedWaitUntil:
+    visible: "What the state posted"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: ../../harness/state/screens/gate/${MODE}-alert
+
+- openLink: daycarewatch://daycare/1459611/tour
+- extendedWaitUntil:
+    visible: "Tour questions"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: ../../harness/state/screens/gate/${MODE}-tour
+
+- openLink: daycarewatch://report
+- extendedWaitUntil:
+    visible: "Call 911.*"
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: ../../harness/state/screens/gate/${MODE}-report

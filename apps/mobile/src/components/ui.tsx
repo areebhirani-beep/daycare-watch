@@ -18,8 +18,9 @@ type ButtonProps = Omit<PressableProps, 'children' | 'style'> & {
 
 export function Button({ label, kind = 'primary', icon, style, onPress, disabled, ...rest }: ButtonProps) {
   const c = useColors();
-  const bg = kind === 'primary' ? c.accent : kind === 'secondary' ? c.surface : 'transparent';
-  const fg = kind === 'primary' ? c.onAccent : c.accent;
+  // Disabled reads as inert paper rather than faded teal.
+  const bg = disabled && kind !== 'plain' ? c.sunken : kind === 'primary' ? c.accent : kind === 'secondary' ? c.surface : 'transparent';
+  const fg = disabled ? c.textTertiary : kind === 'primary' ? c.onAccent : c.accent;
   return (
     <Pressable
       accessibilityRole="button"
@@ -32,7 +33,7 @@ export function Button({ label, kind = 'primary', icon, style, onPress, disabled
       }}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: bg, opacity: disabled ? 0.5 : pressed ? 0.8 : 1 },
+        { backgroundColor: bg, opacity: pressed && !disabled ? 0.8 : 1 },
         kind === 'secondary' && { borderWidth: StyleSheet.hairlineWidth, borderColor: c.border },
         style,
       ]}
@@ -53,12 +54,15 @@ export function RowLink({
   onPress,
   external,
   accessibilityHint,
+  flush,
 }: {
   title: string;
   detail?: string;
   onPress: () => void;
   external?: boolean;
   accessibilityHint?: string;
+  /** No side padding, for rows set straight on the page under a heading rather than in a Surface. */
+  flush?: boolean;
 }) {
   const c = useColors();
   return (
@@ -67,7 +71,7 @@ export function RowLink({
       accessibilityLabel={detail ? `${title}. ${detail}` : title}
       accessibilityHint={accessibilityHint}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && { backgroundColor: c.sunken }]}
+      style={({ pressed }) => [styles.row, flush && { paddingHorizontal: 0 }, pressed && { backgroundColor: c.sunken }]}
     >
       <View style={{ flex: 1, gap: 2 }}>
         <T variant="headline">{title}</T>

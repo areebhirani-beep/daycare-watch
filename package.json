@@ -3,10 +3,16 @@
   "private": true,
   "version": "0.1.0",
   "description": "Plain-English Texas daycare inspection records and alerts for parents",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm test --workspaces --if-present"
+    "test": "npm test --workspaces --if-present",
+    "lint": "expo lint"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }

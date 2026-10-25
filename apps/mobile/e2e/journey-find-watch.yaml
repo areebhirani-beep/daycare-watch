@@ -1,0 +1,46 @@
+appId: com.areebhirani.daycare-watch
+# Find a real daycare by name, open its record, and watch it.
+# Run through e2e/journey.sh, which then delivers the replayed alert and runs alert-tap.yaml.
+---
+- launchApp
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- extendedWaitUntil:
+    visible: "Name, city, or ZIP"
+    timeout: 20000
+- tapOn: "Name, city, or ZIP"
+- inputText: "Viva World School"
+# The result row's label is "<name>. <type> · <city>. <record>"; matching it skips the text field.
+- extendedWaitUntil:
+    visible: "Viva World School\\. .*"
+    timeout: 15000
+- hideKeyboard
+- takeScreenshot: ../../harness/state/screens/journey-0-search
+- tapOn: "Viva World School\\. .*"
+- extendedWaitUntil:
+    visible: "The record, last.*"
+    timeout: 20000
+- takeScreenshot: ../../harness/state/screens/journey-1-record
+# A device that already watches this daycare shows "Watching"; otherwise walk the watch flow.
+- runFlow:
+    when:
+      visible: "My kid goes here"
+    commands:
+      - tapOn: "My kid goes here"
+      - extendedWaitUntil:
+          visible: "Turn on alerts"
+          timeout: 10000
+      - tapOn: "Turn on alerts"
+      - runFlow:
+          when:
+            visible: "Allow"
+          commands:
+            - tapOn: "Allow"
+      - extendedWaitUntil:
+          visible: "You’re watching.*"
+          timeout: 15000
+- takeScreenshot: ../../harness/state/screens/journey-2-watching
+- pressKey: Home

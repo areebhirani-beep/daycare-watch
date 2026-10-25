@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, isAuthApiError } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
 
 import { authStorage } from './storage';
@@ -24,11 +24,24 @@ AppState.addEventListener('change', (state) => {
   else supabase.auth.stopAutoRefresh();
 });
 
-/** Anonymous sign-in on first launch, so watching needs no account. */
+let verifiedUserId: string | null = null;
+
+/**
+ * Anonymous sign-in on first launch, so watching needs no account.
+ * A stored session is checked with the server once per launch: if the server no longer knows the user
+ * (database reset, or the app now points at a different project), start a fresh anonymous session
+ * instead of failing every write. Offline, the stored session is kept so cached records still open.
+ */
 export async function ensureSession(): Promise<string> {
+  if (verifiedUserId) return verifiedUserId;
   const { data } = await supabase.auth.getSession();
-  if (data.session) return data.session.user.id;
+  if (data.session) {
+    const { error } = await supabase.auth.getUser();
+    if (!error) return (verifiedUserId = data.session.user.id);
+    if (!isAuthApiError(error)) return data.session.user.id;
+    await supabase.auth.signOut({ scope: 'local' });
+  }
   const { data: signed, error } = await supabase.auth.signInAnonymously();
   if (error || !signed.user) throw error ?? new Error('Anonymous sign-in failed');
-  return signed.user.id;
+  return (verifiedUserId = signed.user.id);
 }

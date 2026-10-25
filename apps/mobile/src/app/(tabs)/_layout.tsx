@@ -1,9 +1,12 @@
+import { Redirect } from 'expo-router';
 import { NativeTabs } from 'expo-router/native-tabs';
 
+import { hasOnboarded } from '@/components/ui/onboarding';
 import { font, useColors } from '@/theme';
 
 export default function TabsLayout() {
   const c = useColors();
+  if (!hasOnboarded()) return <Redirect href="/onboarding" />;
   return (
     <NativeTabs
       backgroundColor={c.bg}
@@ -22,7 +25,8 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label>Your rights</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: 'doc.text', selected: 'doc.text.fill' }} md="description" />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="pulse">
+      {/* District pulse is cut until a replayed push lands on a real phone (CONTRACT decision log, Oct 24 6:15 pm). */}
+      <NativeTabs.Trigger name="pulse" hidden>
         <NativeTabs.Trigger.Label>This week</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="calendar" md="calendar_today" />
       </NativeTabs.Trigger>

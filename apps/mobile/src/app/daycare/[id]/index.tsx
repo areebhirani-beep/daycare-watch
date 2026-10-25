@@ -1,13 +1,16 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { Fragment } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Fragment, useRef, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, type ScrollViewInstance, StyleSheet, View } from 'react-native';
 
 import { FindingRow } from '@/components/FindingRow';
+import { Icon } from '@/components/Icon';
 import { RecordSkeleton } from '@/components/Skeleton';
 import { T } from '@/components/T';
-import { Button, LastChecked, RowLink, Rule, SectionLabel, Surface } from '@/components/ui';
-import { useAreaCompare, useDaycareRecord, useIsWatching } from '@/lib/api';
+import { Button, LastChecked, RowLink, Rule, Surface } from '@/components/ui';
+import { RecordStrip, stripFromRecord, type StripVisit } from '@/components/ui/RecordStrip';
+import { SectionHead, Serif } from '@/components/ui/Serif';
+import { useAreaCompare, useDaycareRecord, useIsWatching, useSetWatch } from '@/lib/api';
 import {
   agesLabel,
   daysLabel,
@@ -19,7 +22,7 @@ import {
 } from '@/lib/format';
 import { groupByVisit, segments, summarize, type Visit, visibleVisits, visitTypeLabel } from '@/lib/record';
 import type { AreaCompare, DaycareHeader } from '@/lib/types';
-import { space, useColors } from '@/theme';
+import { minTap, space, useColors } from '@/theme';
 
 export default function DaycareRecordScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,6 +31,18 @@ export default function DaycareRecordScreen() {
   const record = useDaycareRecord(operationId);
   const area = useAreaCompare(operationId);
   const watching = useIsWatching(operationId);
+  const setWatch = useSetWatch(operationId);
+  const scroll = useRef<ScrollViewInstance>(null);
+  // Where each visit sits in the scroll content, so a tap on the strip can bring it into view.
+  const timelineY = useRef(0);
+  const visitY = useRef(new Map<StripVisit['id'], number>());
+  const [selected, setSelected] = useState<StripVisit['id'] | null>(null);
+
+  function showVisit(id: StripVisit['id']) {
+    setSelected(id);
+    const y = visitY.current.get(id) ?? 0;
+    scroll.current?.scrollTo({ y: Math.max(0, timelineY.current + y - space.md), animated: true });
+  }
 
   if (!record.data) {
     return (
@@ -55,6 +70,7 @@ export default function DaycareRecordScreen() {
 
   return (
     <ScrollView
+      ref={scroll}
       style={{ backgroundColor: c.bg }}
       contentContainerStyle={styles.content}
       refreshControl={
@@ -65,22 +81,33 @@ export default function DaycareRecordScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <T variant="largeTitle" accessibilityRole="header">
+        <Serif variant="display" accessibilityRole="header">
           {name}
-        </T>
+        </Serif>
         <T variant="callout" tone="secondary">
           {[operationTypeLabel(daycare.operation_type), tidyCase(daycare.city)].filter(Boolean).join(' · ')}
         </T>
         <StatusNotes daycare={daycare} />
         <View style={styles.actions}>
           {watching ? (
-            <Button
-              label="Watching"
-              kind="secondary"
-              icon="check"
-              accessibilityHint="Opens watch settings"
-              onPress={() => router.push(`/daycare/${operationId}/watch`)}
-            />
+            <View style={styles.watchingRow}>
+              <Icon name="bellFill" size={16} color={c.accent} />
+              <T variant="callout" style={{ flex: 1 }}>
+                Watching · you&rsquo;ll get alerts
+              </T>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Stop watching this daycare"
+                disabled={setWatch.isPending}
+                onPress={() => setWatch.mutate(false)}
+                hitSlop={8}
+                style={styles.stop}
+              >
+                <T variant="callout" tone="accent">
+                  Stop
+                </T>
+              </Pressable>
+            </View>
           ) : (
             <Button
               label="My kid goes here"
@@ -94,18 +121,19 @@ export default function DaycareRecordScreen() {
 
       {/* Summary: counts and dates only */}
       <View style={styles.section}>
-        <SectionLabel>{`Last ${summary.months} months`}</SectionLabel>
-        <T variant="title" tabular>
-          {summary.findings === 0
-            ? 'No findings posted'
-            : `${plural(summary.findings, 'finding')} from ${plural(summary.visitsWithFindings, 'visit')}`}
-        </T>
+        <SectionHead title={`The record, last ${summary.months} months`} first />
+        <RecordStrip
+          visits={stripFromRecord(record.data)}
+          months={summary.months}
+          onPressVisit={showVisit}
+          selectedId={selected}
+        />
         <View style={styles.counts}>
           {(
             [
               [summary.visits, summary.visits === 1 ? 'state visit in total' : 'state visits in total'],
               [summary.high, summary.high === 1 ? 'finding on a High risk rule' : 'findings on High risk rules'],
-              [summary.notFixed, 'not yet verified fixed by the state'],
+              [summary.notFixed, 'not yet verified by the state'],
               [summary.repeatedRules, summary.repeatedRules === 1 ? 'rule cited more than once' : 'rules cited more than once'],
             ] as const
           )
@@ -131,8 +159,13 @@ export default function DaycareRecordScreen() {
       {area.data ? <AreaComparison area={area.data} /> : null}
 
       {/* Timeline */}
-      <View style={styles.section}>
-        <SectionLabel>What inspectors found</SectionLabel>
+      <View
+        style={styles.section}
+        onLayout={(e) => {
+          timelineY.current = e.nativeEvent.layout.y;
+        }}
+      >
+        <SectionHead title="What inspectors found" />
         {shown.length === 0 ? (
           <T variant="callout" tone="secondary">
             The state has not posted any visits for this daycare in the last five years.
@@ -142,9 +175,20 @@ export default function DaycareRecordScreen() {
             <Fragment key={seg.kind === 'quiet' ? `q${seg.visits[0]?.activity_id}` : seg.visit.activity_id}>
               {i > 0 ? <Rule /> : null}
               {seg.kind === 'quiet' ? (
-                <QuietVisits visits={seg.visits} />
+                <View
+                  onLayout={(e) => {
+                    for (const v of seg.visits) visitY.current.set(v.activity_id, e.nativeEvent.layout.y);
+                  }}
+                >
+                  <QuietVisits visits={seg.visits} />
+                </View>
               ) : (
-              <View style={styles.visit}>
+              <View
+                style={styles.visit}
+                onLayout={(e) => {
+                  visitY.current.set(seg.visit.activity_id, e.nativeEvent.layout.y);
+                }}
+              >
                 <T variant="subhead" tabular accessibilityRole="header">
                   {formatDate(seg.visit.date) || 'Date not listed by the state'}
                   <T variant="footnote" tone="secondary">
@@ -160,7 +204,7 @@ export default function DaycareRecordScreen() {
                 ) : (
                   <View style={{ gap: space.xl }}>
                     {seg.visit.findings.map((f) => (
-                      <FindingRow key={f.non_compliance_id} finding={f} />
+                      <FindingRow key={f.non_compliance_id} finding={f} visitDate={seg.visit.date} />
                     ))}
                   </View>
                 )}
@@ -178,13 +222,13 @@ export default function DaycareRecordScreen() {
 
       {/* Facts */}
       <View style={styles.section}>
-        <SectionLabel>About this daycare</SectionLabel>
+        <SectionHead title="About this daycare" />
         <Facts daycare={daycare} />
       </View>
 
       {/* Act */}
       <View style={styles.section}>
-        <SectionLabel>Before you tour or enroll</SectionLabel>
+        <SectionHead title="Before you tour or enroll" />
         <Surface>
           <RowLink
             title="Questions to ask on a tour"
@@ -270,20 +314,30 @@ function AreaComparison({ area }: { area: AreaCompare }) {
   const peers = `${plural(area.peer_count, operationTypeLabel(area.operation_type).toLowerCase())} in ${tidyCase(area.county)} County`;
   return (
     <View style={styles.section}>
-      <SectionLabel>In context</SectionLabel>
+      <SectionHead title="Compared with the county" />
+      <T variant="body" tabular>
+        <T variant="headline" tabular>
+          {area.this.findings}
+        </T>
+        {area.this.findings === 1 ? ' finding' : ' findings'} here, against a median of{' '}
+        <T variant="headline" tabular>
+          {formatMedian(area.median.findings)}
+        </T>{' '}
+        for {peers}.
+      </T>
       <T variant="callout" tone="secondary">
-        Compared with the median of {peers}, last {area.window_months} months.
+        Medians for the same type of daycare in the same county, last {area.window_months} months.
       </T>
       <View style={[styles.table, { borderColor: c.hairline }]}>
         <View style={styles.tr}>
           <T variant="caption" tone="tertiary" style={styles.tdLabel}>
             {' '}
           </T>
-          <T variant="caption" tone="secondary" style={styles.tdNum}>
-            THIS DAYCARE
+          <T variant="footnote" tone="secondary" style={styles.tdNum}>
+            This daycare
           </T>
-          <T variant="caption" tone="secondary" style={styles.tdNum}>
-            AREA MEDIAN
+          <T variant="footnote" tone="secondary" style={styles.tdNum}>
+            County median
           </T>
         </View>
         {rows.map((r) => (
@@ -291,7 +345,7 @@ function AreaComparison({ area }: { area: AreaCompare }) {
             key={r.key}
             style={[styles.tr, { borderTopColor: c.hairline, borderTopWidth: StyleSheet.hairlineWidth }]}
             accessible
-            accessibilityLabel={`${r.label}: this daycare ${area.this[r.key]}, area median ${area.median[r.key]}`}
+            accessibilityLabel={`${r.label}: this daycare ${area.this[r.key]}, county median ${formatMedian(area.median[r.key])}`}
           >
             <T variant="callout" style={styles.tdLabel}>
               {r.label}
@@ -300,13 +354,18 @@ function AreaComparison({ area }: { area: AreaCompare }) {
               {area.this[r.key]}
             </T>
             <T variant="callout" tone="secondary" tabular style={styles.tdNum}>
-              {area.median[r.key]}
+              {formatMedian(area.median[r.key])}
             </T>
           </View>
         ))}
       </View>
     </View>
   );
+}
+
+/** Medians of whole counts can land on a half (an even number of peers). */
+function formatMedian(n: number): string {
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
 function Facts({ daycare }: { daycare: DaycareHeader }) {
@@ -350,11 +409,13 @@ const styles = StyleSheet.create({
   header: { gap: space.xs + 2, paddingTop: space.sm, paddingBottom: space.xl },
   actions: { marginTop: space.md },
   notes: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 10, padding: space.md, gap: space.xs, marginTop: space.sm },
-  section: { paddingTop: space.xxl, gap: space.sm },
+  section: { gap: space.md },
+  watchingRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: minTap },
+  stop: { minHeight: minTap, minWidth: minTap, justifyContent: 'center', alignItems: 'flex-end' },
   visit: { paddingVertical: space.lg, gap: space.md },
   counts: { gap: space.xxs, paddingVertical: space.xs },
   countRow: { flexDirection: 'row', alignItems: 'baseline', gap: space.md },
-  countN: { minWidth: 28, textAlign: 'right' },
+  countN: { width: 32 },
   quiet: { paddingVertical: space.lg, gap: space.xs },
   quietRow: { flexDirection: 'row', gap: space.md },
   quietDate: { width: 118 },

@@ -38,11 +38,13 @@ export const light: Palette = {
   mapPin: '#1B1A17',
   mapPinWatched: '#1D5A54',
   risk: {
-    High: '#A3321F',
-    'Medium High': '#9C4F12',
-    Medium: '#76600F',
-    'Medium Low': '#4F5D66',
-    Low: '#625F58',
+    // Warm and dark = a higher-risk rule; cool and gray = lower. High is the darkest step so it
+    // separates under deuteranopia too. Every step clears 4.5:1 on paper, surface and sunken.
+    High: '#8A1F12',
+    'Medium High': '#A8460F',
+    Medium: '#8A6400',
+    'Medium Low': '#4D6472',
+    Low: '#6B675E',
   },
 };
 
@@ -62,11 +64,12 @@ export const dark: Palette = {
   mapPin: '#EEECE6',
   mapPinWatched: '#86CABF',
   risk: {
-    High: '#F2907C',
-    'Medium High': '#E8A566',
-    Medium: '#D6C06A',
-    'Medium Low': '#A9B6BE',
-    Low: '#A8A59D',
+    // On dark, High is the most saturated step and Low the dimmest. All clear 5:1 on bg and surface.
+    High: '#FF7B66',
+    'Medium High': '#E89A58',
+    Medium: '#CDB46A',
+    'Medium Low': '#93A9B5',
+    Low: '#928E86',
   },
 };
 
@@ -79,10 +82,32 @@ export const font = {
   bold: 'PublicSans_700Bold',
 } as const;
 
+// Newsreader (Production Type) is the record's second voice: daycare names, screen and section
+// titles, and the inspector's own words. Public Sans carries every number and every control.
+export const serifFont = {
+  regular: 'Newsreader_400Regular',
+  italic: 'Newsreader_400Regular_Italic',
+  medium: 'Newsreader_500Medium',
+  semibold: 'Newsreader_600SemiBold',
+} as const;
+
+export const serifType = {
+  display: { fontFamily: serifFont.semibold, fontSize: 34, lineHeight: 38, letterSpacing: -0.6 },
+  title: { fontFamily: serifFont.semibold, fontSize: 28, lineHeight: 32, letterSpacing: -0.4 },
+  heading: { fontFamily: serifFont.medium, fontSize: 22, lineHeight: 27, letterSpacing: -0.2 },
+  quote: { fontFamily: serifFont.italic, fontSize: 18, lineHeight: 25 },
+} as const;
+
+export type SerifStyle = keyof typeof serifType;
+
+// Big counts on the record page, always tabular so columns of numbers line up.
+export const figure = { fontFamily: font.semibold, fontSize: 28, lineHeight: 32, letterSpacing: -0.4 } as const;
+
 // Strict scale. Nothing outside these eight styles appears in the app.
 export const type = {
-  largeTitle: { fontFamily: font.bold, fontSize: 30, lineHeight: 36, letterSpacing: -0.4 },
-  title: { fontFamily: font.semibold, fontSize: 22, lineHeight: 28, letterSpacing: -0.2 },
+  // Screen and section titles speak in the serif voice; everything below them stays in Public Sans.
+  largeTitle: { fontFamily: 'Newsreader_600SemiBold', fontSize: 33, lineHeight: 37, letterSpacing: -0.5 },
+  title: { fontFamily: 'Newsreader_600SemiBold', fontSize: 24, lineHeight: 29, letterSpacing: -0.3 },
   headline: { fontFamily: font.semibold, fontSize: 17, lineHeight: 23 },
   body: { fontFamily: font.regular, fontSize: 17, lineHeight: 25 },
   callout: { fontFamily: font.regular, fontSize: 15, lineHeight: 21 },
@@ -107,7 +132,8 @@ export const space = {
 
 export const radius = { sm: 6, md: 10, lg: 14, pill: 999 } as const;
 
-export const motion = { fast: 150, base: 220 } as const;
+// Durations in ms. Entrances ease out; nothing loops; Reduce Motion turns all of it off.
+export const motion = { fast: 150, base: 220, slow: 360, stagger: 18 } as const;
 
 export const minTap = 44;
 

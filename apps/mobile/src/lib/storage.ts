@@ -1,6 +1,37 @@
-import { createMMKV } from 'react-native-mmkv';
+import { isExpoGo } from './runtime';
 
-export const storage = createMMKV({ id: 'daycare-watch' });
+type KeyValue = {
+  getString(key: string): string | undefined;
+  getBoolean(key: string): boolean | undefined;
+  set(key: string, value: string | boolean): void;
+  remove(key: string): void;
+};
+
+/** Expo Go has no MMKV: use the SQLite key-value store it does ship, through its synchronous API. */
+function sqliteStore(): KeyValue {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const kv = (require('expo-sqlite/kv-store') as typeof import('expo-sqlite/kv-store')).default;
+  return {
+    getString: (key) => kv.getItemSync(key) ?? undefined,
+    getBoolean: (key) => {
+      const v = kv.getItemSync(key);
+      return v === null ? undefined : v === 'true';
+    },
+    set: (key, value) => kv.setItemSync(key, String(value)),
+    remove: (key) => {
+      kv.removeItemSync(key);
+    },
+  };
+}
+
+function mmkvStore(): KeyValue {
+  // Required lazily so Expo Go never loads the native module.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { createMMKV } = require('react-native-mmkv') as typeof import('react-native-mmkv');
+  return createMMKV({ id: 'daycare-watch' });
+}
+
+export const storage: KeyValue = isExpoGo ? sqliteStore() : mmkvStore();
 
 /** Adapter for supabase-js auth persistence. */
 export const authStorage = {

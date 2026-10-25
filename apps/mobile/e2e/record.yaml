@@ -6,7 +6,7 @@ appId: com.areebhirani.daycare-watch
     commands:
       - tapOn: "Allow While Using App"
 - extendedWaitUntil:
-    visible: "WHAT INSPECTORS FOUND"
+    visible: "The record, last.*"
     timeout: 20000
 - takeScreenshot: ../../harness/state/screens/record-1
 - scroll

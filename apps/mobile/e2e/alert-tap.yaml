@@ -1,12 +1,23 @@
 appId: com.areebhirani.daycare-watch
 ---
+# journey.sh delivers the push after this flow starts; tap the banner while it's on screen.
 - extendedWaitUntil:
     visible: "Viva World School"
-    timeout: 10000
+    timeout: 30000
 - takeScreenshot: ../../harness/state/screens/alert-0-push
-- tapOn: "Viva World School"
+- tapOn:
+    text: "Replay of a real state record.*"
+    index: 0
+# iOS groups repeat alerts: the first tap only expands the stack, so tap the newest one again.
+- runFlow:
+    when:
+      visible: "Show less"
+    commands:
+      - tapOn:
+          text: "Replay of a real state record.*"
+          index: 0
 - extendedWaitUntil:
-    visible: "WHAT THE STATE POSTED"
+    visible: "What the state posted"
     timeout: 20000
 - takeScreenshot: ../../harness/state/screens/alert-1-detail
 - scroll

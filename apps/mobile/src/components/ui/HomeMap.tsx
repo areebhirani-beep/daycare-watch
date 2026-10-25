@@ -246,10 +246,15 @@ export function HomeMap({
     const i = featured.findIndex((x) => x.operation_id === selected);
     if (i >= 0) carousel.current?.scrollToOffset({ offset: i * (cardW + 12), animated: true });
   }, [selected]); // eslint-disable-line react-hooks/exhaustive-deps
+  // A stacked spot's list starts at its first card, wherever the carousel was.
+  useEffect(() => {
+    if (group) carousel.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [group]);
 
   const zoomInto = (k: Cluster) => {
     haptic.select();
     if (stacked(k)) {
+      setSelected(null);
       setGroup(new Set(k.rows.map((r) => r.operation_id)));
       sheetRef.current?.snapToIndex(1);
       list.current?.scrollToOffset({ offset: 0, animated: true });
@@ -278,7 +283,12 @@ export function HomeMap({
               <Text variant="callout" tone="secondary">
                 {`${listed.length} daycares at this spot`}
               </Text>
-              <Pressable accessibilityRole="button" hitSlop={12} onPress={() => setGroup(null)}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Show all daycares near you"
+                onPress={() => setGroup(null)}
+                style={styles.showAll}
+              >
                 <Text variant="callout" tone="accent">
                   Show all
                 </Text>
@@ -405,9 +415,15 @@ export function HomeMap({
                 </View>
               </Marker>
             ) : (
-              <Marker key={k.key} coordinate={{ latitude: k.lat, longitude: k.lng }} onPress={() => zoomInto(k)} tracksViewChanges={false} zIndex={3}>
+              <Marker
+                key={k.key}
+                coordinate={{ latitude: k.lat, longitude: k.lng }}
+                onPress={() => zoomInto(k)}
+                tracksViewChanges={false}
+                zIndex={group && k.rows.some((r) => group.has(r.operation_id)) ? 10 : 3}
+              >
                 <View accessible accessibilityRole="button" accessibilityLabel={`${k.rows.length} daycares here. ${stacked(k) ? 'Lists them below.' : 'Zooms in.'}`}>
-                  <ClusterBubble count={k.rows.length} />
+                  <ClusterBubble count={k.rows.length} selected={group !== null && k.rows.some((r) => group.has(r.operation_id))} />
                 </View>
               </Marker>
             ),
@@ -504,5 +520,6 @@ const styles = StyleSheet.create({
   carousel: { paddingHorizontal: space.lg, gap: 12 },
   carouselLoading: { flexDirection: 'row', gap: 12, paddingHorizontal: space.lg },
   groupRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  showAll: { minHeight: 44, minWidth: 44, justifyContent: 'center' },
   sep: { height: StyleSheet.hairlineWidth, marginLeft: space.lg + 64 + space.md },
 });

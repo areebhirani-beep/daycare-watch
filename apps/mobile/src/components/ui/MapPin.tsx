@@ -98,9 +98,11 @@ export function AreaPin({ kind = 'home', watched, selected }: { kind?: PinKind; 
 }
 
 /** A group of nearby daycares. The count is tabular and heavy, like every number in the app. */
-export function ClusterBubble({ count }: { count: number }) {
-  const size = count >= 100 ? 52 : count >= 10 ? 44 : 38;
-  return (
+/** Selected = the spot the sheet is listing: 1.15x, with a text-color ring a 2 pt gap outside the white border. */
+export function ClusterBubble({ count, selected }: { count: number; selected?: boolean }) {
+  const c = useColors();
+  const size = Math.round((count >= 100 ? 52 : count >= 10 ? 44 : 38) * (selected ? 1.15 : 1));
+  const disc = (
     <View
       accessible
       accessibilityLabel={`${count} daycares here`}
@@ -110,6 +112,11 @@ export function ClusterBubble({ count }: { count: number }) {
         {count >= 1000 ? `${Math.floor(count / 100) / 10}k` : String(count)}
       </Text>
     </View>
+  );
+  return selected ? (
+    <View style={{ borderRadius: size / 2 + 4, borderWidth: 2, borderColor: c.text, padding: 2 }}>{disc}</View>
+  ) : (
+    disc
   );
 }
 

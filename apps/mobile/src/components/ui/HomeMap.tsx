@@ -219,13 +219,16 @@ export function HomeMap({
     opacity: sheetY.value < height * 0.4 ? 0 : 1,
   }));
 
-  const toggle = (f: Filter) =>
+  // A filter is a new question about the whole area, so it leaves a stacked spot (it could empty it).
+  const toggle = (f: Filter) => {
+    setGroup(null);
     setFilters((prev) => {
       const next = new Set(prev);
       if (next.has(f)) next.delete(f);
       else next.add(f);
       return next;
     });
+  };
 
   const pick = (r: DaycareRow) => {
     haptic.select();

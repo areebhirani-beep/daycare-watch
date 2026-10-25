@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { LastChecked } from '@/components/ui';
@@ -93,7 +94,13 @@ export default function AlertScreen() {
 
         {change?.visit ? <WhatChanged change={change} /> : null}
 
-        {a.finding ? <FindingCard finding={a.finding} visitDate={a.finding.date} /> : null}
+        {a.finding ? (
+          <FindingCard
+            finding={a.finding}
+            visitDate={a.finding.date}
+            onOfficial={record.data ? () => void WebBrowser.openBrowserAsync(record.data.official_url) : undefined}
+          />
+        ) : null}
         <Text variant={a.finding ? 'footnote' : 'callout'} tone="secondary">
           {meaning(a)}
         </Text>

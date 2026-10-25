@@ -53,7 +53,7 @@ export default function HookScreen() {
       </View>
 
       <View style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, space.lg) }]}>
-        <Animated.View entering={rise(0)} style={styles.lockup}>
+        <Animated.View entering={rise(0)} accessible accessibilityLabel="Daycare Watch" style={styles.lockup}>
           <AppMark width={44} color="#FFFFFF" background="transparent" />
           <Text variant="headline" color="#FFFFFF">
             Daycare Watch

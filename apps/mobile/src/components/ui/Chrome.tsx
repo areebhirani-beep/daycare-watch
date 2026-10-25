@@ -40,6 +40,8 @@ export function SearchPill({
       <Glyph name="search" size={17} color={c.text} weight="bold" />
       {input ? (
         <TextInput
+          // Keeps a name once text is typed; the placeholder alone goes silent then.
+          accessibilityLabel={placeholder}
           placeholder={placeholder}
           placeholderTextColor={c.textTertiary}
           returnKeyType="search"

@@ -27,7 +27,7 @@ export function recordLine(visits: StripVisit[]): { text: string; found: boolean
 /** What VoiceOver reads for a card or row: name, meta, then the record line, which is the point of the card. */
 function spoken(name: string, meta: string, strip?: StripVisit[] | null, fallback?: string, watched?: boolean): string {
   const line = strip ? recordLine(strip).text : fallback;
-  return [name, meta, line, watched ? 'Watching' : null].filter(Boolean).join('. ');
+  return [name, meta, line, watched ? 'Watching' : null].filter(Boolean).join('. ').replace(/ · /g, ', ');
 }
 
 /** Line caps for names and meta; past 1.6x text nothing truncates, the row grows instead. */

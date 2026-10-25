@@ -48,6 +48,8 @@ export default function RootLayout() {
               headerTintColor: c.accent,
               headerTitleStyle: { fontFamily: font.semibold, color: c.text },
               headerBackButtonDisplayMode: 'minimal',
+              // Minimal hides the text, but VoiceOver still reads the previous route's title, e.g. '(tabs)'.
+              headerBackTitle: 'Back',
               contentStyle: { backgroundColor: c.bg },
             }}
           >

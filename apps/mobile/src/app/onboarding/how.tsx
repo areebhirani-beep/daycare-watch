@@ -24,8 +24,11 @@ const BEATS = [
   'And tell you when the state posts something new.',
 ];
 
-/** A card that rises into place (one fade/rise), then steps back (washed, a touch smaller) when the next arrives. */
-function Layer({ from = 16, behind, children, style }: { from?: number; behind?: boolean; children: ReactNode; style?: ViewStyle }) {
+/**
+ * A card that rises into place (one fade/rise), then steps back (washed, a touch smaller) each time a newer
+ * card arrives. `depth` = how many cards sit in front of it.
+ */
+function Layer({ from = 16, depth = 0, children, style }: { from?: number; depth?: number; children: ReactNode; style?: ViewStyle }) {
   const c = useColors();
   const t = useSharedValue(0);
   const back = useSharedValue(0);
@@ -33,14 +36,15 @@ function Layer({ from = 16, behind, children, style }: { from?: number; behind?:
     t.value = withTiming(1, { duration: motion.slow, easing: easeOut, reduceMotion: ReduceMotion.System });
   }, [t]);
   useEffect(() => {
-    back.value = withTiming(behind ? 1 : 0, { duration: motion.base, easing: easeOut, reduceMotion: ReduceMotion.System });
-  }, [back, behind]);
+    back.value = withTiming(depth, { duration: motion.base, easing: easeOut, reduceMotion: ReduceMotion.System });
+  }, [back, depth]);
   const s = useAnimatedStyle(() => ({
     opacity: t.value,
-    transform: [{ translateY: (1 - t.value) * from }, { scale: 1 - back.value * 0.04 }],
+    transform: [{ translateY: (1 - t.value) * from }, { scale: 1 - Math.min(back.value, 1) * 0.04 }],
   }));
   // Stepping back washes the card with the page colour instead of fading it, so cards never show through each other.
-  const wash = useAnimatedStyle(() => ({ opacity: back.value * 0.55 }));
+  // Two cards in front wash it out completely: a silhouette, so no half-line peeks out under the banner.
+  const wash = useAnimatedStyle(() => ({ opacity: back.value <= 1 ? back.value * 0.55 : 0.55 + (back.value - 1) * 0.45 }));
   return (
     <Animated.View style={[s, style]}>
       {children}
@@ -115,7 +119,7 @@ export default function HowScreen() {
         ) : (
           <>
             {/* a. The state's own record of that visit, as dense as the state publishes it. */}
-            <Layer behind={beat > 0}>
+            <Layer depth={beat}>
               <View style={[styles.card, elevation.card, { backgroundColor: c.surface }]}>
                 <View style={styles.row}>
                   <Glyph name="record" size={15} color={c.textSecondary} />
@@ -143,7 +147,7 @@ export default function HowScreen() {
 
             {/* b. The same finding, the way the app shows it. */}
             {beat >= 1 ? (
-              <Layer behind={beat > 1} style={styles.plain}>
+              <Layer depth={beat > 1 ? 1 : 0} style={styles.plain}>
                 <View style={[styles.card, elevation.float, { backgroundColor: c.surface }]}>
                   <View style={styles.row}>
                     <CategoryIcon category={ex.f.category} size={40} />

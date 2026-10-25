@@ -1,0 +1,7 @@
+risk_level,findings,state_checked,fixed_during_visit,neither_yet
+All risk levels,49768,44354,4993,421
+High,12607,11697,854,56
+Medium High,20446,17728,2505,213
+Medium,14074,12505,1436,133
+Medium Low,1865,1684,166,15
+Low,776,740,32,4

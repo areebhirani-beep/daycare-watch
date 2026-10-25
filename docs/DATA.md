@@ -4,11 +4,11 @@ Every fact in the app comes from one of three public sources. This page maps eac
 
 | Source | Dataset | Publisher |
 |---|---|---|
-| Daycares | [`bc5r-88dy`](https://data.texas.gov/d/bc5r-88dy) Child Care Regulation operations | Texas HHSC on data.texas.gov |
-| Visits | [`m5q4-3y3d`](https://data.texas.gov/d/m5q4-3y3d) Child Care Regulation activities | Texas HHSC on data.texas.gov |
-| Findings | [`tqgd-mf4x`](https://data.texas.gov/d/tqgd-mf4x) Child Care Regulation non-compliance | Texas HHSC on data.texas.gov |
+| Daycares | [`bc5r-88dy`](https://data.texas.gov/d/bc5r-88dy) HHSC CCL Daycare and Residential Operations Data | Texas HHSC on data.texas.gov |
+| Visits | [`m5q4-3y3d`](https://data.texas.gov/d/m5q4-3y3d) HHSC CCL Inspection Investigation Assessment Data | Texas HHSC on data.texas.gov |
+| Findings | [`tqgd-mf4x`](https://data.texas.gov/d/tqgd-mf4x) HHSC CCL Non-Compliance Data | Texas HHSC on data.texas.gov |
 | Map points | Census Geocoder batch API (`Public_AR_Current`) | U.S. Census Bureau |
-| District boundary | TIGER/Line CD119, Texas district 4 | U.S. Census Bureau |
+| District boundary | TIGERweb 119th Congressional Districts, Jan 1 2026 vintage (GEOID 4804) | U.S. Census Bureau |
 | Street photos (hand-checked) | Mapillary Graph API `images`, then a person's review in `services/pipeline/data/verified_photos.csv` | Mapillary (open street-level imagery, CC BY-SA 4.0) |
 
 Every row passes a pydantic data contract before it is loaded ([`models.py`](../services/pipeline/src/pipeline/models.py)). An unknown risk level, a missing required field, or a bad date fails the whole run rather than loading a guess.
@@ -58,12 +58,12 @@ Every row passes a pydantic data contract before it is loaded ([`models.py`](../
 | Category (Supervision, Safety hazards, Paperwork, ...) | Fixed rules on the rule number and title. No model, no guessing; every rule is tested | [`classify.py`](../services/pipeline/src/pipeline/classify.py) |
 | Plain summary | The inspector's first sentence that states a problem, shortened and de-jargoned. It only removes words: a property test proves it adds no numbers, and a test over every finding in the state file proves it adds no words | same |
 | Map point | The state's coordinates when published (577 daycares); otherwise a Census Geocoder match on the address | [`geocode.py`](../services/pipeline/src/pipeline/geocode.py) |
-| Map point quality | `state`, `exact`, or `non_exact` (address matched with corrections) | same |
+| Map point quality | `state`, `exact`, or `non_exact` (the Census Geocoder's "Non_Exact" match type) | same |
 | In TX-04 | The map point inside the CD119 polygon (PostGIS `ST_Covers`). The state's county field is never used to claim the district | [`load.py`](../services/pipeline/src/pipeline/load.py) |
 | Area comparison | Median findings in 24 months for the same daycare type in the same county | `core.area_medians` (materialized view) |
 | Alerts | A new finding, a permit status change, a capacity change, or a change in any enforcement flag, found by diffing each night's state files | `core.change_events`; [`load.py`](../services/pipeline/src/pipeline/load.py), [`notify.py`](../services/pipeline/src/pipeline/notify.py) |
-| Street photos (**hand-checked**; 1 of 209 TX-04 centers today) | Candidates are Mapillary images near an exactly matched Licensed Center whose camera faces the building's footprint (OpenStreetMap). A person looks at every candidate, and only a photo that shows that daycare (its name on the building) goes into `verified_photos.csv`, with what it shows, the photographer, and the review time. At most 2 per center, from different drives, taken within the last 6 years. No panoramas. The daily sync loads that list and calls no photo API | [`photos.py`](../services/pipeline/src/pipeline/photos.py) |
+| Street photos (**hand-checked**; 1 of 209 TX-04 centers today) | Candidates are Mapillary images near an exactly matched Licensed Center whose camera faces the building's outline (building outlines © OpenStreetMap contributors, ODbL, used only during the review). A person looks at every candidate, and only a photo that shows that daycare (its name on the building) goes into `verified_photos.csv`, with what it shows, the photographer, and the review time. At most 2 per center, from different drives, taken within the last 6 years. No panoramas. The daily sync loads that list and calls no photo API | [`photos.py`](../services/pipeline/src/pipeline/photos.py) |
 
 ## Freshness
 
-The state reloads visits and findings in full, usually overnight around 09:00 UTC, and updates daycares row by row. The pipeline runs daily at 10:15 UTC, with a second run at 11:47 UTC in case GitHub starts the first one late ([`daily-sync.yml`](../.github/workflows/daily-sync.yml)); on Oct 25 2026 GitHub started them 3 to 4 hours late (14:23 and 15:02 UTC). Each run writes one row per run to `ops.sync_runs`; the app's "Last checked with the state" line reads it through `last_sync()`. Findings appear only after the daycare has had due process, so they can post days to weeks after a visit.
+The state reloads visits and findings in full, usually overnight around 09:00 UTC, and updates daycares row by row. The pipeline runs daily at 10:15 UTC, with a second run at 11:47 UTC in case GitHub starts the first one late ([`daily-sync.yml`](../.github/workflows/daily-sync.yml)); on Oct 25 2026 GitHub started them 3 to 4 hours late (14:23 and 15:02 UTC). Each run writes one row per run to `ops.sync_runs`; the app's "Last checked with the state" line reads it through `last_sync()`. The state posts violations only after the daycare has had due process or waived it; the state gives no time frame, and we have not measured one yet.

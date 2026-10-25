@@ -1,0 +1,10 @@
+group,stage,count
+Daycares,Rows in the state's operations file,14977
+Daycares,Daycares in scope (4 daycare types),14310
+Daycares,With a map point,13024
+Daycares,"Active, inside TX-04 by map point",379
+Visits,Rows in the state's activities file,205457
+Visits,Visits at in-scope daycares,157358
+Findings,Rows in the state's non-compliance file,133739
+Findings,Findings at in-scope daycares,118294
+Findings,Joined to their state visit,118294

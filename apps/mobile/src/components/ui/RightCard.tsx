@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { haptic, space, useColors } from '@/theme';
 
@@ -26,7 +26,8 @@ export function RightCard({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${title}. ${detail}`}
+      // The web names the row from its visible text (WCAG 2.5.3); the phones get the same words with a pause.
+      accessibilityLabel={Platform.OS === 'web' ? undefined : `${title}. ${detail}`}
       accessibilityHint={hint}
       onPress={() => {
         haptic.press();

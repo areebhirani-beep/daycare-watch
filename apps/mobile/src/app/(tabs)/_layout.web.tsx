@@ -24,7 +24,7 @@ export default function TabsLayout() {
       <TabSlot style={{ flex: 1 }} />
       {/* Tabs finds its list among its direct children, and the list its triggers. Inside the frame the bar clears
           the drawn home indicator, as on the iPhone. */}
-      <TabList style={[styles.capsule, { marginBottom: inFrame ? 26 : 12, backgroundColor: c.surface, borderColor: c.hairline }]}>
+      <TabList accessibilityRole="tablist" style={[styles.capsule, { marginBottom: inFrame ? 26 : 12, backgroundColor: c.surface, borderColor: c.hairline }]}>
         <TabTrigger name="index" href="/" asChild>
           <TabButton icon="map" label="Find" />
         </TabTrigger>

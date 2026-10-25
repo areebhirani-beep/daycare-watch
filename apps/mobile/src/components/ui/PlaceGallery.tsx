@@ -290,6 +290,8 @@ export function PlaceGallery({
         ref={scroller}
         horizontal
         pagingEnabled
+        // No rubber band: past the first or last picture it would show the dark backing as a black strip.
+        bounces={false}
         showsHorizontalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}

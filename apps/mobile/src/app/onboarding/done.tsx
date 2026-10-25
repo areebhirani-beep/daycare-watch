@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -39,6 +39,14 @@ export default function DoneScreen() {
   useEffect(() => {
     if (id) haptic.success();
   }, [id]);
+
+  // This screen opens as the iOS alerts prompt closes, and its Allow button sits over the card: a tap that lands
+  // just after the prompt goes must not open the record before the parent has seen this screen.
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setSettled(true), 700);
+    return () => clearTimeout(t);
+  }, []);
 
   const { attach, over, onLayout, onContentSizeChange } = useFold();
 
@@ -87,7 +95,7 @@ export default function DoneScreen() {
                 operationType={d.operation_type}
                 strip={stripFromRecord(record.data)}
                 watched
-                onPress={() => go(true)}
+                onPress={() => settled && go(true)}
               />
             ) : (
               <CardSkeleton width="100%" heroRatio={heroRatio} />

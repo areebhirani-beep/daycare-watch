@@ -35,7 +35,8 @@ function RecordLine({ strip, fallback }: { strip?: StripVisit[] | null; fallback
   if (!line) return null;
   return (
     <Text variant="subhead" tone={line.found ? 'primary' : 'secondary'} numberOfLines={one} tabular>
-      {line.text}
+      {/* A count never wraps away from its word ("1 serious", "Oct 5"). */}
+      {line.text.replace(/(\d+|[A-Z][a-z]{2}) (serious|problems?|\d)/g, '$1\u00A0$2')}
     </Text>
   );
 }

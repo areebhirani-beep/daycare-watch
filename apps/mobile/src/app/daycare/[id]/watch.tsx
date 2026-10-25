@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 
 import { T } from '@/components/T';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { visitAnswer } from '@/components/ui/PlacePage';
 import { useDaycareRecord, useIsWatching, useSetWatch } from '@/lib/api';
 import { tidyCase, todayIso } from '@/lib/format';
-import { type EnableResult, enableAlerts, useAlertsOn } from '@/lib/notifications';
+import { type EnableResult, enableAlerts, getPermission, type PermissionState, useAlertsOn } from '@/lib/notifications';
 import { groupByVisit } from '@/lib/record';
 import { isWeb } from '@/lib/runtime';
 import type { DaycareRecord } from '@/lib/types';
@@ -26,6 +26,11 @@ export default function WatchScreen() {
   const [step, setStep] = useState<Step>('explain');
   const [result, setResult] = useState<EnableResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // iOS asks only once, so the 'your phone asks' line shows only while the answer is still undetermined.
+  const [permission, setPermission] = useState<PermissionState | null>(null);
+  useEffect(() => {
+    if (!isWeb) void getPermission().then(setPermission);
+  }, []);
   const name = tidyCase(record.data?.daycare.name) || 'this daycare';
 
   async function turnOn() {
@@ -124,9 +129,15 @@ export default function WatchScreen() {
         </Point>
       </View>
 
-      <T variant="footnote" tone="secondary">
-        Next, your phone asks about notifications. Tap Allow so alerts reach you.
-      </T>
+      {permission === 'undetermined' ? (
+        <T variant="footnote" tone="secondary">
+          Next, your phone asks about notifications. Tap Allow so alerts reach you.
+        </T>
+      ) : permission === 'denied' ? (
+        <T variant="footnote" tone="secondary">
+          Notifications are off for this app. You can turn them on in Settings.
+        </T>
+      ) : null}
       {error ? (
         <T variant="callout" color={c.risk.High} accessibilityLiveRegion="assertive">
           {error}

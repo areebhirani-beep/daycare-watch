@@ -10,18 +10,18 @@ struct SnapshotOptions: Record {
   @Field var cacheKey: String?
 }
 
-/// How the scene was found. "place": Apple Maps matched the daycare by name within 60 m of its point, so the camera
-/// is framed on that place. "point": the street nearest the address point, which may face another building.
+/// How the scene was found. Always "place": Apple Maps matched the daycare by name within 60 m of its point, so the
+/// camera is framed on that place. (The street at the bare address point can face another building, so it is never
+/// fetched.)
 private enum Facing: String {
   case place
-  case point
 }
 
 public class LookAroundModule: Module {
   public func definition() -> ModuleDefinition {
     Name("LookAround")
 
-    // A still street-level image of the daycare's front, or nil where Apple has no Look Around imagery.
+    // A still street-level image of the daycare's front, or nil where Apple has no matching place with Look Around.
     AsyncFunction("snapshot") { (lat: Double, lng: Double, options: SnapshotOptions) async throws -> [String: Any]? in
       if let key = options.cacheKey, let cached = Self.cached(key) {
         return ["uri": cached.url.absoluteString, "facing": cached.facing.rawValue]
@@ -52,7 +52,7 @@ public class LookAroundModule: Module {
   }
 
   /// Apple's place for the daycare when its name matches a point of interest within 60 m, so the camera faces that
-  /// building; otherwise the street at the address point. Also returns how far Apple's place is from our point.
+  /// building; otherwise nil. Also returns how far Apple's place is from our point.
   private static func findScene(lat: Double, lng: Double, name: String?) async throws -> (MKLookAroundScene, Facing, Double?)? {
     let point = CLLocationCoordinate2D(latitude: lat, longitude: lng)
     if let name, !name.isEmpty {
@@ -69,8 +69,7 @@ public class LookAroundModule: Module {
         return (scene, .place, item.placemark.location?.distance(from: here))
       }
     }
-    guard let scene = try await MKLookAroundSceneRequest(coordinate: point).scene else { return nil }
-    return (scene, .point, nil)
+    return nil
   }
 
   // Words every daycare name shares, so "Kids Academy" never matches "Little Stars Academy" next door.
@@ -112,7 +111,7 @@ public class LookAroundModule: Module {
 
   // A week: Apple refreshes Look Around rarely, and the cache lives in Caches, which iOS may clear anyway.
   private static func cached(_ key: String) -> (url: URL, facing: Facing)? {
-    for facing in [Facing.place, Facing.point] {
+    for facing in [Facing.place] {
       let url = file(key, facing)
       if let made = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date,
          Date().timeIntervalSince(made) < 7 * 24 * 3600 {

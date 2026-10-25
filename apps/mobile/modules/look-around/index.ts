@@ -1,9 +1,9 @@
 import { Platform } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
 
-/** How the scene was found: "place" = Apple matched the daycare by name, so it's framed on it; "point" = the street at the address point. */
-export type Facing = 'place' | 'point';
-/** distanceM: how far Apple's matched place is from our point (only for "place"). */
+/** How the scene was found: "place" = Apple matched the daycare by name within 60 m, so it's framed on it. Nothing else is returned. */
+export type Facing = 'place';
+/** distanceM: how far Apple's matched place is from our point. */
 export type LookAroundSnapshot = { uri: string; facing: Facing; distanceM?: number };
 
 type Native = {

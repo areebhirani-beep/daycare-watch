@@ -35,5 +35,6 @@ Every user-facing case, run cold by someone who did not build the screen, with p
 
 | Workflow | When | What |
 |---|---|---|
+| [`app-ci.yml`](../.github/workflows/app-ci.yml) | Every app change | TypeScript typecheck, ESLint, Jest |
 | [`pipeline-ci.yml`](../.github/workflows/pipeline-ci.yml) | Every push | ruff, `mypy --strict`, pytest |
 | [`daily-sync.yml`](../.github/workflows/daily-sync.yml) | 10:15 and 11:47 UTC daily, and on demand | The real sync against the cloud database, with a per-stage report in the run summary |

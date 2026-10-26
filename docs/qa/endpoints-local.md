@@ -22,7 +22,7 @@ Endpoint test against `http://127.0.0.1:55321`: 93 passed, 3 failed (2026-10-25 
 | daycare_search | nul-byte | 400 | 400 | 33 | ok |
 | daycare_search | bad-json | 400 | 400 | 30 | ok |
 | daycare_search | get-form | 200 | 200 | 71 | ok |
-| daycare_search | no-home-street | 200 | 200 | 91 | FAIL (check failed: all(.[]; has("address") or has("zip") | not); body [{"operation_id":1529274,"name":"Allena Brown","operation_type":"Registered Child-Care Home","address":null,"city":"LAKE) |
+| daycare_search | no-home-street | 200 | 200 | 91 | FAIL (check failed: all(.[]; has("address") or has("zip") | not); body [{"operation_id":1529274,"name":"[home daycare name removed]","operation_type":"Registered Child-Care Home","address":null,"city":"LAKE) |
 | daycares_near | good | 200 | 200 | 99 | ok |
 | daycares_near | km-zero | 200 | 200 | 26 | ok |
 | daycares_near | km-negative | 200 | 200 | 19 | ok |

@@ -22,7 +22,7 @@ What we tested, how, and what happened, Oct 24 to 25 2026. Each case was run by 
 
 ## Every endpoint, cloud and local
 
-`supabase/snippets/api_endpoints.sh` calls each of the 12 RPCs plus the REST, auth and storage paths with good, empty, bad, huge (20,000 characters), unicode, emoji and SQL-like input, signed out, with a forged or `alg: none` token, and as two signed-in users. Any 5xx fails. Full tables: [local](qa/endpoints-local.md), [cloud](qa/endpoints-cloud.md). Latest: local 96/96, cloud 94/94 (1:44 pm Oct 25). Two device-registration cases run on local only, so no test token reaches the cloud push list.
+`supabase/snippets/api_endpoints.sh` calls each of the 12 RPCs plus the REST, auth and storage paths with good, empty, bad, huge (20,000 characters), unicode, emoji and SQL-like input, signed out, with a forged or `alg: none` token, and as two signed-in users. Any 5xx fails. Full tables: [local](qa/endpoints-local.md), [cloud](qa/endpoints-cloud.md). Latest committed tables (3 pm Oct 25): cloud 93/94, the one failure a district query that hit the 3-second statement timeout; local 93/96, two search statement timeouts on the laptop database and one home-privacy check written before home daycares showed a 5-digit ZIP (homes still never return a street). Two device-registration cases run on local only, so no test token reaches the cloud push list.
 
 | # | Case | Method | Result | Evidence |
 |---|---|---|---|---|

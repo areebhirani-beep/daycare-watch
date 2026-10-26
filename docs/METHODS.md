@@ -107,6 +107,7 @@ flowchart LR
 | Most common categories | Paperwork 46 · Safety hazards 34 · Health and medication 30 · Supervision 10 |
 | Time between state inspections at one daycare | Median 66 days, 90th percentile 330 days (inspections since Oct 2023) |
 | Daycares with at least one finding under a High-risk rule in the last 24 months | 140 of 379 |
+| Findings posted at these daycares in the 24 months to Oct 25 2026 | at least 1,347 (`count(*)` of `core.violations` joined to the 379 by `operation_id`, posted in the last 24 months) |
 
 ## Honesty and privacy rules
 

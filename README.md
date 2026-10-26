@@ -9,6 +9,7 @@
 See what Texas inspectors found at any daycare, and get a heads-up when they post something new.
 
 ### [Try it: daycare-watch.vercel.app](https://daycare-watch.vercel.app)
+### [Watch the 3-minute demo](https://youtu.be/UcrsTslTqGI)
 No sign-in. Real Texas state records. The website is a simple preview; the full app, with alerts, runs on iPhone and Android.
 
 **14,310** Texas daycares · **118,294** state findings, each matched to its visit · refreshed **every morning** · **545** automated tests
@@ -61,8 +62,9 @@ flowchart LR
   TX["data.texas.gov<br/>daycares · visits · findings"] --> P["Pipeline (Python, daily)<br/>validate → join → diff → plain summary"]
   CEN["Census geocoder<br/>and TX-04 boundary"] --> P
   P --> DB["Postgres + PostGIS<br/>(Supabase)"]
-  P -- "new finding × watchers" --> PUSH["Expo Push"] --> APP["App: iPhone, Android, web"]
+  P -- "new finding × watchers" --> PUSH["Expo Push"] --> APP["Phone app<br/>iPhone · Android"]
   APP -- "SQL functions only" --> DB
+  WEB["Website preview<br/>daycare-watch.vercel.app"] -- "same SQL functions" --> DB
 ```
 
 The one-line summary only shortens the inspector's first sentence; a test over all 133,739 findings in the state's file checks that it never adds a word or a number. Each stage, its guarantee, and its test are in [`docs/METHODS.md`](docs/METHODS.md).
@@ -122,7 +124,7 @@ Run on Oct 25 2026. Details and commands: [`docs/TESTING.md`](docs/TESTING.md).
 |---|---|
 | Pipeline (pytest and hypothesis) | 283 pass, 93% line coverage, ruff and `mypy --strict` clean |
 | Database (pgTAP): schema, row-level security, every SQL function, home privacy | 199 pass in 12 files |
-| Live API against the cloud database | 94 of 94 endpoint checks pass |
+| Live API against the cloud database | 93 of 94 endpoint checks pass; the one failure is a district query that hit the database's 3-second statement timeout ([table](docs/qa/endpoints-cloud.md)) |
 | App unit (Jest) | 63 pass |
 | Continuous integration | `app-ci` and `pipeline-ci` run on GitHub Actions; the badges at the top show the latest result |
 | End to end | Tapping a push with the app closed or in the background opens that visit's findings (Release build, Maestro); a replayed real finding arrived as a push on a real iPhone |

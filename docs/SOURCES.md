@@ -25,9 +25,9 @@ Every outside library, data source, and service the project uses, as the contest
 
 ## Sources and claim map
 
-**Result:** 56 primary or official sources opened on Oct 25 2026, each with the exact URL used. The README's legal, dataset, district, and contest claims hold up, with three exceptions that need new wording before submission. (1) H.R. 2425 does not "line up with" the Texas law on drop-in visits, because it has no drop-in right. (2) "Days to weeks" and "1 to 3 weeks" are not the state's figures. (3) The TX-04 boundary comes from TIGERweb, not TIGER/Line, and "public domain" and "address matched with corrections" are not the Census Bureau's words. Of 111 claims mapped: 81 VERIFIED, 22 WORDING CHANGE NEEDED, 5 NO SOURCE FOUND, and 3 not re-checked today (carried over from `OFFICIAL_SOURCES.md`).
+**Result:** 56 primary or official sources opened on Oct 25 2026, each with the exact URL used. The README's legal, dataset, district, and contest claims hold up, with three exceptions that were reworded before submission. (1) H.R. 2425 does not "line up with" the Texas law on drop-in visits, because it has no drop-in right. (2) "Days to weeks" and "1 to 3 weeks" are not the state's figures. (3) The TX-04 boundary comes from TIGERweb, not TIGER/Line, and "public domain" and "address matched with corrections" are not the Census Bureau's words. Of 111 claims mapped: 81 VERIFIED, 22 WORDING CHANGE NEEDED, 5 NO SOURCE FOUND, and 3 not re-checked today (carried over from `OFFICIAL_SOURCES.md`).
 
-**Applied 13:29 CDT Oct 25 2026:** every WORDING CHANGE NEEDED and NO SOURCE FOUND row below has been applied to `README.md` and `docs/*.md` with the suggested wording. The Esri imagery credit (row for README:376) is fixed in the app too: it now reads "Imagery © Esri, Vantor, Earthstar Geographics", checked against Esri's live service credit. The "Operations update: about 300 to 450 rows a day" figure stays, under a column now headed "What we observed (Oct 2026)".
+**Applied 13:29 CDT Oct 25 2026:** every row marked WORDING CHANGED (applied) or NO SOURCE FOUND below has been applied to `README.md` and `docs/*.md` with the suggested wording. The Esri imagery credit (row for README:376) is fixed in the app too: it now reads "Imagery © Esri, Vantor, Earthstar Geographics", checked against Esri's live service credit. The "Operations update: about 300 to 450 rows a day" figure stays, under a column now headed "What we observed (Oct 2026)".
 
 Line numbers refer to the longer `README.md` of Oct 25 2026, 13:15 CDT (commit f0b23f2); its methods, data, and credits sections now live in [`METHODS.md`](METHODS.md) and the Built with list above. They refer to it as it stood at 13:15 CDT on Oct 25 2026 and to `docs/*.md` at the same time (`QA_MATRIX.md` is skipped). Numbers from our own database cite the dataset IDs; the SQL behind them is documented separately.
 
@@ -128,7 +128,7 @@ All accessed **Oct 25 2026**. Quotes are kept under 15 words.
 
 ## Claim map
 
-Status: **VERIFIED**: the source says it. **WORDING CHANGE NEEDED**: the source supports a narrower or different statement (suggested wording given). **NO SOURCE FOUND**: no primary source says it.
+Status: **VERIFIED**: the source says it. **WORDING CHANGED (applied)**: the source supports a narrower or different statement (suggested wording given). **NO SOURCE FOUND**: no primary source says it.
 
 ### README.md
 
@@ -140,26 +140,26 @@ Status: **VERIFIED**: the source says it. **WORDING CHANGE NEEDED**: the source 
 | "Texas publishes every inspection finding, but in a state search site few parents ever open." | README.md:44 | 17, 19 | **NO SOURCE FOUND** for "few parents ever open". → "Texas posts every inspection report online [19], but only on a search site, one daycare at a time, and only after due process [17]." |
 | "how serious the state rates the rule" | README.md:45 | 13, 26 | VERIFIED |
 | "Kairo and the Kids' Law (88(R) SB 1098, 2023)" | README.md:46 | 2, 3 | VERIFIED |
-| "which line up with Rep. Pat Fallon's proposed federal Kairo Act (H.R. 2425, not law)" | README.md:46 | 29, 30 | **WORDING CHANGE NEEDED**: H.R. 2425 has no drop-in right, and the README's three requests include a drop-in visit. → "which overlap with Rep. Pat Fallon's proposed federal Kairo Act (H.R. 2425, introduced Mar 27 2025, not law; it adds a 2-business-day video deadline but no drop-in right)" |
+| "which line up with Rep. Pat Fallon's proposed federal Kairo Act (H.R. 2425, not law)" | README.md:46 | 29, 30 | **WORDING CHANGED (applied)**: H.R. 2425 has no drop-in right, and the README's three requests include a drop-in visit. → "which overlap with Rep. Pat Fallon's proposed federal Kairo Act (H.R. 2425, introduced Mar 27 2025, not law; it adds a 2-business-day video deadline but no drop-in right)" |
 | "against the Census CD119 boundary" | README.md:52 | 40 | VERIFIED |
 | "about 5 years of history" | README.md:53 | 17 | VERIFIED ("five-year period") |
-| "Android push needs a standalone build" | README.md:56, :126 | 45 | **WORDING CHANGE NEEDED** (Expo's term): → "Android push needs a development or standalone build, not Expo Go (Expo SDK 53+)" |
+| "Android push needs a standalone build" | README.md:56, :126 | 45 | **WORDING CHANGED (applied)** (Expo's term): → "Android push needs a development or standalone build, not Expo Go (Expo SDK 53+)" |
 | Each finding shows "the state's risk level for the rule" | README.md:70 | 13, 26 | VERIFIED |
 | Push on "a permit status change, or a corrective or adverse action" | README.md:71 | 24 | VERIFIED (columns `operation_status`, `corrective_action`, `adverse_action`) |
 | Requests quote "HRC §42.04271 (drop in during open hours, records and inspection reports, video only after an alleged abuse or neglect incident involving their child)" | README.md:72 | 1, 3 | VERIFIED: (b)(1), (b)(4)-(5), (b)(8). The video right is to *inspect*, and only if a recording exists |
 | "Uses rights that already exist in Texas law" | README.md:72 | 1, 3 | VERIFIED (effective Sep 1 2023) |
-| Operations "row-level daily updates"; inspections and violations "full nightly reload" | README.md:93-95 | 24, 25, 26 | **WORDING CHANGE NEEDED**: the state publishes no schedule. The metadata shows reloads near 09:00 UTC Oct 24 and none since, which matches :342 ("not every night"). → "full reload, usually overnight (observed)" |
-| "Census TIGER CD119 · TX-04 boundary" | README.md:98 | 40, 41 | **WORDING CHANGE NEEDED**: the pipeline pulls the polygon from TIGERweb, not TIGER/Line files. → "Census TIGERweb CD119 (Jan 1 2026 vintage)" |
+| Operations "row-level daily updates"; inspections and violations "full nightly reload" | README.md:93-95 | 24, 25, 26 | **WORDING CHANGED (applied)**: the state publishes no schedule. The metadata shows reloads near 09:00 UTC Oct 24 and none since, which matches :342 ("not every night"). → "full reload, usually overnight (observed)" |
+| "Census TIGER CD119 · TX-04 boundary" | README.md:98 | 40, 41 | **WORDING CHANGED (applied)**: the pipeline pulls the polygon from TIGERweb, not TIGER/Line files. → "Census TIGERweb CD119 (Jan 1 2026 vintage)" |
 | "Expo Push → APNs / FCM" | README.md:111 | 44 | VERIFIED |
 | "Tokens Apple or Google reject are disabled" | README.md:129, :163 | 44 | VERIFIED (`DeviceNotRegistered`) |
 | "checked against all 133,739 findings in the state file" | README.md:139 | 26 | VERIFIED (live count Oct 25: 133,739) |
 | "Reloads visits and findings (usually overnight)" | README.md:154 | 25, 26 | VERIFIED (`rowsUpdatedAt` 09:02 and 09:07 UTC Oct 24) |
 | "batches of ≤ 100" | README.md:161 | 44 | VERIFIED |
 | Operations update: "about 300 to 450 rows a day statewide" | README.md:198 | 24 | **NO SOURCE FOUND**: this is our measurement; the state publishes no figure. → rename the column "What we observed (Oct 2026)" |
-| Activities: "Full reload nightly, about 205,000 rows" | README.md:199 | 25 | **WORDING CHANGE NEEDED**: the count is VERIFIED (205,457), but "nightly" conflicts with :342. → "Full reload, usually overnight; about 205,000 rows" |
-| Violations: "Full reload nightly, about 134,000 rows" | README.md:200 | 26 | **WORDING CHANGE NEEDED**, as above (count 133,739 VERIFIED) |
+| Activities: "Full reload nightly, about 205,000 rows" | README.md:199 | 25 | **WORDING CHANGED (applied)**: the count is VERIFIED (205,457), but "nightly" conflicts with :342. → "Full reload, usually overnight; about 205,000 rows" |
+| Violations: "Full reload nightly, about 134,000 rows" | README.md:200 | 26 | **WORDING CHANGED (applied)**, as above (count 133,739 VERIFIED) |
 | In-scope daycares statewide: 14,310 | README.md:206 | 24 | VERIFIED (9,605 + 1,593 + 1,742 + 1,370) |
-| "1,456 non-exact (address matched with corrections)" | README.md:209 | 38 | **WORDING CHANGE NEEDED**: the Census Bureau names the type "Non-Exact" but does not say "with corrections". → "1,456 non-exact (the Census Geocoder's 'Non_Exact' match type)" |
+| "1,456 non-exact (address matched with corrections)" | README.md:209 | 38 | **WORDING CHANGED (applied)**: the Census Bureau names the type "Non-Exact" but does not say "with corrections". → "1,456 non-exact (the Census Geocoder's 'Non_Exact' match type)" |
 | Apple Look Around street-level picture | README.md:211, :236 | 49, 50 | VERIFIED (the API exists); the counts are ours |
 | "Another 23 are still marked 'Pending', which fits findings being posted 1 to 3 weeks after a visit" | README.md:219 | 25 | **NO SOURCE FOUND** for "1 to 3 weeks", and :343 says the lag is not measured. → "Another 23 are still marked 'Pending' (findings not posted yet)." |
 | "31 under rules the state rates High risk, 55 Medium High, 47 Medium" | README.md:220 | 13, 26 | VERIFIED (state scale) + our query |
@@ -175,16 +175,16 @@ Status: **VERIFIED**: the source says it. **WORDING CHANGE NEEDED**: the source 
 | "GitHub does start scheduled runs late" | README.md:258 | 55 | VERIFIED |
 | "Expo Go on Android cannot receive remote pushes" | README.md:325 | 45 | VERIFIED (SDK 53 and later) |
 | "14,310 of 14,977 rows in the operations file" | README.md:337 | 24 | VERIFIED (live Oct 25) |
-| "1,456 non-exact" · "inside the Census CD119 boundary" | README.md:341 | 38, 40 | **WORDING CHANGE NEEDED**, as at :209 and :98 |
+| "1,456 non-exact" · "inside the Census CD119 boundary" | README.md:341 | 38, 40 | **WORDING CHANGED (applied)**, as at :209 and :98 |
 | "The state reloads usually overnight, not every night" | README.md:342 | 25, 26 | VERIFIED (no `rowsUpdatedAt` change since 2026-10-24 09:0x UTC) |
-| "can post days to weeks after a visit, which is the state's own due-process rule" | README.md:343 | 17 | **WORDING CHANGE NEEDED**: the state's rule sets no time span. → "The state posts violations only after the daycare has had due process or waived it [17]; the state gives no time frame, and we have not measured one yet." |
+| "can post days to weeks after a visit, which is the state's own due-process rule" | README.md:343 | 17 | **WORDING CHANGED (applied)**: the state's rule sets no time span. → "The state posts violations only after the daycare has had due process or waived it [17]; the state gives no time frame, and we have not measured one yet." |
 | "the state publishes findings only after due process" | README.md:344 | 17 | VERIFIED; for full accuracy add "or the daycare waived its rights" |
 | "the state offers email updates" | README.md:348 | 17 | VERIFIED |
 | "Every outside library ... as the contest rules ask" | README.md:363 | 33 | VERIFIED ("must clearly document any such usage") |
 | react-native-maps (MIT) | README.md:367 | 48 | VERIFIED |
 | data.texas.gov "(public open data)" | README.md:374 | 24, 25, 26 | VERIFIED (CC0 1.0) |
-| "U.S. Census Geocoder and TIGER/Line CD119 ... (public domain)" | README.md:375 | 40, 41, 43 | **WORDING CHANGE NEEDED**: the Census files make no public-domain statement, and the boundary comes from TIGERweb. → "U.S. Census Geocoder and TIGERweb CD119: U.S. Government works, not subject to copyright (17 U.S.C. §105)" |
-| "Esri World Imagery ... credited on screen" | README.md:376 | 53 | **WORDING CHANGE NEEDED** (in the app, not the README): the code credits "Imagery © Esri, Maxar" (`PlaceGallery.tsx:55`, `MapSnapshot.tsx:161`), but the item's credit line now reads "Esri, Vantor, Earthstar Geographics, and the GIS User Community" |
+| "U.S. Census Geocoder and TIGER/Line CD119 ... (public domain)" | README.md:375 | 40, 41, 43 | **WORDING CHANGED (applied)**: the Census files make no public-domain statement, and the boundary comes from TIGERweb. → "U.S. Census Geocoder and TIGERweb CD119: U.S. Government works, not subject to copyright (17 U.S.C. §105)" |
+| "Esri World Imagery ... credited on screen" | README.md:376 | 53 | **WORDING CHANGED (applied)** (in the app, not the README): the code credits "Imagery © Esri, Maxar" (`PlaceGallery.tsx:55`, `MapSnapshot.tsx:161`), but the item's credit line now reads "Esri, Vantor, Earthstar Geographics, and the GIS User Community" |
 | "Apple Maps (MapKit) · Map, 3D view, and directions on iPhone" | README.md:377 | 47, 49 | VERIFIED |
 | "Mapillary (CC BY-SA 4.0)" | README.md:378 | 51 | VERIFIED |
 | "State records are public data published by the Texas Health and Human Services Commission" | README.md:383 | 24, 25, 26 | VERIFIED (attribution HHSC; CC0) |
@@ -194,37 +194,37 @@ Status: **VERIFIED**: the source says it. **WORDING CHANGE NEEDED**: the source 
 | Claim | file:line | Cite | Status · suggested wording |
 |---|---|---|---|
 | Kairo and the Kids' Law (SB 1098) gives records, video, and visit requests | ARCHITECTURE.md:20 | 1, 3 | VERIFIED |
-| "investig. txmx-ceda (county totals)" listed under "data.texas.gov (Texas HHSC Child Care Regulation)" | ARCHITECTURE.md:25, :30 | 27 | **WORDING CHANGE NEEDED**: published by DFPS, not HHSC; covers FY 2016 to 2025, last updated Feb 9 2026; no code uses it. → remove the line, or "DFPS `txmx-ceda` (closed abuse/neglect investigations by county, FY2016-2025; not used yet)" |
+| "investig. txmx-ceda (county totals)" listed under "data.texas.gov (Texas HHSC Child Care Regulation)" | ARCHITECTURE.md:25, :30 | 27 | **WORDING CHANGED (applied)**: published by DFPS, not HHSC; covers FY 2016 to 2025, last updated Feb 9 2026; no code uses it. → remove the line, or "DFPS `txmx-ceda` (closed abuse/neglect investigations by county, FY2016-2025; not used yet)" |
 | "SODA API, nightly ~09:00 UTC" | ARCHITECTURE.md:32 | 24, 25, 26 | VERIFIED (observed) |
-| "About 4 in 10 US phones are Android" | ARCHITECTURE.md:56 | 56 | **WORDING CHANGE NEEDED**: the only source is secondary and says 46%. → "Close to half of US mobile web traffic is Android (46%, StatCounter, Sep 2026)" |
-| "react-native-maps (Apple Maps on iPhone with no API key, Google Maps on Android), which also runs inside the Expo Go test app" | ARCHITECTURE.md:56 | 47 | **WORDING CHANGE NEEDED** (Expo does not say "no API key"; it puts key steps only under the Google provider). → "Apple Maps on iPhone, Google Maps on Android (a key is needed only for Google); included in Expo Go" |
+| "About 4 in 10 US phones are Android" | ARCHITECTURE.md:56 | 56 | **WORDING CHANGED (applied)**: the only source is secondary and says 46%. → "Close to half of US mobile web traffic is Android (46%, StatCounter, Sep 2026)" |
+| "react-native-maps (Apple Maps on iPhone with no API key, Google Maps on Android), which also runs inside the Expo Go test app" | ARCHITECTURE.md:56 | 47 | **WORDING CHANGED (applied)** (Expo does not say "no API key"; it puts key steps only under the Google provider). → "Apple Maps on iPhone, Google Maps on Android (a key is needed only for Google); included in Expo Go" |
 | "Android push needs an FCM credential" | ARCHITECTURE.md:57 | 46 | VERIFIED |
 | "no 150-second timeout" (Edge Functions) | ARCHITECTURE.md:59 | 54 | VERIFIED (free plan; paid plans allow 400 s) |
 | "The SODA API is documented" | ARCHITECTURE.md:60 | 28 | VERIFIED |
 | "the Congressional App Challenge rules allow any platform. Nothing has to be on the App Store or Google Play. Judges watch the video and may ask for the code." | ARCHITECTURE.md:62 | 33, 36 | VERIFIED (the rules never require a store listing) |
-| "alerts arrive days to weeks after an inspection, never when an investigation opens" | ARCHITECTURE.md:72 | 17 | **WORDING CHANGE NEEDED** ("days to weeks" is not sourced). → "alerts arrive only after the state posts findings, which it does after due process, never when an investigation opens" |
+| "alerts arrive days to weeks after an inspection, never when an investigation opens" | ARCHITECTURE.md:72 | 17 | **WORDING CHANGED (applied)** ("days to weeks" is not sourced). → "alerts arrive only after the state posts findings, which it does after due process, never when an investigation opens" |
 | "activities about 205,000 rows · violations about 134,000 rows" | ARCHITECTURE.md:75 | 25, 26 | VERIFIED |
-| "activities and violations: full reload nightly, about 09:00 UTC" | ARCHITECTURE.md:76 | 25, 26 | **WORDING CHANGE NEEDED** → "full reload, usually overnight around 09:00 UTC (observed)" |
+| "activities and violations: full reload nightly, about 09:00 UTC" | ARCHITECTURE.md:76 | 25, 26 | **WORDING CHANGED (applied)** → "full reload, usually overnight around 09:00 UTC (observed)" |
 | "Census Geocoder ... (exact or non-exact match kept)" | ARCHITECTURE.md:91 | 38 | VERIFIED |
-| "TX-04 polygon (Census TIGER CD119)" | ARCHITECTURE.md:109 | 40 | **WORDING CHANGE NEEDED** → "Census TIGERweb CD119, Jan 1 2026 vintage" |
+| "TX-04 polygon (Census TIGER CD119)" | ARCHITECTURE.md:109 | 40 | **WORDING CHANGED (applied)** → "Census TIGERweb CD119, Jan 1 2026 vintage" |
 
 ### docs/DATA.md
 
 | Claim | file:line | Cite | Status · suggested wording |
 |---|---|---|---|
-| Dataset names "Child Care Regulation operations / activities / non-compliance" | DATA.md:7-9 | 24, 25, 26 | **WORDING CHANGE NEEDED** → use the official titles: "HHSC CCL Daycare and Residential Operations Data", "HHSC CCL Inspection Investigation Assessment Data", "HHSC CCL Non-Compliance Data" |
+| Dataset names "Child Care Regulation operations / activities / non-compliance" | DATA.md:7-9 | 24, 25, 26 | **WORDING CHANGED (applied)** → use the official titles: "HHSC CCL Daycare and Residential Operations Data", "HHSC CCL Inspection Investigation Assessment Data", "HHSC CCL Non-Compliance Data" |
 | Census Geocoder batch API (`Public_AR_Current`) | DATA.md:10 | 39 | VERIFIED |
-| "TIGER/Line CD119, Texas district 4" | DATA.md:11 | 40 | **WORDING CHANGE NEEDED** → "TIGERweb 119th Congressional Districts (GEOID 4804)" |
+| "TIGER/Line CD119, Texas district 4" | DATA.md:11 | 40 | **WORDING CHANGED (applied)** → "TIGERweb 119th Congressional Districts (GEOID 4804)" |
 | Mapillary CC BY-SA 4.0 | DATA.md:12 | 51 | VERIFIED |
 | Four types in scope (Licensed Center, Licensed Child-Care Home, Registered Child-Care Home, Listed Family Home) | DATA.md:21 | 24 | VERIFIED (exact `operation_type` values) |
 | State record URL `OperationDetails?operationId=<id>` | DATA.md:30 | 17 | VERIFIED |
 | `activity_type`: INSPECTION, REPORT, ASSESSMENT | DATA.md:37 | 25 | VERIFIED (the dataset covers "Inspections, Investigations, Assessments") |
 | Risk level: "High, Medium High, Medium, Medium Low, Low. It rates the rule, not the daycare" | DATA.md:45 | 13, 26 | VERIFIED |
-| "`non_exact` (address matched with corrections)" | DATA.md:61 | 38 | **WORDING CHANGE NEEDED**, as at README:209 |
+| "`non_exact` (address matched with corrections)" | DATA.md:61 | 38 | **WORDING CHANGED (applied)**, as at README:209 |
 | "inside the CD119 polygon" | DATA.md:62 | 40 | VERIFIED |
 | Candidates face "the building's footprint (OpenStreetMap)" | DATA.md:65 | 52 | **NO SOURCE FOUND in the repo**: no pipeline code mentions OpenStreetMap or footprints. If OSM is used, ODbL needs credit, and the README "Built with" table must list "OpenStreetMap (ODbL)". If it is not used, drop the clause |
 | "The state reloads visits and findings in full, usually overnight around 09:00 UTC" | DATA.md:69 | 25, 26 | VERIFIED (observed) |
-| "Findings appear only after the daycare has had due process, so they can post days to weeks after a visit" | DATA.md:69 | 17 | **WORDING CHANGE NEEDED**, as at README:343 |
+| "Findings appear only after the daycare has had due process, so they can post days to weeks after a visit" | DATA.md:69 | 17 | **WORDING CHANGED (applied)**, as at README:343 |
 
 ### docs/PRIVACY.md
 
@@ -247,7 +247,7 @@ Status: **VERIFIED**: the source says it. **WORDING CHANGE NEEDED**: the source 
 | 89(R) SB 1098 is a pharmacy bill | :6, :35 | 4 | VERIFIED |
 | §42.04271(a) facilities and (b)(1) to (11), (c), (e); no Texas camera mandate or video deadline | :7, :41-53 | 1, 3 | VERIFIED |
 | H.R. 2425: title, sponsor, cosponsors, status Introduced, not law | :59-62, :64 | 29, 30 | VERIFIED (status read from govinfo BILLSTATUS; the congress.gov page returned 403) |
-| H.R. 2425 "closely tracks Texas HRC §42.04271 and adds a 2-business-day deadline" | :63 | 29 | **WORDING CHANGE NEEDED** → "tracks §42.04271(b)(3)-(11) (records, inspection reports, court orders, regulator contact, video, policies, training records, no retaliation), omits the drop-in and complaint rights, and adds hotline and inspection-database information plus a 2-business-day video deadline" |
+| H.R. 2425 "closely tracks Texas HRC §42.04271 and adds a 2-business-day deadline" | :63 | 29 | **WORDING CHANGED (applied)** → "tracks §42.04271(b)(3)-(11) (records, inspection reports, court orders, regulator contact, video, policies, training records, no retaliation), omits the drop-in and complaint rights, and adds hotline and inspection-database information plus a 2-business-day video deadline" |
 | OperationDetails URL; five-year history; due-process lag; email updates | :9, :70, :72-74 | 17 | VERIFIED |
 | Search page redirect (curl -I) | :75 | n/a | Not re-checked Oct 25 |
 | "texreg ... could not be fetched as text" | :79 | 5-12 | Now resolved: Cornell LII serves the current TAC text (URLs [5]-[12]); cite those alongside the HHSC PDF [13] |

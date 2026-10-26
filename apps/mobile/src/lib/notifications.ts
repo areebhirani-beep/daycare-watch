@@ -30,12 +30,12 @@ export async function getPermission(): Promise<PermissionState> {
   return status;
 }
 
+export type EnableResult = { permission: PermissionState; registered: boolean };
+
 /**
  * Asks the OS for permission (only after our own explainer), then registers the Expo push token.
  * Registration failures are reported, not thrown, so watching still succeeds.
  */
-export type EnableResult = { permission: PermissionState; registered: boolean };
-
 export async function enableAlerts(): Promise<EnableResult> {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('state-records', {

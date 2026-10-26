@@ -503,7 +503,7 @@ export function PlacePage({
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <Text variant="subhead">Alerts need the app</Text>
             <Text variant="callout" tone="secondary">
-              Watch a daycare in the iPhone app to get the state’s next post.
+              Watch a daycare in the phone app to get the state’s next post.
             </Text>
           </View>
         ) : (

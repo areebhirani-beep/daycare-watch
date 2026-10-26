@@ -6,7 +6,7 @@ import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanima
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { formatDateShort, plural, tidyCase } from '@/lib/format';
-import type { DaycareRow } from '@/lib/types';
+import type { NearRow } from '@/lib/types';
 import { fade, haptic, sheet, space, spring, TAB_BAR_CLEARANCE, useColors, useIsDark } from '@/theme';
 
 import { FloatButton } from './Button';
@@ -37,7 +37,7 @@ const SHORT_TYPE: Record<string, string> = {
   'Registered Child-Care Home': 'Registered home',
 };
 
-export function rowMeta(r: DaycareRow, today = new Date().toISOString().slice(0, 10)): string {
+export function rowMeta(r: NearRow, today = new Date().toISOString().slice(0, 10)): string {
   const parts = [SHORT_TYPE[r.operation_type] ?? r.operation_type];
   if (typeof r.distance_km === 'number') parts.push(`${(r.distance_km * 0.621371).toFixed(1)} mi`);
   else if (r.city) parts.push(tidyCase(r.city));
@@ -46,7 +46,7 @@ export function rowMeta(r: DaycareRow, today = new Date().toISOString().slice(0,
   return parts.join(' · ');
 }
 
-export function rowFallback(r: DaycareRow, today = new Date().toISOString().slice(0, 10)): string {
+export function rowFallback(r: NearRow, today = new Date().toISOString().slice(0, 10)): string {
   const n = r.findings_24mo ?? 0;
   if (n > 0) return `${plural(n, 'problem')} posted in 2 years`;
   // "No problems" only when the state visited; with no visit there is nothing to report either way.
@@ -56,21 +56,21 @@ export function rowFallback(r: DaycareRow, today = new Date().toISOString().slic
 }
 
 /** The compact strip for a row, when the RPC carries `visits_24mo`. */
-export function rowStrip(r: DaycareRow) {
+export function rowStrip(r: NearRow) {
   // Cloud returns the field only after its next migration, so treat it as optional until then.
   const v: RowVisit[] | undefined = r.visits_24mo;
   // An empty list is a real answer (no visits in 24 months), so only a missing field falls back.
   return v ? stripFromRow(v) : null;
 }
 
-function matches(r: DaycareRow, f: Set<Filter>): boolean {
+function matches(r: NearRow, f: Set<Filter>): boolean {
   if (f.has('centers') && !f.has('homes') && r.operation_type !== 'Licensed Center') return false;
   if (f.has('homes') && !f.has('centers') && r.operation_type === 'Licensed Center') return false;
   if (f.has('district') && !(r.in_district && r.district_basis === 'point')) return false;
   return true;
 }
 
-type Cluster = { key: string; lat: number; lng: number; rows: DaycareRow[] };
+type Cluster = { key: string; lat: number; lng: number; rows: NearRow[] };
 
 // Pins closer than this on screen would overlap, so they share one bubble.
 const CLUSTER_PT = 52;
@@ -85,16 +85,16 @@ const stacked = (k: Cluster) => {
 };
 
 /** Map layering: translucent home/approximate areas under solid pins, watched above, clusters above, the picked one on top. */
-function markerZ(r: DaycareRow, selected: boolean, watched: boolean): number {
+function markerZ(r: NearRow, selected: boolean, watched: boolean): number {
   if (selected) return 10;
   if (watched) return 2;
   return imageryAllowed(r.operation_type) && r.geocode_quality !== 'non_exact' ? 1 : 0;
 }
 
-function cluster(rows: DaycareRow[], region: Region, width: number, height: number): Cluster[] {
+function cluster(rows: NearRow[], region: Region, width: number, height: number): Cluster[] {
   const latCell = (region.latitudeDelta * CLUSTER_PT) / height;
   const lngCell = (region.longitudeDelta * CLUSTER_PT) / width;
-  const groups = new Map<string, DaycareRow[]>();
+  const groups = new Map<string, NearRow[]>();
   for (const r of rows) {
     if (r.lat == null || r.lng == null) continue;
     const k = `${Math.floor(r.lat / latCell)}:${Math.floor(r.lng / lngCell)}`;
@@ -114,7 +114,7 @@ function cluster(rows: DaycareRow[], region: Region, width: number, height: numb
 const TAB_FLOOR = TAB_BAR_CLEARANCE - 20;
 
 type Props = {
-  rows: DaycareRow[];
+  rows: NearRow[];
   loading: boolean;
   center: { lat: number; lng: number } | null;
   fallbackCenter: { lat: number; lng: number };
@@ -124,7 +124,7 @@ type Props = {
   areaLabel?: string;
   watchedIds: Set<number>;
   onOpen: (operationId: number) => void;
-  onToggleWatch?: (row: DaycareRow) => void;
+  onToggleWatch?: (row: NearRow) => void;
   onSearch: () => void;
   onLocate: () => void;
   /** "Last checked with the state …" (every data screen says when it last matched the state), rendered at the end of the list. */
@@ -161,7 +161,7 @@ export function HomeMap({
   const sheetRef = useRef<BottomSheet>(null);
   // Detents spring like Apple Maps instead of easing on a timer.
   const sheetSpring = useBottomSheetSpringConfigs(spring.sheet);
-  const carousel = useRef<FlatList<DaycareRow>>(null);
+  const carousel = useRef<FlatList<NearRow>>(null);
   const list = useRef<BottomSheetFlatListMethods>(null);
   const [filters, setFilters] = useState<Set<Filter>>(new Set());
   const [selected, setSelected] = useState<number | null>(null);
@@ -230,7 +230,7 @@ export function HomeMap({
     });
   };
 
-  const pick = (r: DaycareRow) => {
+  const pick = (r: NearRow) => {
     haptic.select();
     setSelected(r.operation_id);
     // A lone pin is never inside a stacked spot, so picking one shows the full list again.
@@ -459,7 +459,7 @@ export function HomeMap({
         <BottomSheetFlatList
           ref={list}
           data={loading && rows.length === 0 ? [] : listed}
-          keyExtractor={(r: DaycareRow) => String(r.operation_id)}
+          keyExtractor={(r: NearRow) => String(r.operation_id)}
           ListHeaderComponent={header}
           refreshing={refreshing}
           onRefresh={onRefresh}
@@ -477,7 +477,7 @@ export function HomeMap({
             )
           }
           ItemSeparatorComponent={() => <View style={[styles.sep, { backgroundColor: c.hairline }]} />}
-          renderItem={({ item }: { item: DaycareRow }) => (
+          renderItem={({ item }: { item: NearRow }) => (
             <PlaceRow
               name={tidyCase(item.name)}
               meta={rowMeta(item)}

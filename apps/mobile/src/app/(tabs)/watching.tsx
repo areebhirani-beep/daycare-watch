@@ -141,11 +141,11 @@ export default function WatchingScreen() {
               <Glyph name="bellFill" size={28} color={c.onSignal} />
             </View>
             <Text variant="title" align="center" accessibilityRole="header">
-              {isWeb ? 'Watching works in the iPhone app' : 'Watch a daycare'}
+              {isWeb ? 'Watching works in the phone app' : 'Watch a daycare'}
             </Text>
             <Text variant="callout" tone="secondary" align="center">
               {isWeb
-                ? 'On the web, open any daycare to see its record.'
+                ? 'On the web, open any daycare to see its record, or see what an alert looks like.'
                 : 'You get an alert when the state posts something new about it.'}
             </Text>
             <Button
@@ -154,6 +154,15 @@ export default function WatchingScreen() {
               onPress={() => router.navigate('/')}
               style={{ alignSelf: 'stretch' }}
             />
+            {/* The web has no alerts of its own, so it shows what one looks like, drawn from a real public record. */}
+            {isWeb ? (
+              <Button
+                label="See an example alert"
+                kind="secondary"
+                onPress={() => router.push('/alert/example')}
+                style={{ alignSelf: 'stretch' }}
+              />
+            ) : null}
           </View>
         )
       }

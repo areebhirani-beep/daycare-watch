@@ -67,6 +67,7 @@ function App() {
               <Stack.Screen name="daycare/[id]/watch" options={{ presentation: 'modal', title: 'Watch this daycare' }} />
               <Stack.Screen name="daycare/[id]/tour" options={{ title: 'Tour questions' }} />
               <Stack.Screen name="alert/[eventId]" options={{ title: 'New state record' }} />
+              <Stack.Screen name="alert/example" options={{ title: 'Example alert' }} />
               <Stack.Screen name="report" options={{ title: 'Report a concern' }} />
               <Stack.Screen name="week" options={{ title: 'TX-04 last week' }} />
               <Stack.Screen

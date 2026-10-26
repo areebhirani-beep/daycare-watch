@@ -13,6 +13,7 @@ export type {
   Inspection,
   Photo,
   LastSync,
+  NearRow,
   RiskLevel,
   Stats,
 } from '@daycare-watch/db';

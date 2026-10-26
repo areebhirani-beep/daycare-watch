@@ -5,6 +5,7 @@ import { Linking, Platform, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { Button, LastChecked } from '@/components/ui';
+import { useLetter } from '@/components/ui/LetterSheet';
 import { PlacePage, type RequestKind } from '@/components/ui/PlacePage';
 import { PlaceSkeleton } from '@/components/ui/Skeletons';
 import { Text } from '@/components/ui/Text';
@@ -26,6 +27,7 @@ export default function DaycareRecordScreen() {
   const watching = useIsWatching(operationId);
   const setWatch = useSetWatch(operationId);
   const alertsOn = useAlertsOn();
+  const letter = useLetter();
   const ready = Boolean(record.data);
   useEffect(() => {
     if (ready) since('place record shown');
@@ -78,11 +80,12 @@ export default function DaycareRecordScreen() {
         onCategories={() => router.push('/categories')}
         onRequest={(kind: RequestKind) => {
           const { subject, body } = requestText(kind, name);
-          shareText(subject, body);
+          letter.open(subject, body);
         }}
         lawCite={LAW_CITE}
         footer={<LastChecked fallback={last_checked_at} />}
       />
+      {letter.sheet}
     </Animated.View>
   );
 }

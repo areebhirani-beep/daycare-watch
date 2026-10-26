@@ -17,7 +17,7 @@ import { Text } from '@/components/ui/Text';
 import { useDaycaresNear, useDaycareSearch, useSetWatch } from '@/lib/api';
 import { useAppWidth } from '@/lib/layout';
 import { tidyCase } from '@/lib/format';
-import type { DaycareRow } from '@/lib/types';
+import type { NearRow } from '@/lib/types';
 import { easeOut, enter, haptic, motion, space, useColors } from '@/theme';
 
 /** The picked card rises 2 pt and gets a check, like choosing a ride in Uber. No bounce. */
@@ -58,7 +58,7 @@ export default function FindScreen() {
   const [query, setQuery] = useState('');
   const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
-  const [picked, setPicked] = useState<DaycareRow | null>(null);
+  const [picked, setPicked] = useState<NearRow | null>(null);
   const searching = query.trim().length >= 2;
   const search = useDaycareSearch(query);
   const near = useDaycaresNear(searching ? null : (center ?? ONBOARDING_AREA), 10);

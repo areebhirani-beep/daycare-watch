@@ -6,11 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActionPill } from '@/components/ui/Chrome';
 import type { GlyphName } from '@/components/ui/Glyph';
 import { SectionHead } from '@/components/ui/Prose';
+import { useLetter } from '@/components/ui/LetterSheet';
 import { RightCard } from '@/components/ui/RightCard';
 import { Text } from '@/components/ui/Text';
 import { useDaycareRecord } from '@/lib/api';
 import { tidyCase } from '@/lib/format';
-import { shareText } from '@/lib/share';
 import { FEDERAL_NOTE, LAW_CITE, LAW_NAME, LAW_URL, lawCovers, NOT_COVERED, requestText, type RequestKind, RIGHTS } from '@/lib/rights';
 import { radius, space, TAB_BAR_CLEARANCE, useColors } from '@/theme';
 
@@ -35,11 +35,12 @@ export default function RightsScreen() {
   const record = useDaycareRecord(Number(operationId ?? 0));
   const daycare = operationId && record.data ? tidyCase(record.data.daycare.name) : null;
   const covered = !record.data || lawCovers(record.data.daycare.operation_type);
+  const letter = useLetter();
 
   function run(action: Action) {
     if ('request' in action) {
       const { subject, body } = requestText(action.request, daycare);
-      shareText(subject, body);
+      letter.open(subject, body);
     } else if ('route' in action) {
       router.push(action.route);
     } else {
@@ -110,6 +111,7 @@ export default function RightsScreen() {
           {FEDERAL_NOTE}
         </Text>
       </View>
+      {letter.sheet}
     </ScrollView>
   );
 }

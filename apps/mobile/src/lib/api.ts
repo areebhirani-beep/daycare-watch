@@ -13,6 +13,7 @@ import type {
   DistrictPulse,
   DistrictRecentVisit,
   LastSync,
+  NearRow,
 } from './types';
 
 // The app reaches data only through the Postgres RPCs in supabase/migrations; no direct table reads.
@@ -46,6 +47,8 @@ export function useDaycareRecord(id: number) {
   return useQuery({
     queryKey: keys.record(id),
     queryFn: () => rpc<DaycareRecord>('daycare_record', { p_operation_id: id }),
+    // 0 means no daycare yet (an alert still loading), so nothing is fetched.
+    enabled: id > 0,
   });
 }
 
@@ -77,8 +80,8 @@ export function useAreaCompare(id: number) {
 export function useDaycaresNear(center: { lat: number; lng: number } | null, km = 10) {
   return useQuery({
     queryKey: keys.near(center?.lat ?? 0, center?.lng ?? 0, km),
-    // The closest 50 keep the first load small (about 36 KB, against 131 KB for the RPC's 200).
-    queryFn: () => rpc<DaycareRow[]>('daycares_near', { lat: center?.lat, lng: center?.lng, km }, 50),
+    // The closest 50 keep the first load small; the RPC returns up to 150.
+    queryFn: () => rpc<NearRow[]>('daycares_near', { lat: center?.lat, lng: center?.lng, km }, 50),
     enabled: center !== null,
     placeholderData: (prev) => prev,
   });

@@ -1,11 +1,11 @@
 -- Home daycares are private residences: the API never returns a home's street or a point finer
--- than 2 decimals or a ZIP+4, search never matches a home on its street or ZIP+4, and district_recent_visits stays
+-- than 2 decimals or a ZIP+4, daycares_near can't be probed to find a home's real point, search never matches a home on its street or ZIP+4, and district_recent_visits stays
 -- name-free. Also the photo age rule (no photo before the permit or older than 6 years).
 begin;
 create extension if not exists pgtap with schema extensions;
 -- Real records the asserts below name, so they hold on a fresh clone too (rolled back with the test).
 \ir fixtures/real_rows.psql
-select plan(13);
+select plan(16);
 
 create temp table h on commit drop as
 select d.operation_id, d.name, d.address, d.city, d.zip,
@@ -70,6 +70,52 @@ select is(
   (select count(*) from h, public.daycare_search(h.zip) s where length(h.zip) > 5 and s.operation_id = h.operation_id),
   0::bigint, 'searching a home''s ZIP+4 does not find it');
 
+reset role;
+
+-- Probing daycares_near for a home's real point. For the test (rolled back) a home's point is moved 0.004 degrees
+-- north and east of its 2-decimal public point, about 600 m, so the real and public points are known to differ.
+create temp table hp on commit drop as
+select operation_id,
+       round(extensions.st_y(geom::extensions.geometry)::numeric, 2)::float8 as pub_lat,
+       round(extensions.st_x(geom::extensions.geometry)::numeric, 2)::float8 as pub_lng
+  from core.daycares
+ where operation_type <> 'Licensed Center' and operation_type = any (core.in_scope_types())
+   and geom is not null and operation_status is distinct from 'N'
+ order by operation_id
+ limit 1;
+update core.daycares d
+   set geom = extensions.st_setsrid(extensions.st_makepoint(hp.pub_lng + 0.004, hp.pub_lat + 0.004), 4326)::extensions.geography
+  from hp where d.operation_id = hp.operation_id;
+-- A spot 950 m past the real point, on the side away from the public point: a 1 km circle there holds the real
+-- point but not the public one.
+create temp table probe on commit drop as
+select hp.operation_id, extensions.st_y(o::extensions.geometry) as lat, extensions.st_x(o::extensions.geometry) as lng
+  from hp, lateral (
+    select extensions.st_project(
+             extensions.st_setsrid(extensions.st_makepoint(hp.pub_lng + 0.004, hp.pub_lat + 0.004), 4326)::extensions.geography,
+             950,
+             extensions.st_azimuth(
+               extensions.st_setsrid(extensions.st_makepoint(hp.pub_lng, hp.pub_lat), 4326)::extensions.geography,
+               extensions.st_setsrid(extensions.st_makepoint(hp.pub_lng + 0.004, hp.pub_lat + 0.004), 4326)::extensions.geography)
+           )::extensions.geography as o) x;
+grant select on hp, probe to anon;
+
+set local role anon;
+select is(
+  (select count(*) from probe p, public.daycares_near(p.lat, p.lng, 1, '{}') n where n.operation_id = p.operation_id),
+  0::bigint, 'a 1 km circle that holds a home''s real point but not its public point does not return it');
+
+select is(
+  (select count(*) from hp, public.daycares_near(hp.pub_lat + 0.004, hp.pub_lng + 0.004, 0.005, '{}') n
+    where n.operation_id = hp.operation_id),
+  (select count(*) from hp, public.daycares_near(hp.pub_lat, hp.pub_lng, 0.005, '{}') n
+    where n.operation_id = hp.operation_id),
+  'a 5 m probe at a home''s real point answers the same as one at its public point');
+
+select is(
+  (select count(*) from hp, public.daycares_near(hp.pub_lat + 0.004, hp.pub_lng + 0.004, 0.005, '{}')),
+  (select count(*) from hp, public.daycares_near(hp.pub_lat + 0.004, hp.pub_lng + 0.004, 1, '{}')),
+  'a radius under 1 km searches 1 km');
 reset role;
 
 -- Photo age rule, on a real exact-geocoded licensed center (rolled back). A person checked each verified photo shows

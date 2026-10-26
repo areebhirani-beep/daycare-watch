@@ -9,7 +9,7 @@ What we tested, how, and what happened, Oct 24 to 25 2026. Each case was run by 
 
 | # | Case | Method | Result | Evidence |
 |---|---|---|---|---|
-| B1 | Schema, row-level security (every allow and every deny), RPC shapes, views, photo rules, recent visits | pgTAP | PASS | `supabase test db` → Files=12, Tests=196, PASS (Oct 25) |
+| B1 | Schema, row-level security (every allow and every deny), RPC shapes, views, photo rules, recent visits | pgTAP | PASS | `supabase test db` → Files=12, Tests=199, PASS (Oct 25) |
 | B2 | The app's API path: public reads, anonymous sign-in, watch / unwatch / re-watch, internal tables unreachable | `supabase/snippets/api_smoke.sh` | PASS | local 21/21, cloud 21/21 (Oct 25) |
 | B3 | The nightly sync on a night with no changes creates no events | `python -m pipeline sync --dry-run --no-notify` | PASS | events_new_violation 0, events_daycare 0, inspections_new 0, join_rate 1.0 |
 | B4 | An alert for a daycare you no longer watch is not shown | `EVENT_ID=43 EVENT_OP=1304920 supabase/snippets/api_smoke.sh` | PASS | hidden before watching, shown while watching (is_replay=true), hidden after unwatch; 24/24 |
@@ -159,3 +159,4 @@ What we tested, how, and what happened, Oct 24 to 25 2026. Each case was run by 
 | D34 | M7 | Oct 25 | [D34](qa/D34-allow-opens-record.jpg) | after Allow on the iOS notification prompt, the done screen opens the watched daycare's record by itself 0.8 s later (in the simulator the Allow tap also reaches the card under the prompt) | FIXED, the card ignores taps for 1.5 s; re-tested (M7) |
 | D35 | M7 | Oct 25 | [D35](qa/D35-hero-swipe-opens-viewer.jpg) | a sideways swipe on a place's single 3D picture opens the full-screen viewer, and the next scrolls turn the 3D view | FIXED, the viewer opens only on a tap (finger moved 10 pt or less); re-tested (M7) |
 | D36 | M7 | Oct 25 | [D36](qa/D36-push-tap-under-viewer.jpg) | with that viewer open and the app in the background, tapping the alert brings back the viewer, not the alert | FIXED, the viewer closes when the place page loses focus; re-tested on the fix build with Look Around open ([after](qa/D36-fixed-alert-over-viewer.jpg)) |
+| D37 | B1 | Oct 25 | | the nearby search picked homes by their real map point while showing only the rounded one, so very small search circles could narrow a home down past its rounded point | FIXED, homes are searched and sorted on the same rounded point the app shows, and a radius under 1 km searches 1 km (`20261025190000_near_public_point.sql`). pgTAP: a 1 km circle holding a home's real point but not its rounded point does not return it; a 5 m search at the real point answers the same as one at the rounded point. Cloud, 7:25 pm: 5 m and 1 km searches return the same rows at 3 points |

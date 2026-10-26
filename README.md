@@ -69,7 +69,7 @@ The one-line summary only shortens the inspector's first sentence; a test over a
 | Database | Supabase Postgres + PostGIS, row-level security | Nearest-daycare search, the TX-04 boundary, home-daycare privacy; the app reads it only through SQL functions |
 | Pipeline | Python 3.12, Pydantic, GitHub Actions (every morning) | Download, validate, join, diff, and notify |
 | Alerts | Expo Push | One alert per new visit for each parent watching that daycare |
-| Tests | pytest + hypothesis, pgTAP, Jest, Maestro | 283 pipeline, 196 database, 63 app, plus end-to-end |
+| Tests | pytest + hypothesis, pgTAP, Jest, Maestro | 283 pipeline, 199 database, 63 app, plus end-to-end |
 
 ### Repository layout
 
@@ -114,7 +114,7 @@ Run on Oct 25 2026. Details and commands: [`docs/TESTING.md`](docs/TESTING.md).
 | Suite | Result |
 |---|---|
 | Pipeline (pytest and hypothesis) | 283 pass, 93% line coverage, ruff and `mypy --strict` clean |
-| Database (pgTAP): schema, row-level security, every SQL function, home privacy | 196 pass in 12 files |
+| Database (pgTAP): schema, row-level security, every SQL function, home privacy | 199 pass in 12 files |
 | Live API against the cloud database | 94 of 94 endpoint checks pass |
 | App unit (Jest) | 63 pass |
 | End to end | Tapping a push with the app closed or in the background opens that visit's findings (Release build, Maestro); a replayed real finding arrived as a push on a real iPhone |

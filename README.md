@@ -1,6 +1,6 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/readme/banner-dark.png">
-  <img src="docs/readme/banner-light.png" alt="Daycare Watch. See what Texas inspectors found. Every licensed daycare in Texas, in plain words, with an alert when the state posts something new. 2026 Congressional App Challenge, Texas's 4th District." width="100%">
+  <img src="docs/readme/banner-light.png" alt="Daycare Watch. Find the right daycare for your family. See what Texas inspectors found at any daycare, and get a heads-up when they post something new. 2026 Congressional App Challenge, Texas's 4th District." width="100%">
 </picture>
 
 <div align="center">
@@ -102,7 +102,7 @@ flowchart TB
   subgraph TABS["Tabs"]
     t1["Find<br/>nearest first · TX-04 filter"]
     t2["Watching<br/>your daycares"]
-    t3["Your rights<br/>Texas law, plain words"]
+    t3["Your rights<br/>SB 1098, as a request letter"]
   end
   o3 -- "I'm just looking" --> t1
   o4 --> t2

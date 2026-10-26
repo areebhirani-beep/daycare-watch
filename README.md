@@ -9,7 +9,7 @@
 See what Texas inspectors found at any daycare, and get a heads-up when they post something new.
 
 ### [Try it: daycare-watch.vercel.app](https://daycare-watch.vercel.app)
-No sign-in. Real Texas state records. Works on any phone or computer.
+No sign-in. Real Texas state records. The website is a simple preview; the full app, with alerts, runs on iPhone and Android.
 
 [![Pipeline CI](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml)
 [![Daily sync](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml)
@@ -25,7 +25,7 @@ Built for the **2026 Congressional App Challenge, Texas's 4th District**
 
 ## Why we built this
 
-This app is personal to us: one of us was moved to a better daycare as a kid over things that seemed small at the time, like being made to nap when already too old for it. One place the warning signs can show up is in the reports state inspectors write after they visit a daycare, and Texas already makes those reports public, but they sit on a search website that you have to know about and go through one daycare at a time. We know the app cannot detect or prevent anything that happens at a daycare; what it does is make the reports the state already writes easier for a parent to find, understand, and act on.
+This app is personal to us. Areeb's cousin came home from her daycare crying every single day, and his uncle had no idea where to look. Texas already sends inspectors into every licensed daycare and publishes what they find, but it sits in an open dataset of more than a hundred thousand rows of rule numbers and legal language. In Texas's 4th District alone, inspectors wrote down 1,347 findings in the last two years. Daycare Watch puts those reports in front of parents in words they can follow, and tells them when something new is posted. We know the app cannot detect or prevent anything that happens at a daycare; it makes what the state already knows easy to find.
 
 The app never calls a daycare safe or unsafe, and never scores, grades, or ranks one. It shows what the state found, when, and whether the state has checked the fix.
 
@@ -36,7 +36,7 @@ The app never calls a daycare safe or unsafe, and never scores, grades, or ranks
 3. Open a daycare: what the state found at its latest visit, each finding with the inspector's own words, and a link to the official state record.
 4. Scroll a little to the tabs under the daycare's name and tap **Your rights**: the three requests Texas law already gives parents (your child's records, a drop-in visit, incident video), written and ready to send.
 
-On the iPhone app, **Watch this daycare** turns on a push alert for the next time the state posts something about it.
+In the phone app, **Watch this daycare** turns on a push alert for the next time the state posts something about it.
 
 | Find | A daycare's record | Every finding |
 |:-:|:-:|:-:|
@@ -58,6 +58,28 @@ flowchart LR
 ```
 
 The one-line summary only shortens the inspector's first sentence; a test over all 133,739 findings in the state's file checks that it never adds a word or a number. Each stage, its guarantee, and its test are in [`docs/METHODS.md`](docs/METHODS.md).
+
+## Built with
+
+| Layer | Technology | What it does |
+|---|---|---|
+| App | Expo SDK 58, React Native 0.88, TypeScript, Expo Router | One codebase for iPhone, Android, and the web |
+| Web | Static export hosted on Vercel | [daycare-watch.vercel.app](https://daycare-watch.vercel.app), the app inside a phone frame on desktop |
+| Database | Supabase Postgres + PostGIS, row-level security | Nearest-daycare search, the TX-04 boundary, home-daycare privacy; the app reads it only through SQL functions |
+| Pipeline | Python 3.12, Pydantic, GitHub Actions (every morning) | Download, validate, join, diff, and notify |
+| Alerts | Expo Push | One alert per new visit for each parent watching that daycare |
+| Tests | pytest + hypothesis, pgTAP, Jest, Maestro | 283 pipeline, 196 database, 63 app, plus end-to-end |
+
+### Repository layout
+
+| Path | What's in it |
+|---|---|
+| [`apps/mobile`](apps/mobile) | The Expo app: screens in `src/app`, shared UI in `src/components` |
+| [`services/pipeline`](services/pipeline) | The Python pipeline (`src`), its SQL, and its tests |
+| [`supabase`](supabase) | Database migrations, SQL functions, and the pgTAP tests in `supabase/tests` |
+| [`packages/db`](packages/db) | Typed database client shared with the app |
+| [`.github/workflows`](.github/workflows) | `daily-sync.yml` (the morning run) and `pipeline-ci.yml` (pipeline tests on every pipeline change) |
+| [`docs`](docs) | Methods, data dictionary, testing, privacy, and sources |
 
 ## What the data shows
 

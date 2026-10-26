@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Linking, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { isWeb } from '@/lib/runtime';
 import { shareText } from '@/lib/share';
@@ -11,13 +12,12 @@ import { Text } from './Text';
 type Letter = { subject: string; body: string };
 
 /**
- * A ready-to-send request letter. Phones hand it to the share sheet. A desktop browser's share sheet shows no letter,
- * so a tap there looked like nothing happened: the web shows the letter itself, with Copy and Email.
- * Render `sheet` once on the screen and call `open` from any row.
+ * A ready-to-send request letter, shown in full before it goes anywhere, so a parent sees what they are sending.
+ * Phones then send it through the share sheet. The web copies it or opens an email draft (a desktop browser's share
+ * sheet shows no letter). Render `sheet` once on the screen and call `open` from any row.
  */
 export function useLetter(): { open: (subject: string, body: string) => void; sheet: React.ReactNode } {
   const [letter, setLetter] = useState<Letter | null>(null);
-  if (!isWeb) return { open: shareText, sheet: null };
   return {
     open: (subject, body) => setLetter({ subject, body }),
     sheet: <LetterSheet letter={letter} onClose={() => setLetter(null)} />,
@@ -26,6 +26,7 @@ export function useLetter(): { open: (subject: string, body: string) => void; sh
 
 function LetterSheet({ letter, onClose }: { letter: Letter | null; onClose: () => void }) {
   const c = useColors();
+  const insets = useSafeAreaInsets();
   const [copied, setCopied] = useState<'yes' | 'failed' | null>(null);
   const close = () => {
     setCopied(null);
@@ -53,10 +54,13 @@ function LetterSheet({ letter, onClose }: { letter: Letter | null; onClose: () =
   };
 
   return (
-    <Modal visible={letter !== null} transparent animationType="fade" onRequestClose={close}>
+    <Modal visible={letter !== null} transparent animationType={isWeb ? 'fade' : 'slide'} onRequestClose={close}>
       <Pressable accessibilityRole="button" accessibilityLabel="Close the letter" style={[StyleSheet.absoluteFill, { backgroundColor: c.scrim }]} onPress={close} />
       <View style={styles.wrap} pointerEvents="box-none">
-        <View style={[styles.sheet, elevation.sheet, { backgroundColor: c.surface }]} accessibilityViewIsModal>
+        <View
+          style={[styles.sheet, elevation.sheet, { backgroundColor: c.surface, paddingBottom: Math.max(space.xl, insets.bottom + space.sm) }]}
+          accessibilityViewIsModal
+        >
           <Text variant="headline" accessibilityRole="header">
             {letter?.subject}
           </Text>
@@ -72,10 +76,14 @@ function LetterSheet({ letter, onClose }: { letter: Letter | null; onClose: () =
                 ? 'This browser blocked copying. Select the letter and copy it.'
                 : 'Fill in the parts in [brackets], then send it to the director.'}
           </Text>
-          <View style={styles.buttons}>
-            <Button label={copied === 'yes' ? 'Copied' : 'Copy letter'} kind="ink" icon="doc" onPress={() => void copy()} style={{ flex: 1 }} />
-            <Button label="Email" kind="secondary" icon="external" onPress={email} style={{ flex: 1 }} />
-          </View>
+          {isWeb ? (
+            <View style={styles.buttons}>
+              <Button label={copied === 'yes' ? 'Copied' : 'Copy letter'} kind="ink" icon="doc" onPress={() => void copy()} style={{ flex: 1 }} />
+              <Button label="Email" kind="secondary" icon="external" onPress={email} style={{ flex: 1 }} />
+            </View>
+          ) : (
+            <Button label="Send" kind="ink" icon="share" onPress={() => letter && shareText(letter.subject, letter.body)} />
+          )}
           <Button label="Close" kind="plain" size="md" onPress={close} />
         </View>
       </View>
@@ -106,7 +114,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radius.sheet,
     borderTopRightRadius: radius.sheet,
     padding: space.lg,
-    paddingBottom: space.xl,
     gap: space.md,
     maxHeight: '88%',
   },

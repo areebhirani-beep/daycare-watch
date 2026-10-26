@@ -1,5 +1,6 @@
+import { useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type LayoutChangeEvent, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import Animated, {
@@ -117,6 +118,13 @@ export function PlacePage({
 }: Props) {
   const c = useColors();
   const insets = useSafeAreaInsets();
+  const [focused, setFocused] = useState(true);
+  useFocusEffect(
+    useCallback(() => {
+      setFocused(true);
+      return () => setFocused(false);
+    }, []),
+  );
   const [tab, setTab] = useState<Tab>('overview');
   const hasPoint = typeof record.daycare.lat === 'number' && typeof record.daycare.lng === 'number';
   // No map location in the state record: a short band, not an empty map that pretends to be one.
@@ -259,8 +267,9 @@ export function PlacePage({
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      {/* Light status-bar text over the aerial photo and the dimmed bar; the street maps follow the theme. */}
-      <StatusBar style={(solid ? hasPoint : aerial) ? 'light' : 'auto'} />
+      {/* Light status-bar text over the aerial photo and the dimmed bar; the street maps follow the theme. Only while
+          this page is on top: a screen pushed over it (Tour questions, an alert) keeps the app's own style. */}
+      {focused ? <StatusBar style={(solid ? hasPoint : aerial) ? 'light' : 'auto'} /> : null}
       <Animated.ScrollView
         ref={scrollRef}
         contentContainerStyle={{ paddingBottom: space.section }}

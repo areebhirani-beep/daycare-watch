@@ -192,7 +192,8 @@ export default function FindScreen() {
               showsHorizontalScrollIndicator={false}
               snapToInterval={cardW + space.md}
               decelerationRate="fast"
-              style={{ marginHorizontal: -space.xl, overflow: 'visible' }}
+              // On the web an inline overflow replaces the scroller's own overflow-x: auto and the row stops scrolling.
+              style={{ marginHorizontal: -space.xl, overflow: web ? undefined : 'visible' }}
               contentContainerStyle={{ paddingHorizontal: space.xl, paddingTop: space.md, gap: space.md }}
               ListEmptyComponent={
                 near.isPending ? (

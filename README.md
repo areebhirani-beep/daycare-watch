@@ -11,6 +11,8 @@ See what Texas inspectors found at any daycare, and get a heads-up when they pos
 ### [Try it: daycare-watch.vercel.app](https://daycare-watch.vercel.app)
 No sign-in. Real Texas state records. The website is a simple preview; the full app, with alerts, runs on iPhone and Android.
 
+**14,310** Texas daycares · **118,294** state findings, each matched to its visit · refreshed **every morning** · **545** automated tests
+
 [![App CI](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/app-ci.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/app-ci.yml)
 [![Pipeline CI](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml)
 [![Daily sync](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml)
@@ -26,16 +28,21 @@ Built for the **2026 Congressional App Challenge, Texas's 4th District**
 
 ## Why we built this
 
-This app is personal to us. Areeb's cousin came home from her daycare crying every single day, and his uncle had no idea where to look. Texas already sends inspectors into every licensed daycare and publishes what they find, but it sits in an open dataset of more than a hundred thousand rows of rule numbers and legal language. In Texas's 4th District alone, inspectors wrote down 1,347 findings in the last two years. Daycare Watch puts those reports in front of parents in words they can follow, and tells them when something new is posted. We know the app cannot detect or prevent anything that happens at a daycare; it makes what the state already knows easy to find.
+This app is personal to us. Areeb's cousin came home from her daycare crying every single day, and his uncle had no idea where to look. Texas already sends inspectors into every licensed daycare and publishes what they find, but it sits in an open dataset of more than a hundred thousand rows of rule numbers and legal language. In Texas's 4th District alone, inspectors wrote down at least 1,347 findings in the two years to Oct 25 2026. Daycare Watch puts those reports in front of parents in words they can follow, and tells them when something new is posted. We know the app cannot detect or prevent anything that happens at a daycare; it makes what the state already knows easy to find.
 
 The app never calls a daycare safe or unsafe, and never scores, grades, or ranks one. It shows what the state found, when, and whether the state has checked the fix.
+
+### Why Texas's 4th District
+
+In 2018, a two-month-old baby named Kairo was badly hurt at his daycare in McKinney. Congressman Pat Fallon (TX-04) introduced the [Kairo Act (H.R. 2425)](https://www.congress.gov/bill/119th-congress/house-bill/2425) in March 2025. It would require child care providers that receive federal funds to give parents a written bill of rights, including access to their child's records, inspection reports, and video of an alleged incident. The bill has been introduced and referred to committee; it is not law. Texas already gives parents most of these rights in Kairo and the Kids' Law (SB 1098, [Human Resources Code §42.04271](https://statutes.capitol.texas.gov/Docs/HR/htm/HR.42.htm)), and the app's **Your rights** tab turns them into requests a parent can send. Sources, with verbatim quotes: [`docs/OFFICIAL_SOURCES.md`](docs/OFFICIAL_SOURCES.md).
 
 ## Try it in 30 seconds
 
 1. Open **[daycare-watch.vercel.app](https://daycare-watch.vercel.app)** on any phone or computer.
 2. Search a name, city, or ZIP in TX-04, for example `Montessori`, `Rockwall`, or `75034`.
 3. Open a daycare: what the state found at its latest visit, each finding with the inspector's own words, and a link to the official state record.
-4. Scroll a little to the tabs under the daycare's name and tap **Your rights**: the three requests Texas law already gives parents (your child's records, a drop-in visit, incident video), written and ready to send.
+4. Scroll a little to the tabs under the daycare's name and tap **Your rights**: the three requests Texas law already gives parents (your child's records, a drop-in visit, incident video). Tap one to see the letter, filled in and ready to copy or email.
+5. See what a parent's alert looks like: **[daycare-watch.vercel.app/alert/example](https://daycare-watch.vercel.app/alert/example)**, a real Oct 5 2026 inspection replayed and labelled as an example.
 
 In the phone app, **Watch this daycare** turns on a push alert for the next time the state posts something about it.
 
@@ -54,7 +61,7 @@ flowchart LR
   TX["data.texas.gov<br/>daycares · visits · findings"] --> P["Pipeline (Python, daily)<br/>validate → join → diff → plain summary"]
   CEN["Census geocoder<br/>and TX-04 boundary"] --> P
   P --> DB["Postgres + PostGIS<br/>(Supabase)"]
-  P -- "new finding × watchers" --> PUSH["Expo Push"] --> APP["iPhone app and web"]
+  P -- "new finding × watchers" --> PUSH["Expo Push"] --> APP["App: iPhone, Android, web"]
   APP -- "SQL functions only" --> DB
 ```
 
@@ -79,7 +86,7 @@ The one-line summary only shortens the inspector's first sentence; a test over a
 | [`services/pipeline`](services/pipeline) | The Python pipeline (`src`), its SQL, and its tests |
 | [`supabase`](supabase) | Database migrations, SQL functions, and the pgTAP tests in `supabase/tests` |
 | [`packages/db`](packages/db) | Typed database client shared with the app |
-| [`.github/workflows`](.github/workflows) | `daily-sync.yml` (the morning run) and `pipeline-ci.yml` (pipeline tests on every pipeline change) |
+| [`.github/workflows`](.github/workflows) | `daily-sync.yml` (the morning run), `app-ci.yml` (typecheck, lint, and Jest on every app change), and `pipeline-ci.yml` (pipeline tests on every pipeline change) |
 | [`docs`](docs) | Methods, data dictionary, testing, privacy, and sources |
 
 ## What the data shows
@@ -117,6 +124,7 @@ Run on Oct 25 2026. Details and commands: [`docs/TESTING.md`](docs/TESTING.md).
 | Database (pgTAP): schema, row-level security, every SQL function, home privacy | 199 pass in 12 files |
 | Live API against the cloud database | 94 of 94 endpoint checks pass |
 | App unit (Jest) | 63 pass |
+| Continuous integration | `app-ci` and `pipeline-ci` run on GitHub Actions; the badges at the top show the latest result |
 | End to end | Tapping a push with the app closed or in the background opens that visit's findings (Release build, Maestro); a replayed real finding arrived as a push on a real iPhone |
 
 ## Privacy

@@ -201,7 +201,11 @@ export function PlaceGallery({
     staleTime: Infinity,
     retry: 0,
   });
-  const lookPage: Page | null = look.data ? { key: 'lookaround', kind: 'lookaround', uri: look.data.uri, facing: look.data.facing } : null;
+  // A name match nobody has checked by hand may not show the school (no sign, an older tenant), so until it is checked
+  // it is shown and labelled as the street at the address.
+  const lookPage: Page | null = look.data
+    ? { key: 'lookaround', kind: 'lookaround', uri: look.data.uri, facing: streetChecked ? look.data.facing : 'point' }
+    : null;
 
   // Only hand-checked photos reach the record. Their URLs are looked up now so swiping never waits, and a photo
   // joins the carousel only once its URL is in.

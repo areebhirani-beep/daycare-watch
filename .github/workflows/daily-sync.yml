@@ -47,7 +47,7 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SODA_APP_TOKEN: ${{ secrets.SODA_APP_TOKEN }}
       EXPO_ACCESS_TOKEN: ${{ secrets.EXPO_ACCESS_TOKEN }}
-      # Optional: without it the photo step logs "skipped" and the run stays ok.
+      # Used only by the manual "photos" command, which stops with "MAPILLARY_TOKEN is not set" without it.
       MAPILLARY_TOKEN: ${{ secrets.MAPILLARY_TOKEN }}
       GEOCODE_CACHE: ""
     steps:
@@ -55,7 +55,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
-      - run: uv sync --frozen --no-dev || uv sync --no-dev
+      - run: uv sync --frozen --no-dev
       - name: Run
         env:
           OPERATION_ID: ${{ inputs.operation_id }}

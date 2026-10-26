@@ -9,15 +9,15 @@ What we tested, how, and what happened, Oct 24 to 25 2026. Each case was run by 
 
 | # | Case | Method | Result | Evidence |
 |---|---|---|---|---|
-| B1 | Schema, row-level security (every allow and every deny), RPC shapes, views, photo rules, recent visits | pgTAP | PASS | `supabase test db` → Files=12, Tests=195, PASS (Oct 25) |
+| B1 | Schema, row-level security (every allow and every deny), RPC shapes, views, photo rules, recent visits | pgTAP | PASS | `supabase test db` → Files=12, Tests=196, PASS (Oct 25) |
 | B2 | The app's API path: public reads, anonymous sign-in, watch / unwatch / re-watch, internal tables unreachable | `supabase/snippets/api_smoke.sh` | PASS | local 21/21, cloud 21/21 (Oct 25) |
-| B3 | The nightly sync on a night with no changes creates no events | `python -m pipeline sync --dry-run --no-notify` | PASS | events_new_violation 0, events_daycare 0, inspections_new 0, join_rate 1.0 ([log](qa/resync-dryrun.log)) |
+| B3 | The nightly sync on a night with no changes creates no events | `python -m pipeline sync --dry-run --no-notify` | PASS | events_new_violation 0, events_daycare 0, inspections_new 0, join_rate 1.0 |
 | B4 | An alert for a daycare you no longer watch is not shown | `EVENT_ID=43 EVENT_OP=1304920 supabase/snippets/api_smoke.sh` | PASS | hidden before watching, shown while watching (is_replay=true), hidden after unwatch; 24/24 |
 | B5 | RPC latency p95 under 100 ms | `supabase/snippets/bench_rpc.sql` | PASS | search p50 3.3 / p95 24.6 ms, near 6.5 ms, record 1.9 ms (60 runs each, as the anon role, on a busy laptop) |
 | B6 | A push reaches a real iPhone | replay → Expo ticket → receipt → banner | PASS | event 43, ticket 01a17151-582b-75bd-89b2-ccba6e7ae980, receipt `delivered_to_provider`, banner shown on the phone 11:31 pm Oct 24 |
 | B7 | Push on Android | | CUT | Expo Go on Android has no remote push |
-| B8 | "In TX-04" is shown only when the map point is inside the district | pgTAP + SQL + source | PASS | 379 by point, 23 by county only; every app check is `in_district && district_basis === 'point'` (HomeMap.tsx:66, HomeMap.web.tsx:52, PlacePage.tsx:190); `district_pulse_weekly` and `district_recent_visits` filter on the point basis (pgTAP 004, 008) |
-| B9 | Replays are labelled as replays | push body + alert screen | PASS | push body starts `Replay of a real state record from {date}:` (notify.py:49); the alert screen shows "Replay of a real state record" when `is_replay` (alert/[eventId].tsx:69); on screen in U21 |
+| B8 | "In TX-04" is shown only when the map point is inside the district | pgTAP + SQL + source | PASS | 379 by point, 23 by county only; every app check is `in_district && district_basis === 'point'` (HomeMap.tsx:69, HomeMap.web.tsx:52, PlacePage.tsx:227); `district_pulse_weekly` and `district_recent_visits` filter on the point basis (pgTAP 004, 008) |
+| B9 | Replays are labelled as replays | push body + alert screen | PASS | push body starts `Replay of a real state record from {date}:` (notify.py:61); the alert screen shows "Replay of a real state record" when `is_replay` (alert/[eventId].tsx:84); on screen in U21 |
 | B10 | A fresh clone builds and passes from zero | second stack: `supabase start` → `supabase test db` → `uv run python -m pipeline backfill` → `pytest` | PASS | start 33 s; pgTAP passed on the seed alone (the tests load the real rows in `supabase/tests/fixtures/real_rows.psql` and roll them back); cold backfill 259.9 s, 14,310 daycares, 379 in TX-04 by point, the same as the loaded database. Run 4:33 am Oct 25 with 180 tests; the suite has 195 now |
 
 ## Every endpoint, cloud and local
@@ -26,7 +26,7 @@ What we tested, how, and what happened, Oct 24 to 25 2026. Each case was run by 
 
 | # | Case | Method | Result | Evidence |
 |---|---|---|---|---|
-| E1 | Public reads: `daycare_search`, `daycares_near`, `daycare_record`, `area_compare`, `district_pulse`, `district_recent_visits`, `last_sync` | 51 cases | PASS | local and cloud 51/51: empty, blank or null → `[]`; huge input capped at 50 rows (search) and 200 (near); bad number or date → 400; unknown id → `null`; `'; drop table …` and `' or '1'='1` return plain results; `%` and `_` match nothing; `Pequenos` finds "Los Pequeños Exploradores"; the iPhone's curly apostrophe works like a straight one |
+| E1 | Public reads: `daycare_search`, `daycares_near`, `daycare_record`, `area_compare`, `district_pulse`, `district_recent_visits`, `last_sync` | 51 cases | PASS | local and cloud 51/51: empty, blank or null → `[]`; huge input capped at 50 rows (search) and 150 (near); bad number or date → 400; unknown id → `null`; `'; drop table …` and `' or '1'='1` return plain results; `%` and `_` match nothing; `Pequenos` finds "Los Pequeños Exploradores"; the iPhone's curly apostrophe works like a straight one |
 | E2 | Privacy holds through the API | jq on every row | PASS | no home from search or near has a street or a ZIP longer than 5 digits; `district_recent_visits` never names a home; at most 2 photos |
 | E3 | Signed out: no writes, no private reads | 8 cases | PASS | `watch`, `unwatch`, `my_watches`, `alert_detail`, `register_device` → 401; garbage, forged (`role: service_role`, bad signature) and `alg: none` tokens → 401 |
 | E4 | Nothing else is reachable | 16 cases | PASS | `core`, `app`, `geo`, `ops`, `staging`, `auth`, `storage`, `vault` → 406; no public tables (404); internal functions → 404; auth admin → 403; storage has no buckets |

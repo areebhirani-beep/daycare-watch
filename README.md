@@ -11,6 +11,7 @@ See what Texas inspectors found at any daycare, and get a heads-up when they pos
 ### [Try it: daycare-watch.vercel.app](https://daycare-watch.vercel.app)
 No sign-in. Real Texas state records. The website is a simple preview; the full app, with alerts, runs on iPhone and Android.
 
+[![App CI](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/app-ci.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/app-ci.yml)
 [![Pipeline CI](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/pipeline-ci.yml)
 [![Daily sync](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml/badge.svg)](https://github.com/areebhirani-beep/daycare-watch/actions/workflows/daily-sync.yml)
 

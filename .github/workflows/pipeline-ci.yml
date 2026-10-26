@@ -21,7 +21,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
-      - run: uv sync --frozen || uv sync
+      - run: uv sync --frozen
       - run: uv run --no-sync ruff check .
       - run: uv run --no-sync mypy --strict src
       # Database tests skip without DATABASE_URL; they run locally against the Supabase stack.

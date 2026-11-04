@@ -179,6 +179,8 @@ def main() -> None:
             f"insert into core.violations ({', '.join(cols)}) values ("
             f"{', '.join(lit(v) for v in cols.values())}) on conflict do nothing;"
         )
+    out.append("-- The keys the pipeline matches records on (see 20261104120000_natural_keys.sql).")
+    out.append("select core.fill_natural_keys();")
     OUT.write_text("\n".join(out) + "\n")
     print(f"wrote {OUT}: {len(ops)} daycares, {len(acts)} activities, {len(viols)} violations")
 

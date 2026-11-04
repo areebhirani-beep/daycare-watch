@@ -2,9 +2,14 @@
 
 Raw source rows land in staging.* (COPY, tagged with run_id) and the counts are checked
 against the source. Validated rows then go through a typed temp table into core.* with
-SQL upserts. Change events are detected in the same transaction, before each upsert, by
-comparing the incoming rows with what core already holds. core.change_events.dedupe_key
-makes every insert idempotent, so re-running the same data creates 0 events.
+SQL upserts. Change events are detected in the same transaction by comparing the incoming
+rows with what core already holds. core.change_events.dedupe_key makes every insert
+idempotent, so re-running the same data creates 0 events.
+
+Visits and findings are matched on what the record says (natural_key), not on the state's
+IDs: every time the state reloads the activity and violation datasets it issues new
+activity_id, non_compliance_id and section_id values for the same records. The IDs kept in
+core are the first ones seen, so the links between findings and visits never move.
 """
 
 from __future__ import annotations
@@ -73,9 +78,9 @@ def stage(
     acts_raw: list[dict[str, str]],
     viols_raw: list[dict[str, str]],
 ) -> dict[str, int]:
-    """COPY raw rows into staging.* for this run (older runs are cleared) and check counts."""
-    for t in ("operations", "activities", "violations"):
-        conn.execute(f"delete from staging.{t} where run_id <> %s", (run_id,))
+    """COPY raw rows into staging.* for this run and check counts. Only the latest run is kept: the
+    older rows are truncated (not deleted), so their space is freed when the run commits."""
+    conn.execute("truncate staging.operations, staging.activities, staging.violations")
     _copy(conn, "copy staging.operations (run_id, raw) from stdin",
           ((run_id, json.dumps(r)) for r in ops_raw))
     _copy(conn, f"copy staging.activities (run_id, {', '.join(ACTIVITY_COLS)}) from stdin",
@@ -231,82 +236,136 @@ def load_daycares(conn: Conn, run_id: UUID, ops: list[tuple[Operation, str]], ba
 
 # ---------------------------------------------------------------- stage 4: inspections
 
-INSPECTION_UPSERT = """
-insert into core.inspections as i (activity_id, operation_id, activity_at, activity_type,
-                                   violation_found, self_report, row_hash)
-select t.activity_id, t.operation_id, t.activity_at, t.activity_type, t.violation_found,
-       t.self_report, t.row_hash
+# A visit is the operation, the time, and the kind of activity. The few visits that share all
+# three are told apart by an ordinal, so the key set of a reload equals the key set before it.
+INSPECTION_KEY = """
+update t_inspections t set natural_key = k.natural_key
+from (select activity_id,
+             md5(row(operation_id, activity_at, activity_type)::text) || '/' ||
+             row_number() over (partition by operation_id, activity_at, activity_type
+                                order by violation_found, self_report, activity_id) as natural_key
+      from t_inspections) k
+where k.activity_id = t.activity_id
+"""
+
+# Only rows whose content changed are rewritten; touching every row nightly filled the disk.
+INSPECTION_UPDATE = """
+update core.inspections i
+set violation_found = t.violation_found, self_report = t.self_report, row_hash = t.row_hash,
+    last_seen_at = now(), updated_at = now()
+from t_inspections t
+where i.natural_key = t.natural_key
+  and (i.violation_found, i.self_report) is distinct from (t.violation_found, t.self_report)
+"""
+
+INSPECTION_INSERT = """
+insert into core.inspections (activity_id, operation_id, activity_at, activity_type, violation_found,
+                              self_report, row_hash, natural_key)
+select t.activity_id, t.operation_id, t.activity_at, t.activity_type, t.violation_found, t.self_report,
+       t.row_hash, t.natural_key
 from t_inspections t
 where exists (select 1 from core.daycares d where d.operation_id = t.operation_id)
-on conflict (activity_id) do update set
-  operation_id = excluded.operation_id, activity_at = excluded.activity_at,
-  activity_type = excluded.activity_type, violation_found = excluded.violation_found,
-  self_report = excluded.self_report, row_hash = excluded.row_hash, last_seen_at = now(),
-  updated_at = case when i.row_hash is distinct from excluded.row_hash then now() else i.updated_at end
+  and not exists (select 1 from core.inspections i where i.natural_key = t.natural_key)
+on conflict do nothing
 """
 
 
 def load_inspections(conn: Conn, acts: list[tuple[Activity, str]]) -> dict[str, int]:
+    """Load this pull's visits. t_inspections stays for load_violations, which links findings through it."""
     conn.execute("""create temp table t_inspections (activity_id bigint primary key, operation_id bigint,
-      activity_at timestamp, activity_type text, violation_found text, self_report bool, row_hash text)
-      on commit drop""")
-    _copy(conn, "copy t_inspections from stdin", (
+      activity_at timestamp, activity_type text, violation_found text, self_report bool, row_hash text,
+      natural_key text) on commit drop""")
+    _copy(conn, "copy t_inspections (activity_id, operation_id, activity_at, activity_type, violation_found, "
+          "self_report, row_hash) from stdin", (
         (a.activity_id, a.operation_id, a.activity_date.replace(tzinfo=None), a.activity_type,
          a.violation_found, a.self_report, h)
         for a, h in acts
     ))
-    new = conn.execute("""select count(*) from t_inspections t
-        where exists (select 1 from core.daycares d where d.operation_id = t.operation_id)
-          and not exists (select 1 from core.inspections i where i.activity_id = t.activity_id)""").fetchone()
+    conn.execute(INSPECTION_KEY)
+    conn.execute("create index on t_inspections (natural_key)")
     with conn.cursor() as cur:
-        cur.execute(INSPECTION_UPSERT)
-        upserted = cur.rowcount
-    return {"inspections_upserted": upserted, "inspections_new": int(new[0]) if new else 0}
+        cur.execute(INSPECTION_UPDATE)
+        updated = cur.rowcount
+        cur.execute(INSPECTION_INSERT)
+        new = cur.rowcount
+    return {"inspections_upserted": updated + new, "inspections_new": new, "inspections_updated": updated}
 
 
 # ---------------------------------------------------------------- stage 4 + 6 + 7: violations
 
-VIOLATION_EVENTS = """
-insert into core.change_events (run_id, operation_id, kind, ref_id, before, after, source_date, is_backfill)
-select %(run_id)s, t.operation_id, 'new_violation', t.non_compliance_id::text, null,
-       jsonb_build_object('activity_id', t.activity_id, 'risk_level', t.risk_level,
-                          'category', t.category, 'standard', t.standard_code),
-       i.activity_date, %(backfill)s
-from t_violations t
-left join core.inspections i using (activity_id)
-where exists (select 1 from core.daycares d where d.operation_id = t.operation_id)
-  and not exists (select 1 from core.violations v where v.non_compliance_id = t.non_compliance_id)
-on conflict (dedupe_key) do nothing
+# Each finding is linked to its visit through this pull's activities, then to the visit row core
+# already holds (stored_activity_id), so a reload never moves a finding to a new activity_id.
+VIOLATION_LINK = """
+update t_violations t
+set activity_at = a.activity_at, activity_type = a.activity_type,
+    stored_activity_id = i.activity_id, activity_date = i.activity_date
+from t_inspections a
+left join core.inspections i on i.natural_key = a.natural_key
+where a.activity_id = t.activity_id
 """
 
-VIOLATION_UPSERT = """
-insert into core.violations as v (non_compliance_id, activity_id, section_id, operation_id, activity_date,
-  standard_code, standard_title, risk_level, category, plain, narrative, corrected_at_inspection,
-  corrected_date, verified_date, technical_assistance, via_investigation, row_hash)
-select t.non_compliance_id, t.activity_id, t.section_id, t.operation_id, i.activity_date,
-  t.standard_code, t.standard_title, t.risk_level::public.risk_level,
-  t.category::public.violation_category, t.plain, t.narrative, t.corrected_at_inspection,
-  t.corrected_date, t.verified_date, t.technical_assistance,
-  coalesce(i.activity_type = 'REPORT', false), t.row_hash
+# A finding is its visit, its standard, and the inspector's words; an ordinal separates exact repeats.
+VIOLATION_KEY = """
+update t_violations t set natural_key = k.natural_key
+from (select non_compliance_id,
+             md5(row(operation_id, activity_at, activity_type, standard_code, narrative)::text) || '/' ||
+             row_number() over (partition by operation_id, activity_at, activity_type, standard_code, narrative
+                                order by risk_level, corrected_at_inspection, corrected_date, verified_date,
+                                         technical_assistance, non_compliance_id) as natural_key
+      from t_violations) k
+where k.non_compliance_id = t.non_compliance_id
+"""
+
+VIOLATION_UPDATE = """
+update core.violations v
+set standard_title = t.standard_title, risk_level = t.risk_level::public.risk_level,
+    category = t.category::public.violation_category, plain = t.plain,
+    corrected_at_inspection = t.corrected_at_inspection, corrected_date = t.corrected_date,
+    verified_date = t.verified_date, technical_assistance = t.technical_assistance, row_hash = t.row_hash,
+    last_seen_at = now(), updated_at = now()
 from t_violations t
-left join core.inspections i using (activity_id)
-where exists (select 1 from core.daycares d where d.operation_id = t.operation_id)
-on conflict (non_compliance_id) do update set
-  activity_id = excluded.activity_id, section_id = excluded.section_id,
-  operation_id = excluded.operation_id, activity_date = excluded.activity_date,
-  standard_code = excluded.standard_code, standard_title = excluded.standard_title,
-  risk_level = excluded.risk_level, category = excluded.category, plain = excluded.plain,
-  narrative = excluded.narrative, corrected_at_inspection = excluded.corrected_at_inspection,
-  corrected_date = excluded.corrected_date, verified_date = excluded.verified_date,
-  technical_assistance = excluded.technical_assistance, via_investigation = excluded.via_investigation,
-  row_hash = excluded.row_hash, last_seen_at = now(),
-  updated_at = case when v.row_hash is distinct from excluded.row_hash then now() else v.updated_at end
+where v.natural_key = t.natural_key
+  and (v.standard_title, v.risk_level::text, v.category::text, v.plain, v.corrected_at_inspection,
+       v.corrected_date, v.verified_date, v.technical_assistance)
+      is distinct from
+      (t.standard_title, t.risk_level, t.category, t.plain, t.corrected_at_inspection,
+       t.corrected_date, t.verified_date, t.technical_assistance)
+"""
+
+# New findings are inserted and, outside a backfill, each one becomes a new_violation event in the
+# same statement, so an event always points at the row that was stored.
+VIOLATION_INSERT = """
+with ins as (
+  insert into core.violations (non_compliance_id, activity_id, section_id, operation_id, activity_date,
+    standard_code, standard_title, risk_level, category, plain, narrative, corrected_at_inspection,
+    corrected_date, verified_date, technical_assistance, via_investigation, row_hash, natural_key)
+  select t.non_compliance_id, coalesce(t.stored_activity_id, t.activity_id), t.section_id, t.operation_id,
+    t.activity_date, t.standard_code, t.standard_title, t.risk_level::public.risk_level,
+    t.category::public.violation_category, t.plain, t.narrative, t.corrected_at_inspection,
+    t.corrected_date, t.verified_date, t.technical_assistance,
+    coalesce(t.activity_type = 'REPORT', false), t.row_hash, t.natural_key
+  from t_violations t
+  where exists (select 1 from core.daycares d where d.operation_id = t.operation_id)
+    and not exists (select 1 from core.violations v where v.natural_key = t.natural_key)
+  on conflict do nothing
+  returning non_compliance_id, activity_id, operation_id, activity_date, risk_level, category, standard_code
+), ev as (
+  insert into core.change_events (run_id, operation_id, kind, ref_id, before, after, source_date, is_backfill)
+  select %(run_id)s, ins.operation_id, 'new_violation', ins.non_compliance_id::text, null,
+         jsonb_build_object('activity_id', ins.activity_id, 'risk_level', ins.risk_level,
+                            'category', ins.category, 'standard', ins.standard_code),
+         ins.activity_date, false
+  from ins
+  where not %(backfill)s
+  on conflict (dedupe_key) do nothing
+  returning 1
+)
+select (select count(*) from ins), (select count(*) from ev)
 """
 
 JOIN_RATE = """
-select count(*) filter (where i.activity_id is not null)::float8 / nullif(count(*), 0), count(*)
+select count(*) filter (where t.activity_at is not null)::float8 / nullif(count(*), 0), count(*)
 from t_violations t
-left join core.inspections i using (activity_id)
 where exists (select 1 from core.daycares d where d.operation_id = t.operation_id)
 """
 
@@ -322,26 +381,34 @@ def violation_row(v: Violation, h: str) -> tuple[Any, ...]:
 def load_violations(
     conn: Conn, run_id: UUID, viols: list[tuple[Violation, str]], backfill: bool
 ) -> tuple[dict[str, int], float]:
+    """Load this pull's findings. Needs t_inspections from load_inspections in the same transaction."""
     conn.execute("""create temp table t_violations (non_compliance_id bigint primary key,
       activity_id bigint, section_id bigint, operation_id bigint, standard_code text,
       standard_title text, risk_level text, category text, plain text, narrative text,
       corrected_at_inspection bool, corrected_date date, verified_date date,
-      technical_assistance bool, row_hash text) on commit drop""")
-    _copy(conn, "copy t_violations from stdin", (violation_row(v, h) for v, h in viols))
+      technical_assistance bool, row_hash text, activity_at timestamp, activity_type text,
+      stored_activity_id bigint, activity_date date, natural_key text) on commit drop""")
+    _copy(conn, "copy t_violations (non_compliance_id, activity_id, section_id, operation_id, standard_code, "
+          "standard_title, risk_level, category, plain, narrative, corrected_at_inspection, corrected_date, "
+          "verified_date, technical_assistance, row_hash) from stdin",
+          (violation_row(v, h) for v, h in viols))
+    conn.execute(VIOLATION_LINK)
+    conn.execute(VIOLATION_KEY)
+    conn.execute("create index on t_violations (natural_key)")
     row = conn.execute(JOIN_RATE).fetchone()
     rate = float(row[0]) if row and row[0] is not None else 1.0
     in_scope = int(row[1]) if row else 0
     if rate < MIN_JOIN_RATE:
         raise JoinRateError(f"join rate {rate:.4f} is below {MIN_JOIN_RATE} ({in_scope} in-scope violations)")
-    events = 0
     with conn.cursor() as cur:
+        cur.execute(VIOLATION_UPDATE)
+        updated = cur.rowcount
         # A backfill loads history; five years of findings are not news, so no events.
-        if not backfill:
-            cur.execute(VIOLATION_EVENTS, {"run_id": run_id, "backfill": backfill})
-            events = cur.rowcount
-        cur.execute(VIOLATION_UPSERT)
-        upserted = cur.rowcount
-    counts = {"violations_in_scope": in_scope, "violations_upserted": upserted, "events_new_violation": events}
+        cur.execute(VIOLATION_INSERT, {"run_id": run_id, "backfill": backfill})
+        got = cur.fetchone()
+    new, events = (int(got[0]), int(got[1])) if got else (0, 0)
+    counts = {"violations_in_scope": in_scope, "violations_upserted": updated + new, "violations_new": new,
+              "violations_updated": updated, "events_new_violation": events}
     return counts, rate
 
 

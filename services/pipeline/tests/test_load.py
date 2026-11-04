@@ -48,10 +48,18 @@ def _load(conn: psycopg.Connection[Any], run_id: uuid.UUID, parsed: Any, backfil
     counts = load.load_daycares(conn, run_id, ops, backfill)
     conn.execute("drop table t_daycares")
     counts.update(load.load_inspections(conn, acts))
-    conn.execute("drop table t_inspections")
     vc, rate = load.load_violations(conn, run_id, viols, backfill)
-    conn.execute("drop table t_violations")
+    conn.execute("drop table t_inspections, t_violations")
     return {**counts, **vc, "rate": rate}
+
+
+def _reissued(acts_raw: list[dict[str, str]], viols_raw: list[dict[str, str]]) -> tuple[Any, Any]:
+    """The same records with every state ID replaced, as a state reload publishes them."""
+    shift = 10**10
+    acts = [{**a, "activity_id": str(int(a["activity_id"]) + shift)} for a in acts_raw]
+    viols = [{**v, **{k: str(int(v[k]) + shift) for k in ("activity_id", "non_compliance_id", "section_id")
+                      if v.get(k)}} for v in viols_raw]
+    return acts, viols
 
 
 def test_stage_counts_match_source(conn: psycopg.Connection[Any], ops_raw: list[dict[str, Any]],
@@ -110,12 +118,76 @@ def test_backfill_then_sync_is_idempotent_and_detects_changes(
     assert c2["events_daycare"] == 0
 
 
+def test_reload_with_new_state_ids_adds_nothing(
+    conn: psycopg.Connection[Any], ops_raw: list[dict[str, Any]],
+    acts_raw: list[dict[str, str]], viols_raw: list[dict[str, str]],
+) -> None:
+    """The state re-issues every activity and violation ID when it reloads; that is not news."""
+    ids = [int(o["operation_id"]) for o in ops_raw]
+    _wipe(conn, ids)
+    _load(conn, uuid.uuid4(), _parsed(ops_raw, acts_raw, viols_raw), backfill=True)
+
+    def counts() -> tuple[Any, ...]:
+        row = conn.execute("""select (select count(*) from core.inspections where operation_id = any(%(i)s)),
+                                     (select count(*) from core.violations where operation_id = any(%(i)s)),
+                                     (select count(*) from core.change_events where operation_id = any(%(i)s))""",
+                           {"i": ids}).fetchone()
+        assert row
+        return tuple(row)
+
+    before = counts()
+    acts, viols = _reissued(acts_raw, viols_raw)
+    again = _load(conn, uuid.uuid4(), _parsed(ops_raw, acts, viols), backfill=False)
+    assert (again["inspections_new"], again["violations_new"], again["events_new_violation"]) == (0, 0, 0)
+    assert (again["inspections_updated"], again["violations_updated"]) == (0, 0)
+    assert again["rate"] == 1.0
+    assert counts() == before
+    # The first IDs stay, and every finding still points at a stored visit.
+    orphans = conn.execute("""select count(*) from core.violations v where v.operation_id = any(%s)
+                              and v.activity_date is not null and not exists
+                              (select 1 from core.inspections i where i.activity_id = v.activity_id)""",
+                           (ids,)).fetchone()
+    assert orphans == (0,)
+    assert conn.execute("select count(*) from core.violations where non_compliance_id = %s",
+                        (int(viols_raw[0]["non_compliance_id"]),)).fetchone() == (1,)
+
+    # A real new finding on a known visit, after a reload: exactly one event, linked to the stored visit.
+    extra = {**viols[0], "non_compliance_id": str(int(viols[0]["non_compliance_id"]) + 1),
+             "narrative": "A finding the state posted tonight."}
+    new = _load(conn, uuid.uuid4(), _parsed(ops_raw, acts, [*viols, extra]), backfill=False)
+    assert (new["violations_new"], new["events_new_violation"], new["inspections_new"]) == (1, 1, 0)
+    ev = conn.execute("select after ->> 'activity_id' from core.change_events where ref_id = %s",
+                      (extra["non_compliance_id"],)).fetchone()
+    assert ev == (viols_raw[0]["activity_id"],)
+
+
+def test_pipeline_keys_match_the_backfill_function(
+    conn: psycopg.Connection[Any], ops_raw: list[dict[str, Any]],
+    acts_raw: list[dict[str, str]], viols_raw: list[dict[str, str]],
+) -> None:
+    """core.fill_natural_keys() (rows stored before keys existed) builds the same keys as a load."""
+    ids = [int(o["operation_id"]) for o in ops_raw]
+    _wipe(conn, ids)
+    _load(conn, uuid.uuid4(), _parsed(ops_raw, acts_raw, viols_raw), backfill=True)
+    sql = """select (select array_agg(natural_key order by activity_id) from core.inspections
+                     where operation_id = any(%(i)s)),
+                    (select array_agg(natural_key order by non_compliance_id) from core.violations
+                     where operation_id = any(%(i)s))"""
+    loaded = conn.execute(sql, {"i": ids}).fetchone()
+    assert loaded and None not in loaded[0] and None not in loaded[1]
+    for t in ("core.inspections", "core.violations"):
+        conn.execute(f"update {t} set natural_key = null where operation_id = any(%s)", (ids,))
+    conn.execute("select core.fill_natural_keys()")
+    assert conn.execute(sql, {"i": ids}).fetchone() == loaded
+
+
 def test_join_rate_below_threshold_fails(conn: psycopg.Connection[Any], ops_raw: list[dict[str, Any]],
                                         acts_raw: list[dict[str, str]], viols_raw: list[dict[str, str]]) -> None:
     ids = [int(o["operation_id"]) for o in ops_raw]
     _wipe(conn, ids)
     ops, _acts, viols = _parsed(ops_raw, acts_raw, viols_raw)
     load.load_daycares(conn, uuid.uuid4(), ops, True)
+    load.load_inspections(conn, [])
     with pytest.raises(load.JoinRateError):
         load.load_violations(conn, uuid.uuid4(), viols, True)  # no activities loaded -> 0% join
 

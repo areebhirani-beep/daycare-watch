@@ -75,6 +75,9 @@ def _call_if_exists(conn: Conn, fn: str) -> bool:
         "select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace "
         "where n.nspname = %s and p.proname = %s", (schema, name)).fetchone()
     if row:
+        # The concurrent matview refresh outgrew the role's default statement_timeout (Nov 2026),
+        # which rolled back the whole run. Lift it for this transaction only.
+        conn.execute("set local statement_timeout = '15min'")
         conn.execute(f"select {fn}()")
     return row is not None
 
